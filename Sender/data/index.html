@@ -1,0 +1,47 @@
+
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>LaxShotClock - Display</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+	<link type="text/css" rel="stylesheet" href="/style.css">
+	<script type="application/javascript" src="/javascript.js"></script>
+  </head>
+  
+<style>
+
+  @media (max-aspect-ratio: 1/1) {
+    .number {  
+      font-size: 100vw;
+    }
+  }
+  
+  @media (min-aspect-ratio: 1/1) {
+    .number {  
+      font-size: 125vh;
+    }
+  }
+</style>
+
+<body>
+  <div class="container">
+	
+	<div class="number-container">
+	  <div class="number bg-number">88</div>
+  	  <div id="clock" class="number"></div>
+	  
+	</div>
+	<button id="audio-button" class="a-button">A</button>
+  </div>
+</body>
+
+<script>
+
+  function initButtonsSpecial() {
+    document.getElementById('audio-button').addEventListener('click', audioonoff);  
+  }
+
+</script>
+
+</html>
