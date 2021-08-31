@@ -1,3 +1,7 @@
+#include <DallasTemperature.h>
+
+#include <OneWire.h>
+
 /*
   This is a simple example show the Heltec.LoRa recived data in OLED.
 
@@ -38,7 +42,10 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 bool test_led_state = true;
 
 
-#define BAND    433E6  //you can set band here directly,e.g. 868E6,915E6
+//#define BAND    433E6  //you can set band here directly,e.g. 868E6,915E6  BLAU
+//#define BAND    433125000  //you can set band here directly,e.g. 868E6,915E6
+#define BAND    434755000  //you can set band here directly,e.g. 868E6,915E6 ROT
+
 long rssi ;
 String packSize = "--";
 String packet ;
@@ -48,6 +55,12 @@ unsigned long diff;
 bool clientFlag = false;
 
 int j = 7;
+
+unsigned long msTemp;
+unsigned long lmsTemp;
+unsigned long diffmsTemp;
+
+
 
 //////NEO PIXELS//////
 
@@ -77,6 +90,7 @@ NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 
 //Anzeige Variablen ---> prüfen!!!!!!111
 long int Clock = 88;
+long int pClock = 88;
 int color = 1;
 /*
 uint32_t off = sDisplay.Color(0,0,0);
@@ -100,6 +114,32 @@ RgbColor blue(0, 0, colorSaturation);
 RgbColor turquoise(0, colorSaturation, colorSaturation);
 RgbColor white(colorSaturation);
 RgbColor black(0);
+
+
+
+// Temperature
+// Define to which pin of the Arduino the 1-Wire bus is connected:
+#define ONE_WIRE_BUS 23
+// Create a new instance of the oneWire class to communicate with any OneWire device:
+OneWire oneWire(ONE_WIRE_BUS);
+// Pass the oneWire reference to DallasTemperature library:
+DallasTemperature sensors(&oneWire);
+
+float tempC;
+float tempChip;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+uint8_t temprature_sens_read();
+#ifdef __cplusplus
+}
+#endif
+
+uint8_t temprature_sens_read();
+
+
+
 
 
 int SEG_LENGTH = 7;
@@ -263,119 +303,30 @@ void showstatus () {
   sStatus.show(); */
 }
 
-
-
-void logo(){
-  Heltec.display->clear();
-  Heltec.display->drawXbm(0,5,logo_width,logo_height,logo_bits);
-  Heltec.display->display();
-}
-
-void showNewData(){
-  
-//OLED
-  
-  Heltec.display->clear();
-  Heltec.display->setTextAlignment(TEXT_ALIGN_LEFT);
-  Heltec.display->setFont(ArialMT_Plain_10);
-  Heltec.display->drawString(0 , 15 , "Received "+ packSize + " bytes");
-  Heltec.display->drawStringMaxWidth(0 , 26 , 128, packet);
-  Heltec.display->drawString(0, 0, "RSSI --"+ rssi);  
-  Heltec.display->display();
-  Serial.print(packet);
-  Serial.print(" -- ");
-  Serial.print(rssi);
-  Serial.print(" -- ");
-  Serial.print(diff);
-  Serial.println(" ms ");
-
-  String ClockCommand = "T";
-  String ColorCommand = "C";
-  if (packet.startsWith(ClockCommand)){
-    packet.remove(0, 1);
-    Clock = packet.toInt();
-    //Serial.println(Clock);              // Serial.println(receivedChars);      //and determining if it's what is expected
-    displayClock(Clock);
-    showstatus();
-  }
-  else if (packet.startsWith(ColorCommand)){
-    packet.remove(0, 1);
-    color = packet.toInt();
-    Serial.println(color);              // Serial.println(receivedChars);      //and determining if it's what is expected     
-    if (color == 1){
-      displaycolor = red;}
-    else if (color == 2){
-      displaycolor = violet;}
-    else if (color == 3){
-      displaycolor = green;}
-    else if (color == 4){
-      displaycolor = yellow;}
-    else if (color == 5){
-      displaycolor = blue;}         
-    else if (color == 6){
-      displaycolor = turquoise;}  
-           
-    displayClock(Clock);
-   // showstatus();        //... für ändern der Farbe ..muss erstmal am controller möglich gemacht werden
-  }
-
-   
-}
-
-void cbk(int packetSize) {
-  packet ="";
-  packSize = String(packetSize,DEC);
-  for (int i = 0; i < packetSize; i++){ 
-    packet += (char) LoRa.read(); }
-  rssi = LoRa.packetRssi();
-  //ssi = "RSSI " + String(LoRa.packetRssi(), DEC) ;
-  ms = millis();
-  diff = ms - lms;
-  lms = ms;
-  //Flag , wenn Diff > 3sec -> kein Income
-  if (diff >= 3000) {
-    clientFlag = false;
+void horn(){
+  if (Clock == 0 && pClock != 0){
+      pwm.setPWM(7, 4096, 0); // Horn an
     }
-  else {
-    clientFlag = true;
+  else if (Clock == 0 && pClock == 0){
+      pwm.setPWM(7, 0, 4096); // Horn aus
     }
-  showNewData();
- /* test_led_state = !test_led_state;
-  if (test_led_state) {
-    pwm.setPWM(0, 4096, 0); // an
-  } else {
-    pwm.setPWM(0, 0, 4096); // aus 
-  }*/
-
-  
-  
+  else if (Clock != 0){
+      pwm.setPWM(7, 0, 4096); // Horn aus
+    }
 }
 
-void setup() {
-   //WIFI Kit series V1 not support Vext control
-  Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, true /*PABOOST Enable*/, BAND /*long BAND*/);
-
-      //I2CLED.begin(I2C_SDA_LED, I2C_SCL_LED, 100000);
-      pwm.begin();
-      pwm.setPWMFreq(200);  // This is the maximum PWM frequency
-    //  pwm.setPWM(0, 4096, 0); // an
-
+void allPWMoff(){
+  
   for(int i=0; i < 15; i++){
 
       pwm.setPWM(i, 0, 4096); // aus
       //pwm.setPWM(i+7, 0, 4096); // aus
   }
+}
+
+void segmentTest(){
+
   
-    
-
- //  delay(2000); 
-
- 
-  Heltec.display->init();
-  Heltec.display->flipScreenVertically();  
-  Heltec.display->setFont(ArialMT_Plain_10);
-  logo();
-  delay(1500);
   Heltec.display->clear();
 
   Heltec.display->drawString(0, 0, "Segment Test");
@@ -383,23 +334,6 @@ void setup() {
   Heltec.display->display();
 
   delay(1000);
-
-    // this resets all the neopixels to an off state
-    strip.Begin();
-    strip.Show();
-    displaycolor = red;
-
-
-/*  
-  sDisplay.begin();
-  sStatus.begin();
-  sDisplay.setBrightness(255);
-  sStatus.setBrightness(255);
-  ledtest();
-  Serial.print("LED Test abgeschlossen");
-*/  
-  
-  
 
   for(int i=0; i < 7; i++){
 
@@ -422,9 +356,186 @@ void setup() {
       pwm.setPWM(i, 0, 4096); // aus
       //pwm.setPWM(i+7, 0, 4096); // aus
   }
-  
-   
+}
 
+void logo(){
+  Heltec.display->clear();
+  Heltec.display->drawXbm(0,5,logo_width,logo_height,logo_bits);
+  Heltec.display->display();
+}
+
+void showNewData(){
+  
+//OLED
+  
+/*  Heltec.display->clear();
+  Heltec.display->setTextAlignment(TEXT_ALIGN_LEFT);
+  Heltec.display->setFont(ArialMT_Plain_10);
+  //Heltec.display->drawString(0 , 10 , "Received "+ packSize + " bytes");
+  Heltec.display->drawString(0 , 10 , String(packet));
+  Heltec.display->drawString(0, 0, "RSSI --"+ rssi);
+  Heltec.display->drawString(0 , 20, String(tempC, 1));
+  Heltec.display->drawString(0, 30, String(millis()/1000));  
+  Heltec.display->display();*/
+  /*Serial.print(packet);
+  Serial.print(" -- ");
+  Serial.print(rssi);
+  Serial.print(" -- ");
+  Serial.print(diff);
+  Serial.println(" ms ");
+*/
+  String ClockCommand = "T";
+  String ColorCommand = "C";
+  if (packet.startsWith(ClockCommand)){
+    packet.remove(0, 1);
+    pClock = Clock;
+    Clock = packet.toInt();
+    //Serial.println(Clock);              // Serial.println(receivedChars);      //and determining if it's what is expected
+    Serial.println("Step 5");
+    displayClock(Clock);
+    Serial.println("Step 6");
+    showstatus();
+    Serial.println("Step 7");
+    horn();
+  }
+  else if (packet.startsWith(ColorCommand)){
+    packet.remove(0, 1);
+    color = packet.toInt();
+    //Serial.println(color);              // Serial.println(receivedChars);      //and determining if it's what is expected     
+    if (color == 1){
+      displaycolor = red;}
+    else if (color == 2){
+      displaycolor = violet;}
+    else if (color == 3){
+      displaycolor = green;}
+    else if (color == 4){
+      displaycolor = yellow;}
+    else if (color == 5){
+      displaycolor = blue;}         
+    else if (color == 6){
+      displaycolor = turquoise;}  
+           
+    displayClock(Clock);
+   // showstatus();        //... für ändern der Farbe ..muss erstmal am controller möglich gemacht werden
+  }
+  Serial.println("Step 8");
+  tempRequest();
+  Serial.println("Step 9");
+  Heltec.display->clear();
+  Heltec.display->setTextAlignment(TEXT_ALIGN_LEFT);
+  Heltec.display->setFont(ArialMT_Plain_10);
+  //Heltec.display->drawString(0 , 10 , "Received "+ packSize + " bytes");
+  Heltec.display->drawString(0 , 10 , String(packet));
+  Heltec.display->drawString(0, 0, "RSSI --"+ rssi);
+  Heltec.display->drawString(0 , 20, String(tempC, 1));
+  Heltec.display->drawString(0, 30, String(millis()/1000));  
+  Heltec.display->display();
+
+  Serial.println("Step 10"); 
+}
+
+void cbk(int packetSize) {
+  packet ="";
+  packSize = String(packetSize,DEC);
+  for (int i = 0; i < packetSize; i++){ 
+    packet += (char) LoRa.read(); }
+  Serial.println("Step 3");  
+  rssi = LoRa.packetRssi();
+  //ssi = "RSSI " + String(LoRa.packetRssi(), DEC) ;
+  Serial.println("Step 4");
+  ms = millis();
+  diff = ms - lms;
+  lms = ms;
+  //Flag , wenn Diff > 3sec -> kein Income
+  if (diff >= 3000) {
+    clientFlag = false;
+    }
+  else {
+    clientFlag = true;
+    }
+  showNewData();
+ /* test_led_state = !test_led_state;
+  if (test_led_state) {
+    pwm.setPWM(0, 4096, 0); // an
+  } else {
+    pwm.setPWM(0, 0, 4096); // aus 
+  }*/ 
+}
+
+void tempRequest() {
+     sensors.requestTemperatures();
+  // Fetch the temperature in degrees Celsius for device index:
+     tempC = sensors.getTempCByIndex(0); // the index 0 refers to the first device
+   //tempChip = (temprature_sens_read() - 32) / 1.8); /???
+   //tempChip = temperatureRead();
+     
+     
+   //Serial.print(tempChip);
+     Serial.print("Temp: ");
+     Serial.print(tempC);
+     Serial.print(" at sec: ");
+     Serial.println(String(millis()/1000));
+     
+     
+}
+
+
+void tempMonitor() {
+  msTemp = millis();
+  diffmsTemp = msTemp - lmsTemp;
+  
+  if (diffmsTemp >= 1000) {
+      tempRequest();
+      lmsTemp = msTemp;
+    }
+    
+}
+
+
+void setup() {
+   //WIFI Kit series V1 not support Vext control
+  Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, true /*PABOOST Enable*/, BAND /*long BAND*/);
+
+
+
+      //I2CLED.begin(I2C_SDA_LED, I2C_SCL_LED, 100000);
+      pwm.begin();
+      pwm.setPWMFreq(200);  // This is the maximum PWM frequency
+    //  pwm.setPWM(0, 4096, 0); // an
+
+
+  allPWMoff();
+  
+
+ //  delay(2000); 
+
+ 
+  Heltec.display->init();
+  Heltec.display->flipScreenVertically();  
+  Heltec.display->setFont(ArialMT_Plain_10);
+  //logo();
+  //delay(1500);
+  
+
+
+    // this resets all the neopixels to an off state
+    strip.Begin();
+    strip.Show();
+    displaycolor = red;
+
+    sensors.begin();
+
+
+/*  
+  sDisplay.begin();
+  sStatus.begin();
+  sDisplay.setBrightness(255);
+  sStatus.setBrightness(255);
+  ledtest();
+  Serial.print("LED Test abgeschlossen");
+*/  
+  
+  //segmentTest();
 
   Heltec.display->clear();
   
@@ -434,10 +545,20 @@ void setup() {
   Heltec.display->display();
   
   lms = millis();
+  lmsTemp = millis();
+  
   LoRa.setTxPower(20,RF_PACONFIG_PASELECT_PABOOST);
-  LoRa.setSpreadingFactor(7); 
+  LoRa.setSpreadingFactor(7);
+  
+//LoRa.setSyncWord(0xF3);
+//LoRa.setSyncWord(0x31);           // ranges from 0-0xFF, default 0x34, see API docs
+//LoRa.setSyncWord(0x31);           // ranges from 0-0xFF, default 0x34, see API docs 
 
+  tempRequest();
+  
   showstatus();
+
+
   
   delay(1000);
   //LoRa.onReceive(cbk);
@@ -447,10 +568,13 @@ void setup() {
 }
 
 void loop() {
+  //Serial.println("Step 1");
   int packetSize = LoRa.parsePacket();
+  yield();
+  //Serial.println("Step 2");
   if (packetSize) { cbk(packetSize);  }
-  strip.Show();
-    
+  //strip.Show();
+  //tempMonitor();  
   //delay(10);
   
 }

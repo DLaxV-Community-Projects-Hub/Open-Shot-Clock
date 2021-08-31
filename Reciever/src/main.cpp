@@ -47,7 +47,7 @@ unsigned long lms;
 unsigned long diff;
 bool clientFlag = false;
 
-int j = 7;
+
 
 //////NEO PIXELS//////
 
@@ -133,7 +133,7 @@ void segment(int seg, bool on){
     //rgbcolor = displaycolor;
     }
     //pwm.setPWM(seg, 0, B); // an 10%
-    pwm.setPWM(seg+8, 4096, 0); // an
+    pwm.setPWM(seg, 4096, 0); // an
   }
   else {
     //rgbcolor = black;
@@ -143,7 +143,7 @@ void segment(int seg, bool on){
    //sDisplay.setPixelColor(i + 7 * seg, rgbcolor);
      strip.SetPixelColor(i + 7 * seg, black);
     }
-    pwm.setPWM(seg+8, 0, 4096); // aus
+    pwm.setPWM(seg, 0, 4096); // aus
   }
   //sDisplay.show();
 }
@@ -160,10 +160,8 @@ void segment10(int seg, bool on){
     }    
     //rgbcolor = displaycolor;
     //rgbcolor = displaycolor;
-     // for(int i=8;i<0;i--){
     //pwm.setPWM(seg + 7, 0, B); // an 10%
-    pwm.setPWM(seg, 4096, 0); // an
-      //}
+    pwm.setPWM(seg+7, 4096, 0); // an
   }
   else {
     //rgbcolor = black;
@@ -173,7 +171,7 @@ void segment10(int seg, bool on){
     //sDisplay.setPixelColor(49 + i + 7 * seg, rgbcolor); //NUMPIXELS_SEGMENT * 7
       strip.SetPixelColor(49 + i + 7 * seg, black);
     }
-    pwm.setPWM(seg, 0, 4096); // aus
+    pwm.setPWM(seg+7, 0, 4096); // aus
   }
 
 //  sDisplay.show();
@@ -196,7 +194,7 @@ void displayClock(byte c)
     }
    // sDisplay.show(); // Stellt alle Zehner-Stellen LEDs auf den voreingestellten Wert schwarz um
       for(int i=0; i < 7; i++){
-        pwm.setPWM(i, 0, 4096); // aus
+        pwm.setPWM(i+7, 0, 4096); // aus
   }
     
     }
@@ -354,22 +352,6 @@ void cbk(int packetSize) {
 void setup() {
    //WIFI Kit series V1 not support Vext control
   Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, true /*PABOOST Enable*/, BAND /*long BAND*/);
-
-      //I2CLED.begin(I2C_SDA_LED, I2C_SCL_LED, 100000);
-      pwm.begin();
-      pwm.setPWMFreq(200);  // This is the maximum PWM frequency
-    //  pwm.setPWM(0, 4096, 0); // an
-
-  for(int i=0; i < 15; i++){
-
-      pwm.setPWM(i, 0, 4096); // aus
-      //pwm.setPWM(i+7, 0, 4096); // aus
-  }
-  
-    
-
- //  delay(2000); 
-
  
   Heltec.display->init();
   Heltec.display->flipScreenVertically();  
@@ -389,7 +371,12 @@ void setup() {
     strip.Show();
     displaycolor = red;
 
+      //I2CLED.begin(I2C_SDA_LED, I2C_SCL_LED, 100000);
+      pwm.begin();
+      pwm.setPWMFreq(200);  // This is the maximum PWM frequency
+    //  pwm.setPWM(0, 4096, 0); // an
 
+   delay(2000); 
 /*  
   sDisplay.begin();
   sStatus.begin();
@@ -399,30 +386,28 @@ void setup() {
   Serial.print("LED Test abgeschlossen");
 */  
   
-  
+
+
 
   for(int i=0; i < 7; i++){
 
-      //pwm.setPWM(i, 0, B); // an 10%
-      pwm.setPWM(i+8, 4096, 0); // an
-      //pwm.setPWM(i+7, 0, B); // an 10%
-      pwm.setPWM(i, 4096, 0); // an
-      //pwm.setPWM(i+j, 4096, 0); // an
-      
-      Heltec.display->clear();
-      Heltec.display->drawString(0, 0, String(i+1));
-     // Heltec.display->drawString(0, 10, String(i+j));
-      Heltec.display->display();
-     // j=j-2;
-      delay(1000);
-  }
-
-  for(int i=0; i < 16; i++){
-
       pwm.setPWM(i, 0, 4096); // aus
-      //pwm.setPWM(i+7, 0, 4096); // aus
+      pwm.setPWM(i+7, 0, 4096); // aus
   }
   
+  
+  
+  for(int i=0; i < 7; i++){
+
+      //pwm.setPWM(i, 0, B); // an 10%
+      pwm.setPWM(i, 4096, 0); // an
+      //pwm.setPWM(i+7, 0, B); // an 10%
+      pwm.setPWM(i+7, 4096, 0); // an
+      Heltec.display->clear();
+      Heltec.display->drawString(0, 0, String(i+1));
+      Heltec.display->display();
+      delay(2000);
+  }
    
 
 
