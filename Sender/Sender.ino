@@ -31,14 +31,19 @@
 
 #include <SPIFFS.h>
 
-#define BAND    433E6  //you can set band here directly,e.g. 868E6,915E6
+#define BAND    433E6  //you can set band here directly,e.g. 868E6,915E6  BLUE
+//#define BAND    433125000  //you can set band here directly,e.g. 868E6,915E6
+//#define BAND    434755000  //you can set band here directly,e.g. 868E6,915E6   RED
+
+
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
 //Enter your SSID and PASSWORD
-const char* ssid = "ShotClock";
+const char* ssid = "ShotClockBlau";
+//const char* ssid = "ShotClockRot";
 const char* password = "12345678";
 
 //int counter = 30;
@@ -247,6 +252,12 @@ void playPause()
   
 void setTime(int T) {
     ClockStart = T;
+    if (ClockStart < 1){
+      ClockStart = 1;
+    }
+    if (ClockStart > 99){
+      ClockStart = 99;
+    }
     resetClock(false);
     startState = true;
     sendStartTime(ClockStart);
@@ -282,6 +293,24 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
     if (strcmp((char*)data, "setTime60") == 0) {
       setTime(60);    
     }
+    if (strcmp((char*)data, "setTimePlus10") == 0) {
+      setTime(ClockStart+10);    
+    }
+    if (strcmp((char*)data, "setTimeMinus10") == 0) {
+      setTime(ClockStart-10);    
+    }
+    if (strcmp((char*)data, "setTimePlus5") == 0) {
+      setTime(ClockStart+5);    
+    }
+    if (strcmp((char*)data, "setTimeMinus5") == 0) {
+      setTime(ClockStart-5);    
+    }
+    if (strcmp((char*)data, "setTimePlus1") == 0) {
+      setTime(ClockStart+1);    
+    }
+    if (strcmp((char*)data, "setTimeMinus1") == 0) {
+      setTime(ClockStart-1);    
+    }            
     if (strcmp((char*)data, "SW") == 0) {
       sendStartTime(ClockStart);   
     }      
@@ -375,6 +404,7 @@ void setup()
 {
    //WIFI Kit series V1 not support Vext control
   Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, true /*PABOOST Enable*/, BAND /*long BAND*/);
+
 
 
   if(!SPIFFS.begin()){
@@ -473,6 +503,12 @@ void setup()
 
   LoRa.setTxPower(20,RF_PACONFIG_PASELECT_PABOOST);
   LoRa.setSpreadingFactor(7);
+
+  //LoRa.setSyncWord(0x01);
+  //LoRa.setSyncWord(0xF3);           // ranges from 0-0xFF, default 0x34, see API docs
+  //LoRa.setSyncWord(0x31);           // ranges from 0-0xFF, default 0x34, see API docs
+
+
 
 //BUTTON
     

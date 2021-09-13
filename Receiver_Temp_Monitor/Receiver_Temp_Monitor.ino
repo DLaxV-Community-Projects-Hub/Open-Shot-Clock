@@ -44,7 +44,7 @@ bool test_led_state = true;
 
 //#define BAND    433E6  //you can set band here directly,e.g. 868E6,915E6  BLAU
 //#define BAND    433125000  //you can set band here directly,e.g. 868E6,915E6
-#define BAND    434755000  //you can set band here directly,e.g. 868E6,915E6 ROT
+//#define BAND    434755000  //you can set band here directly,e.g. 868E6,915E6 ROT
 
 long rssi ;
 String packSize = "--";
@@ -494,7 +494,7 @@ void tempMonitor() {
 
 void setup() {
    //WIFI Kit series V1 not support Vext control
-  Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, true /*PABOOST Enable*/, BAND /*long BAND*/);
+  Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, true /*PABOOST Enable*/, 434755000 /*long BAND*/);
 
 
 

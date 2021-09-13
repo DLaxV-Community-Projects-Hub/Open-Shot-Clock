@@ -49,8 +49,9 @@
 			}
 		}
 		clock.className = "number is-red";
+		playPauseButton.disabled = true;
 		playPauseButton.className = "pp-button pp-is-disabled";
-	} else if (number <= 7) {
+	} else if (number <= 7 && number > 0) {
 		if (aonoff) {
 		   piep.play();
 		}
@@ -68,6 +69,7 @@
 	if (data == "true") {
 		playPauseButton.innerHTML = "Pause";
 		playPauseButton.className = "pp-button";
+		playPauseButton.disabled = false;
 	} else {
 		playPauseButton.innerHTML = "Play";
 		playPauseButton.className = "pp-button pp-is-active";
@@ -109,33 +111,22 @@
   }
 
   function showStartTimeButton(data) {
-	  if (data == 24) {
-			const setTime24button = document.getElementById('setTime24-button');
-			setTime24button.className = "settime-button settime-is-active";
-			const setTime30button = document.getElementById('setTime30-button');
-			setTime30button.className = "settime-button";
-			const setTime60button = document.getElementById('setTime60-button');
-			setTime60button.className = "settime-button";
-	  }	else if (data  == 30) {
-		 	const setTime24button = document.getElementById('setTime24-button');
-			setTime24button.className = "settime-button";
+	   if (data  == 30) {
 			const setTime30button = document.getElementById('setTime30-button');
 			setTime30button.className = "settime-button settime-is-active";
-			const setTime60button = document.getElementById('setTime60-button');
-			setTime60button.className = "settime-button"; 
-	  }	else if (data == 60) {
-			const setTime24button = document.getElementById('setTime24-button');
-			setTime24button.className = "settime-button";
+	  }	else {
 			const setTime30button = document.getElementById('setTime30-button');
 			setTime30button.className = "settime-button";
-			const setTime60button = document.getElementById('setTime60-button');
-			setTime60button.className = "settime-button settime-is-active";
 	  }		  
   }
 
+  function setTimeMinus10() {
+	websocket.send('setTimeMinus10');
+	//showStartTimeButton(24);
+  }
 
-  function setTime24() {
-	websocket.send('setTime24');
+  function setTimeMinus1() {
+	websocket.send('setTimeMinus1');
 	//showStartTimeButton(24);
   }
 
@@ -145,10 +136,16 @@
 
   }
   
-  function setTime60() {
-	websocket.send('setTime60');
+  function setTimePlus1() {
+	websocket.send('setTimePlus1');
+	//showStartTimeButton(60);
+  }
+  
+  function setTimePlus10() {
+	websocket.send('setTimePlus10');
 	//showStartTimeButton(60);
   }  
+    
   
   function audioonoff() {
 	const audiobutton = document.getElementById('audio-button');
