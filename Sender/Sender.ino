@@ -31,9 +31,9 @@
 
 #include <SPIFFS.h>
 
-#define BAND    433E6  //you can set band here directly,e.g. 868E6,915E6  BLUE
+//#define BAND    433E6  //you can set band here directly,e.g. 868E6,915E6  BLUE
 //#define BAND    433125000  //you can set band here directly,e.g. 868E6,915E6
-//#define BAND    434755000  //you can set band here directly,e.g. 868E6,915E6   RED
+#define BAND    434755000  //you can set band here directly,e.g. 868E6,915E6   RED
 
 
 
@@ -42,8 +42,8 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
 //Enter your SSID and PASSWORD
-const char* ssid = "ShotClockBlau";
-//const char* ssid = "ShotClockRot";
+//const char* ssid = "ShotClockBlau";
+const char* ssid = "ShotClockRot";
 const char* password = "12345678";
 
 //int counter = 30;
