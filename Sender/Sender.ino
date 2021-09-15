@@ -20,6 +20,8 @@
 
 #include <heltec.h>
 #include "images.h"
+#include "channel.h"
+#include "font.h"
 
 #include <JC_Button.h>
 
@@ -28,13 +30,22 @@
 
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include <AsyncElegantOTA.h>
 
 #include <SPIFFS.h>
 
-//#define BAND    433E6  //you can set band here directly,e.g. 868E6,915E6  BLUE
-//#define BAND    433125000  //you can set band here directly,e.g. 868E6,915E6
-#define BAND    434755000  //you can set band here directly,e.g. 868E6,915E6   RED
+//#define BAND    433000000  // Channel 1   BLUE
+//#define BAND    433500000  // Channel 2
+//#define BAND    434000000  // Channel 3
+//#define BAND    434500000  // Channel 4   RED
 
+long band_select[5]={
+  433000000,   //  not needed
+  433000000,   //  Kanal 1
+  433500000,   //  Kanal 2  
+  434000000,   //  Kanal 3  
+  434500000    //  Kanal 4
+};
 
 
 // Create AsyncWebServer object on port 80
@@ -42,11 +53,18 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
 //Enter your SSID and PASSWORD
-//const char* ssid = "ShotClockBlau";
-const char* ssid = "ShotClockRot";
+const char* ssid = "ControllerBlue";
+//const char* ssid = "ControllerRed";
 const char* password = "12345678";
 
-//int counter = 30;
+#include <Preferences.h>
+
+Preferences preferences;
+
+int channel;
+int default_channel = 1;
+long band;
+
 String rssi = "RSSI --";
 String packSize = "--";
 String packet ;
@@ -55,8 +73,7 @@ String packet ;
 const unsigned long
     LONG_PRESS(500),           // we define a "long press" to be 1000 milliseconds.    
     BLINK_INTERVAL_LONG(950),   // the LED just Blinks for 50ms when a Second counted full down 
-    BLINK_INTERVAL_SHORT(50),
-    REPEAT_INCR(2500);
+    BLINK_INTERVAL_SHORT(50);
     
 unsigned long FLEX_INTERVAL(1000);
 
@@ -67,7 +84,8 @@ bool startState = true;
 bool intervalState = true;
 int ClockStart = 30;
 int Clock = ClockStart;               // Start Zahl
-int colorpicker = 1;
+String ClockStr = "30";
+
 
 unsigned long ms;                 // current time from millis()
 unsigned long msLastStop;           // last time Button Pause
@@ -77,13 +95,12 @@ unsigned long msLastStopCount;     // last time count/send in stop mode
 unsigned long abweichung = 0;  // zählt die gesamte Abweichung
 
 const byte
-    BUTTON_PIN_T(12),              // connect a button switch from this pin to ground
-    BUTTON_PIN_C(13),    //tbc          // connect a button switch from this pin to ground    
+    BUTTON_PIN_T(12),              // connect a button switch from this pin to ground  
     LED_PIN(25);                // heltec specific pin 25
 
 
     
-Button myBtn_T(BUTTON_PIN_T),  myBtn_C(BUTTON_PIN_C);      // define the button
+Button myBtn_T(BUTTON_PIN_T);      // define the button
 
 void setStart ()
 {
@@ -208,28 +225,6 @@ void resetClockByHWButton()
     intervalState = false;
 }    
 
-void changeColor()
-{
-  if (colorpicker == 1){
-    colorpicker = 2;}
-  else if (colorpicker == 2){
-    colorpicker = 3;}
-  else if (colorpicker == 3){
-    colorpicker = 4;}
-  else if (colorpicker == 4){
-    colorpicker = 5;}
-  else if (colorpicker == 5){
-    colorpicker = 6;}    
-  else {
-    colorpicker = 1;}
-  String Command_C = "C";
-  String ColorMsg = Command_C + colorpicker;
-  //ledStateMsg += ledState;
-  lorasend(ColorMsg);
-  //TelnetMsg(ColorMsg); //old - wifi/ethernet
-  Serial.println(ColorMsg);
-}
-
 void playPause()
 {
   if (startState == true){
@@ -242,11 +237,22 @@ void playPause()
   {
     notifyClients("false");
     msLastStop = ms;           // wenn auf Pause gewechselt, dann Zeit Letzter PAuse Speichern
+    Heltec.display->fillRect(12, 16, 3, 16);
+    Heltec.display->fillRect(18, 16, 3, 16);
+    Heltec.display->display();
   }
   else
   {
     notifyClients("true");
     msLastPlay = ms;           // wenn auf Play gewechselt, dann Zeit Letztes Play Speichern
+    Heltec.display->clear();
+    Heltec.display->drawHorizontalLine(2, 50, 124);  
+    Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
+    Heltec.display->setFont(DSEG14_Classic_Mini_Regular_40);
+    Heltec.display->drawString(64 , 1 , ClockStr);
+    Heltec.display->setFont(ArialMT_Plain_10);
+    Heltec.display->drawString(64, 52, "Channel " + String(channel));
+    Heltec.display->display();
   }
 }
   
@@ -262,6 +268,17 @@ void setTime(int T) {
     startState = true;
     sendStartTime(ClockStart);
 }    
+
+void set_channel(int ch){
+  channel = ch;
+  preferences.begin("shot-clock", false);
+  preferences.putInt("channel", channel);
+  Serial.println("Channel " + channel);
+  preferences.end();
+  delay(1000);
+  ESP.restart();
+}
+
 
 void sendStartTime(int T) {
     String SW = "SW";
@@ -343,7 +360,7 @@ void initWebSocket() {
 
 void lorasend (String Msg){
   
-  Heltec.display->clear();
+ /* Heltec.display->clear();
   Heltec.display->setTextAlignment(TEXT_ALIGN_LEFT);
   Heltec.display->setFont(ArialMT_Plain_10);
   
@@ -351,8 +368,30 @@ void lorasend (String Msg){
   Heltec.display->drawString(90, 0, String(Msg));
   Heltec.display->display();
   Serial.print(Msg);
-  Serial.print(" -- ");
+  Serial.print(" -- ");*/
 
+    if (Clock < 10) {
+      ClockStr = "0" + String(Clock);
+    }
+    else{
+      ClockStr = String(Clock);
+    }
+
+  Heltec.display->clear();
+  Heltec.display->drawHorizontalLine(2, 50, 124);  
+  Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
+  Heltec.display->setFont(DSEG14_Classic_Mini_Regular_40);
+  Heltec.display->drawString(64 , 1 , ClockStr);
+  Heltec.display->setFont(ArialMT_Plain_10);
+  Heltec.display->drawString(64, 52, "Channel " + String(channel));
+  //Heltec.display->drawString(95, 52, rssi);
+  
+  if (!playState){
+    Heltec.display->fillRect(12, 16, 3, 16);
+    Heltec.display->fillRect(18, 16, 3, 16);
+  }
+  
+  Heltec.display->display();
 
   // send packet
   unsigned long ms2 = millis();
@@ -376,12 +415,6 @@ void lorasend (String Msg){
   Serial.print(" -- ");
   }
 
-  //counter++;
-  /*digitalWrite(LED, HIGH);   // turn the LED on (HIGH is the voltage level)
-  delay(1000);                       // wait for a second
-  digitalWrite(LED, LOW);    // turn the LED off by making the voltage LOW
-  delay(1000);  
-                       // wait for a second   */
 
 //===============================================================
 // This routine shows the logo at start up (logo to be modified
@@ -400,12 +433,17 @@ void logo()
 // Setup
 //===============================================================
 
-void setup()
-{
-   //WIFI Kit series V1 not support Vext control
-  Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, true /*PABOOST Enable*/, BAND /*long BAND*/);
+void setup(){
 
+  preferences.begin("shot-clock", false);
 
+  channel = preferences.getInt("channel", default_channel);
+
+  band = band_select[channel];
+   
+  preferences.end();
+  
+  Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, true /*PABOOST Enable*/, band /*long BAND*/);
 
   if(!SPIFFS.begin()){
     Serial.println("An Error has occurred while mounting SPIFFS");
@@ -418,17 +456,15 @@ void setup()
   Serial.println(WiFi.macAddress());
  
   Heltec.display->init();
-  Heltec.display->flipScreenVertically();  
+  //Heltec.display->flipScreenVertically();  
   Heltec.display->setFont(ArialMT_Plain_10);
-  //logo();
-  //delay(1500);
-  //Heltec.display->clear();
+
 
   Serial.println("Heltec.LoRa started");
   
-  Heltec.display->drawString(0, 0, "Heltec.LoRa Initial success!");
-  Heltec.display->display();
-  delay(1000);  
+  //Heltec.display->drawString(0, 0, "Heltec.LoRa Initial success!");
+  //Heltec.display->display();
+  //delay(1000);  
 
   //ESP32 As access point
   WiFi.mode(WIFI_AP); //Access Point mode
@@ -482,38 +518,56 @@ void setup()
   server.on("/digital-7-mono.woff2", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(SPIFFS, "/digital-7-mono.woff2");
   });
-  
-  
- 
+
+  server.on("/channel", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/html", channel_html);
+  });
+
+  server.on("/1", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", "restarting...");
+    set_channel(1);
+  });
+
+  server.on("/2", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", "restarting...");
+    set_channel(2);
+  });  
+
+  server.on("/3", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", "restarting...");
+    set_channel(3);    
+  });  
+
+  server.on("/4", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", "restarting...");
+    set_channel(4);
+  });
+    
+  AsyncElegantOTA.begin(&server);    // Start ElegantOTA
   server.begin();                  //Start server
   Serial.println("HTTP Websocket Server started");
   
-  Heltec.display->drawString(0, 10, "HTTP server Initial success!");
-  Heltec.display->display();
-  delay(1000);
+  //Heltec.display->drawString(0, 10, "HTTP server Initial success!");
+  //Heltec.display->display();
+  //delay(1000);
 
-
-  Heltec.display->clear();
-  Heltec.display->setTextAlignment(TEXT_ALIGN_LEFT);
-  Heltec.display->setFont(ArialMT_Plain_10);
+  //Heltec.display->clear();
+  //Heltec.display->setTextAlignment(TEXT_ALIGN_LEFT);
+  //Heltec.display->setFont(ArialMT_Plain_10);
   
-  Heltec.display->drawString(0, 0, "Sending packet: ");
-  Heltec.display->drawString(90, 0, String(Clock));
+  //Heltec.display->drawString(0, 0, "Sending packet: ");
+  //Heltec.display->drawString(90, 0, String(Clock));
 //  Heltec.display->display();
 
   LoRa.setTxPower(20,RF_PACONFIG_PASELECT_PABOOST);
   LoRa.setSpreadingFactor(7);
 
-  //LoRa.setSyncWord(0x01);
-  //LoRa.setSyncWord(0xF3);           // ranges from 0-0xFF, default 0x34, see API docs
-  //LoRa.setSyncWord(0x31);           // ranges from 0-0xFF, default 0x34, see API docs
 
 
 
 //BUTTON
     
   myBtn_T.begin();                    // initialize the button object
-  myBtn_C.begin();
   pinMode(LED_PIN, OUTPUT);         // set the LED pin as an output
   //digitalWrite(LED_PIN, ledState);  // LED an, da zu Beginn Pause
   Serial.println(Clock);
@@ -527,33 +581,60 @@ void setup()
 // sequence of states, i.e. ONOFF --> TO_RESET --> Reset --> TO_RESET --> ONOFF
 // note that while the user perceives two "modes", i.e. ON/OFF mode and rapid blink mode,
 // two extra states are needed in the state machine to transition between these modes.
-enum states_t {ONOFF, RESET, SET_TIME24, SET_TIME30, SET_TIME60};
+enum states_t {INITIAL, TOONOFF, ONOFF, RESET};
 
 
 void loop()
 {
  
     static states_t STATE;             // current state machine state
-    static unsigned long
-        rpt(REPEAT_INCR);
     ms = millis();                     // record the current time
     myBtn_T.read();                      // read the button    
-    myBtn_C.read();                      // read the button
   
     switch (STATE)
     {
         // this state watches for short and long presses, switches ON/OFF for
         // short presses, and moves to the RESET state for long presses.
         
-        case ONOFF:
+        
+        case INITIAL:
             if (myBtn_T.wasPressed())
             {
-                playPause();
+                //playPause();
+                STATE = TOONOFF;
             }
-
-            else if (myBtn_C.wasReleased())
+            else
             {
-                changeColor();        
+                if (playState == false)
+                {
+                   stopCount();                 // aktuell: schaltet LED an als User Feedback für Pause
+                   AsyncElegantOTA.loop();
+                }                    
+                AsyncElegantOTA.loop();
+            }
+            break;
+
+        case TOONOFF:
+            if (myBtn_T.wasReleased())
+            {
+                playPause();
+                STATE = ONOFF;
+            }
+            else
+            {
+                if (playState == false)
+                {
+                   stopCount();                 // aktuell: schaltet LED an als User Feedback für Pause
+                }                    
+            }
+            break;
+
+
+        
+        case ONOFF:
+            if (myBtn_T.wasReleased())
+            {
+                playPause();
             }
             
             else if (myBtn_T.pressedFor(LONG_PRESS))
@@ -563,15 +644,13 @@ void loop()
                 if (playState == false)
                 {
                    stopCount();                 // aktuell: schaltet LED an als User Feedback für Pause
+                   AsyncElegantOTA.loop();
                 }   
                 else
                 { 
                    Count();
-                }
-                //Telnet();  // old - wifi/ethernet // Handle telnet connections
-                //server.handleClient(); // This routine is executed when you open its IP in browser   
-                //delay(1);
-                   
+                   AsyncElegantOTA.loop();
+                }                 
             }
             break;
 
@@ -585,11 +664,6 @@ void loop()
             {
                 resetState = true;
                 STATE = ONOFF;
-            }  
-            else if (myBtn_T.pressedFor(rpt)) {
-                rpt += REPEAT_INCR;
-                setTime(60);
-                STATE = SET_TIME24;
             }    
             else
             {
@@ -601,74 +675,9 @@ void loop()
                 Count();
             }    
             break;
-
-        case SET_TIME24:
-            if (myBtn_T.wasReleased())
-            {
-                rpt = REPEAT_INCR;
-                STATE = ONOFF;
-            }    
-            else if (myBtn_T.pressedFor(rpt))
-            {
-                rpt += REPEAT_INCR;
-                setTime(24);
-                STATE = SET_TIME30;
-            }    
-            break;
-
-        case SET_TIME30:
-            if (myBtn_T.wasReleased())
-            {
-                rpt = REPEAT_INCR;
-                STATE = ONOFF;
-            }    
-            else if (myBtn_T.pressedFor(rpt))
-            {
-                rpt += REPEAT_INCR;
-                setTime(30);
-                STATE = SET_TIME60;
-            }    
-            break;
-             
-        case SET_TIME60:
-            //ms = millis();
-            if (myBtn_T.wasReleased())
-            {
-                rpt = REPEAT_INCR;
-                STATE = ONOFF;
-            }
-            else if (myBtn_T.pressedFor(rpt))
-            {
-                rpt += REPEAT_INCR;
-                setTime(60);
-                STATE = SET_TIME24;
-            }    
-            break;
     }
 }
 
   
   
   
-//OLD!!!  
-  /*
-  unsigned long ms = millis();
-
-  myBtn.read();
-
-  if (myBtn.wasReleased()){
-    counter = 30;
-    lorasend();
-    lms = ms;
-  }
-  
-  
-  else if (ms >= lms + interval){
-  counter--;
-    if (counter < 0){
-    counter = 30;
-    }
-  lms = ms;  
-  lorasend(); 
-  }
-}*/

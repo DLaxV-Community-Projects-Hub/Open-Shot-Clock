@@ -20,6 +20,7 @@
 #include "heltec.h" 
 #include "images.h"
 #include "channel.h"
+#include "font.h"
 
 #include <Arduino.h>
 #include <WiFi.h>
@@ -27,7 +28,10 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncElegantOTA.h>
 
-const char* ssid = "BLUE1";
+const char* ssid = "ShotClockBlue1";
+//const char* ssid = "ShotClockBlue2";
+//const char* ssid = "ShotClockRed1";
+//const char* ssid = "ShotClockRed2";
 const char* password = "12345678";
 
 AsyncWebServer server(80);
@@ -43,28 +47,24 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 
 Preferences preferences;
 
-
-//#define BAND    433E6  //you can set band here directly,e.g. 868E6,915E6  BLAU
-//#define BAND    433125000  //you can set band here directly,e.g. 868E6,915E6
-//#define BAND    434755000  //you can set band here directly,e.g. 868E6,915E6 ROT
-
-
 int channel;
 int default_channel = 1;
 long band;
-
-//long rssi ;
 String rssi = "RSSI --";
 String packSize = "--";
 String packet ;
 unsigned long ms;
 unsigned long lms;
 unsigned long diff;
+unsigned long w_ms;
+unsigned long w_lms;
+unsigned long w_diff;
+unsigned long interval = 150;
 bool clientFlag = false;
-
 long int Clock = 88;
 long int pClock = 88;
-int color = 1;
+String ClockStr = "88";
+int waitingNR = 1;
 
 
 // 1 Array mit 10 Daten Zeilen mit jeweils 7 Datensätzen Typ Bool (0 bis 9)
@@ -81,19 +81,37 @@ bool segs[10][7]={
  {true, true, true, false, true, true, true}          //9
 };
 
-long band_select[9]={
+long band_select[5]={
   433000000,   //  not needed
   433000000,   //  Kanal 1
-  433250000,   //  Kanal 2
-  433500000,   //  Kanal 3
-  433750000,   //  Kanal 4
-  434000000,   //  Kanal 5
-  434250000,   //  Kanal 6
-  434500000,   //  Kanal 7
-  434750000    //  Kanal 8
+  433500000,   //  Kanal 2  
+  434000000,   //  Kanal 3  
+  434500000    //  Kanal 4
 };
 
+int waiting1er[5]={
+  0,
+  8,
+  13,
+  12,
+  4
+};
 
+int waiting10er[5]={
+  0,
+  3,
+  2,
+  1,
+  9
+};
+
+String waitingOLED[5]={
+  "0",
+  "+",
+  "X",
+  "+",
+  "X"
+};
 
 // ANZEIGE //
 
@@ -194,6 +212,46 @@ void logo(){
   Heltec.display->display();
 }
 
+void waiting(){
+  w_ms = millis();
+  w_diff = w_ms - w_lms;
+  if (w_diff >= interval) {
+    all_Segments_off();
+    pwm.setPWM(waiting1er[waitingNR], 4096, 0); // an 100%
+    pwm.setPWM(waiting10er[waitingNR], 4096, 0); // an 100%
+
+    Heltec.display->clear();
+    Heltec.display->drawHorizontalLine(2, 50, 124);  
+    Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
+    Heltec.display->setFont(DSEG14_Classic_Mini_Regular_40);
+    Heltec.display->drawString(64 , 1 , waitingOLED[waitingNR]);
+    Heltec.display->setFont(ArialMT_Plain_10);
+    Heltec.display->drawString(30, 52, "Channel " + String(channel));
+    Heltec.display->drawString(95, 52, "RSSI");
+    Heltec.display->display();
+    
+    w_lms = w_ms;
+    waitingNR++;
+    if (waitingNR > 4){
+      waitingNR = 1;
+    }
+  }  
+}
+
+void client_check(){
+  ms = millis();
+  diff = ms - lms;
+  //lms = ms;
+  if (diff >= 2100) {
+    clientFlag = false;
+    waitingNR = 1;
+    all_Segments_off();
+    pwm.setPWM(waiting1er[waitingNR], 4096, 0); // an 100%
+    pwm.setPWM(waiting10er[waitingNR], 4096, 0); // an 100%
+
+    }
+}
+
 void showNewData(){
   
   String ClockCommand = "T";
@@ -201,32 +259,24 @@ void showNewData(){
     packet.remove(0, 1);
     pClock = Clock;
     Clock = packet.toInt();
-    Serial.println(Clock);              // Serial.println(receivedChars);      //and determining if it's what is expected
-    displayClock(Clock);
-    horn();
-/*  
+    if (Clock < 10) {
+      ClockStr = "0" + String(Clock);
+    }
+    else{
+      ClockStr = String(Clock);
+  }
+  Serial.println(Clock);              // Serial.println(receivedChars);      //and determining if it's what is expected
+  displayClock(Clock);
+  horn();
+    
   Heltec.display->clear();
-  Heltec.display->setTextAlignment(TEXT_ALIGN_LEFT);
+  Heltec.display->drawHorizontalLine(2, 50, 124);  
+  Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
+  Heltec.display->setFont(DSEG14_Classic_Mini_Regular_40);
+  Heltec.display->drawString(64 , 1 , ClockStr);
   Heltec.display->setFont(ArialMT_Plain_10);
-  //Heltec.display->drawString(0 , 10 , "Received "+ packSize + " bytes");
-  //Heltec.display->drawString(0 , 10 , String(packet));
-  Heltec.display->drawString(0 , 0 , String(Clock));
-  Heltec.display->drawString(0, 10, rssi);
-  //Heltec.display->drawString(0, 20, String(millis()/1000));  
-  Heltec.display->display();
-*/
-  Heltec.display->clear();
-
-  Heltec.display->drawVerticalLine(64, 4, 56);
-  
-  Heltec.display->setTextAlignment(TEXT_ALIGN_LEFT);
-  Heltec.display->setFont(ArialMT_Plain_24);
-  Heltec.display->drawString(15 , 20 , String(Clock));
-
-  Heltec.display->setFont(ArialMT_Plain_10);
-  Heltec.display->drawString(69, 20, rssi);
-  Heltec.display->drawString(69, 40, "Channel " + String(channel));
-  //Heltec.display->drawString(0, 20, String(millis()/1000));  
+  Heltec.display->drawString(30, 52, "Channel " + String(channel));
+  Heltec.display->drawString(95, 52, rssi);
   Heltec.display->display();
   }
 }
@@ -237,17 +287,10 @@ void cbk(int packetSize) {
   for (int i = 0; i < packetSize; i++){ 
     packet += (char) LoRa.read(); }
   rssi = "RSSI " + String(LoRa.packetRssi(), DEC) ;
-  ms = millis();
-  diff = ms - lms;
-  lms = ms;
-  //Flag , wenn Diff > 3sec -> kein Income
-  if (diff >= 3000) {
-    clientFlag = false;
-    }
-  else {
-    clientFlag = true;
-    }
+  lms = millis();
+  clientFlag = true;
   showNewData();
+  LoRa.receive(); // Test, ob Aufhängen vermieden wird durch "Erinnern" der Lora Funktion
 }
 
 void set_channel(int ch){
@@ -287,10 +330,8 @@ void setup() {
   
   //Heltec.display->drawString(0, 0, "Heltec.LoRa Initial success!");
   //Heltec.display->drawString(0, 10, "LED Test abgeschlossen");
-  Heltec.display->drawString(0, 0, "Wait for incoming data...");
+  //Heltec.display->drawString(0, 0, "Wait for incoming data...");
   Heltec.display->display();
-  
-  lms = millis();
   
   LoRa.setTxPower(20,RF_PACONFIG_PASELECT_PABOOST);
   LoRa.setSpreadingFactor(7);
@@ -331,26 +372,6 @@ void setup() {
     set_channel(4);
   });
 
-  server.on("/5", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", "restarting...");
-    set_channel(5);
-  });
-
-  server.on("/6", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", "restarting...");
-    set_channel(6);
-  });
-
-  server.on("/7", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", "restarting...");
-    set_channel(7);
-  });
-
-  server.on("/8", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", "restarting...");
-    set_channel(8);
-  });
-  
 
   AsyncElegantOTA.begin(&server);    // Start ElegantOTA
   server.begin();
@@ -360,8 +381,22 @@ void setup() {
   //delay(1000);  // not necessary?
   //LoRa.onReceive(cbk);  // aus Beispiel auskommentiert übernommen
   LoRa.receive();
-  
-  
+
+  lms = millis();
+  w_lms = millis();
+  pwm.setPWM(waiting1er[waitingNR], 4096, 0); // an 100%
+  pwm.setPWM(waiting10er[waitingNR], 4096, 0); // an 100%
+  waitingNR++;
+
+  Heltec.display->clear();
+  Heltec.display->drawHorizontalLine(2, 50, 124);  
+  Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
+  Heltec.display->setFont(DSEG14_Classic_Mini_Regular_40);
+  Heltec.display->drawString(64 , 1 , waitingOLED[waitingNR]);
+  Heltec.display->setFont(ArialMT_Plain_10);
+  Heltec.display->drawString(30, 52, "Channel " + String(channel));
+  Heltec.display->drawString(95, 52, "RSSI");
+  Heltec.display->display();
 }
 
 void loop() {
@@ -369,6 +404,12 @@ void loop() {
   int packetSize = LoRa.parsePacket();
   yield();                                    // to mitigate random occuring hang issue when recieving data
   if (packetSize) { cbk(packetSize);  }
-  AsyncElegantOTA.loop();
   
+  if (clientFlag == false){
+    waiting();
+    }
+  else{
+    client_check();
+    }
+  AsyncElegantOTA.loop(); 
 }
