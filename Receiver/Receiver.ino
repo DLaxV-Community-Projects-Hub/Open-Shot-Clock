@@ -28,10 +28,10 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncElegantOTA.h>
 
-const char* ssid = "ShotClockBlue1";
+//const char* ssid = "ShotClockBlue1";
 //const char* ssid = "ShotClockBlue2";
 //const char* ssid = "ShotClockRed1";
-//const char* ssid = "ShotClockRed2";
+const char* ssid = "ShotClockRed2";
 const char* password = "12345678";
 
 AsyncWebServer server(80);
@@ -48,7 +48,7 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 Preferences preferences;
 
 int channel;
-int default_channel = 1;
+int default_channel = 4;
 long band;
 String rssi = "RSSI --";
 String packSize = "--";

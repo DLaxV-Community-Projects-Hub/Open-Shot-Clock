@@ -34,11 +34,6 @@
 
 #include <SPIFFS.h>
 
-//#define BAND    433000000  // Channel 1   BLUE
-//#define BAND    433500000  // Channel 2
-//#define BAND    434000000  // Channel 3
-//#define BAND    434500000  // Channel 4   RED
-
 long band_select[5]={
   433000000,   //  not needed
   433000000,   //  Kanal 1
@@ -53,8 +48,8 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
 //Enter your SSID and PASSWORD
-const char* ssid = "ControllerBlue";
-//const char* ssid = "ControllerRed";
+//const char* ssid = "ControllerBlue";
+const char* ssid = "ControllerRed";
 const char* password = "12345678";
 
 #include <Preferences.h>
@@ -62,7 +57,7 @@ const char* password = "12345678";
 Preferences preferences;
 
 int channel;
-int default_channel = 1;
+int default_channel = 4;
 long band;
 
 String rssi = "RSSI --";
@@ -79,9 +74,9 @@ unsigned long FLEX_INTERVAL(1000);
 
 bool ledState = false;                     // current LED status
 bool playState = false;           // count on/off, starts off
-bool resetState = true;         // damit der Reset nur ein mal Erfolgt bis der Button released ist
 bool startState = true;
 bool intervalState = true;
+bool smartControl = false;
 int ClockStart = 30;
 int Clock = ClockStart;               // Start Zahl
 String ClockStr = "30";
@@ -95,13 +90,17 @@ unsigned long msLastStopCount;     // last time count/send in stop mode
 unsigned long abweichung = 0;  // zählt die gesamte Abweichung
 
 const byte
-    BUTTON_PIN_T(12),              // connect a button switch from this pin to ground  
+    BUTTON_PIN_T(12),              // connect a button switch from this pin to ground
+    BUTTON_PIN_R_P(13),
+    BUTTON_PIN_R_S(17),  
     LED_PIN(25);                // heltec specific pin 25
 
 
     
-Button myBtn_T(BUTTON_PIN_T);      // define the button
-
+Button myBtn_T(BUTTON_PIN_T),      // define the button
+       myBtn_R_P(BUTTON_PIN_R_P),
+       myBtn_R_S(BUTTON_PIN_R_S);
+       
 void setStart ()
 {
   msLastCount = ms;
@@ -109,6 +108,20 @@ void setStart ()
   msLastPlay = ms;  
 }
 
+void Set_Pause_Display(){
+    Heltec.display->fillRect(12, 16, 3, 16);
+    Heltec.display->fillRect(18, 16, 3, 16);
+}
+
+
+void Set_Data_Display(){
+    Heltec.display->drawHorizontalLine(2, 50, 124);  
+    Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
+    Heltec.display->setFont(DSEG14_Classic_Mini_Regular_40);
+    Heltec.display->drawString(64 , 1 , ClockStr);
+    Heltec.display->setFont(ArialMT_Plain_10);
+    Heltec.display->drawString(64, 52, "Channel " + String(channel));
+}
 
 
 void Count()
@@ -154,7 +167,6 @@ void Count()
           lorasend(ClockMsg);
           notifyClients(String(Clock));
           ws.cleanupClients();
-          //TelnetMsg(ClockMsg);
           Serial.println(ClockMsg);
          
           ledState = false;
@@ -188,7 +200,6 @@ void stopCount()
       lorasend(ClockMsg);
       notifyClients(String(Clock));
       ws.cleanupClients();
-      //TelnetMsg(ClockMsg);
       Serial.println(ClockMsg);
       msLastStopCount = ms;  
     }    
@@ -218,9 +229,9 @@ void resetClock(bool play)
     }
 }  
   
-void resetClockByHWButton()
+void resetClockByHWButton(bool play)
 {
-    resetClock(true);
+    resetClock(play);
     FLEX_INTERVAL -= LONG_PRESS; 
     intervalState = false;
 }    
@@ -237,22 +248,23 @@ void playPause()
   {
     notifyClients("false");
     msLastStop = ms;           // wenn auf Pause gewechselt, dann Zeit Letzter PAuse Speichern
-    Heltec.display->fillRect(12, 16, 3, 16);
-    Heltec.display->fillRect(18, 16, 3, 16);
-    Heltec.display->display();
+
+
+    if (smartControl == false){
+      Set_Pause_Display();
+      Heltec.display->display();
+    }
   }
   else
   {
     notifyClients("true");
     msLastPlay = ms;           // wenn auf Play gewechselt, dann Zeit Letztes Play Speichern
-    Heltec.display->clear();
-    Heltec.display->drawHorizontalLine(2, 50, 124);  
-    Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
-    Heltec.display->setFont(DSEG14_Classic_Mini_Regular_40);
-    Heltec.display->drawString(64 , 1 , ClockStr);
-    Heltec.display->setFont(ArialMT_Plain_10);
-    Heltec.display->drawString(64, 52, "Channel " + String(channel));
-    Heltec.display->display();
+    
+    if (smartControl == false){
+      Heltec.display->clear();
+      Set_Data_Display();
+      Heltec.display->display();
+      }
   }
 }
   
@@ -267,6 +279,13 @@ void setTime(int T) {
     resetClock(false);
     startState = true;
     sendStartTime(ClockStart);
+
+    if (smartControl == false){
+      Heltec.display->clear();
+      Set_Pause_Display();
+      Set_Data_Display();
+      Heltec.display->display();
+    }
 }    
 
 void set_channel(int ch){
@@ -300,16 +319,10 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
     }
     if (strcmp((char*)data, "playpause") == 0) {
       playPause();
-    }  
-    if (strcmp((char*)data, "setTime24") == 0) {
-      setTime(24);    
     }
     if (strcmp((char*)data, "setTime30") == 0) {
       setTime(30);    
-    }
-    if (strcmp((char*)data, "setTime60") == 0) {
-      setTime(60);    
-    }
+    }  
     if (strcmp((char*)data, "setTimePlus10") == 0) {
       setTime(ClockStart+10);    
     }
@@ -360,16 +373,6 @@ void initWebSocket() {
 
 void lorasend (String Msg){
   
- /* Heltec.display->clear();
-  Heltec.display->setTextAlignment(TEXT_ALIGN_LEFT);
-  Heltec.display->setFont(ArialMT_Plain_10);
-  
-  Heltec.display->drawString(0, 0, "Sending packet: ");
-  Heltec.display->drawString(90, 0, String(Msg));
-  Heltec.display->display();
-  Serial.print(Msg);
-  Serial.print(" -- ");*/
-
     if (Clock < 10) {
       ClockStr = "0" + String(Clock);
     }
@@ -377,21 +380,15 @@ void lorasend (String Msg){
       ClockStr = String(Clock);
     }
 
-  Heltec.display->clear();
-  Heltec.display->drawHorizontalLine(2, 50, 124);  
-  Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
-  Heltec.display->setFont(DSEG14_Classic_Mini_Regular_40);
-  Heltec.display->drawString(64 , 1 , ClockStr);
-  Heltec.display->setFont(ArialMT_Plain_10);
-  Heltec.display->drawString(64, 52, "Channel " + String(channel));
-  //Heltec.display->drawString(95, 52, rssi);
+  if (smartControl == false){
+      Heltec.display->clear();
+      Set_Data_Display();
   
-  if (!playState){
-    Heltec.display->fillRect(12, 16, 3, 16);
-    Heltec.display->fillRect(18, 16, 3, 16);
+    if (!playState){
+      Set_Pause_Display();
+    } 
+    Heltec.display->display();
   }
-  
-  Heltec.display->display();
 
   // send packet
   unsigned long ms2 = millis();
@@ -404,9 +401,7 @@ void lorasend (String Msg){
  *   - RF_PACONFIG_PASELECT_PABOOST -- LoRa single output via PABOOST, maximum output 20dBm
  *   - RF_PACONFIG_PASELECT_RFO     -- LoRa single output via RFO_HF / RFO_LF, maximum output 14dBm
 */
-  //LoRa.setTxPower(17,RF_PACONFIG_PASELECT_PABOOST);
-  //LoRa.setSpreadingFactor(6);
-  //LoRa.print("hello ");
+
   LoRa.print(Msg);
   LoRa.endPacket();
   unsigned long ms3 = millis();
@@ -449,22 +444,14 @@ void setup(){
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
   }
- 
-   
+    
   Serial.println();
   Serial.print("MAC: ");
   Serial.println(WiFi.macAddress());
  
   Heltec.display->init();
   //Heltec.display->flipScreenVertically();  
-  Heltec.display->setFont(ArialMT_Plain_10);
-
-
-  Serial.println("Heltec.LoRa started");
-  
-  //Heltec.display->drawString(0, 0, "Heltec.LoRa Initial success!");
-  //Heltec.display->display();
-  //delay(1000);  
+  Heltec.display->setFont(ArialMT_Plain_10); 
 
   //ESP32 As access point
   WiFi.mode(WIFI_AP); //Access Point mode
@@ -483,11 +470,8 @@ void setup(){
 
   server.on("/controller/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(SPIFFS, "/controller.html", String(), false);
-  });
-
-  server.on("/set_time/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/set_time.html", String(), false);
-    playPause();
+    smartControl = true;
+    Heltec.display->displayOff();
   });
   
   // Route to load style.css file
@@ -519,8 +503,12 @@ void setup(){
     request->send(SPIFFS, "/digital-7-mono.woff2");
   });
 
-  server.on("/channel", HTTP_GET, [](AsyncWebServerRequest *request) {
+ /* server.on("/channel", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(200, "text/html", channel_html);
+  });*/
+
+      server.on("/channel/", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, "/channel.html", String(), false);
   });
 
   server.on("/1", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -545,32 +533,24 @@ void setup(){
     
   AsyncElegantOTA.begin(&server);    // Start ElegantOTA
   server.begin();                  //Start server
-  Serial.println("HTTP Websocket Server started");
-  
-  //Heltec.display->drawString(0, 10, "HTTP server Initial success!");
-  //Heltec.display->display();
-  //delay(1000);
-
-  //Heltec.display->clear();
-  //Heltec.display->setTextAlignment(TEXT_ALIGN_LEFT);
-  //Heltec.display->setFont(ArialMT_Plain_10);
-  
-  //Heltec.display->drawString(0, 0, "Sending packet: ");
-  //Heltec.display->drawString(90, 0, String(Clock));
-//  Heltec.display->display();
 
   LoRa.setTxPower(20,RF_PACONFIG_PASELECT_PABOOST);
   LoRa.setSpreadingFactor(7);
 
+  Heltec.display->clear();
+  Set_Pause_Display();
+  Set_Data_Display();
+  Heltec.display->display();
 
 
 
 //BUTTON
     
   myBtn_T.begin();                    // initialize the button object
+  myBtn_R_P.begin();
+  myBtn_R_S.begin();
   pinMode(LED_PIN, OUTPUT);         // set the LED pin as an output
   //digitalWrite(LED_PIN, ledState);  // LED an, da zu Beginn Pause
-  Serial.println(Clock);
   ms = millis();
   msLastStop = ms;
   msLastStopCount = ms;
@@ -589,7 +569,9 @@ void loop()
  
     static states_t STATE;             // current state machine state
     ms = millis();                     // record the current time
-    myBtn_T.read();                      // read the button    
+    myBtn_T.read();                      // read the button
+    myBtn_R_P.read();                      // read the button 
+    myBtn_R_S.read();                      // read the button     
   
     switch (STATE)
     {
@@ -600,78 +582,97 @@ void loop()
         case INITIAL:
             if (myBtn_T.wasPressed())
             {
-                //playPause();
-                STATE = TOONOFF;
+                //Serial.println("Initial done");   //Initial State wird benötigt, weil anscheinend 
+                                                    //beim Start einmal ein Button Release ausgelöst wird.
+                smartControl = false;
+                Heltec.display->displayOn();
+
+                playPause();
+                STATE = TOONOFF;                                    
             }
             else
             {
                 if (playState == false)
                 {
-                   stopCount();                 // aktuell: schaltet LED an als User Feedback für Pause
-                   AsyncElegantOTA.loop();
-                }                    
-                AsyncElegantOTA.loop();
+                   stopCount();                 // aktuell: schaltet LED an als User Feedback für Pause                   
+                }   
+                else
+                { 
+                   Count();
+                }
+                AsyncElegantOTA.loop();                     
             }
             break;
 
         case TOONOFF:
             if (myBtn_T.wasReleased())
-            {
-                playPause();
-                STATE = ONOFF;
+            {        
+            STATE = ONOFF;                                    
             }
             else
             {
                 if (playState == false)
                 {
-                   stopCount();                 // aktuell: schaltet LED an als User Feedback für Pause
-                }                    
-            }
-            break;
-
-
-        
-        case ONOFF:
-            if (myBtn_T.wasReleased())
-            {
-                playPause();
-            }
-            
-            else if (myBtn_T.pressedFor(LONG_PRESS))
-                STATE = RESET;
-            else
-            {
-                if (playState == false)
-                {
-                   stopCount();                 // aktuell: schaltet LED an als User Feedback für Pause
-                   AsyncElegantOTA.loop();
+                   stopCount();                 // aktuell: schaltet LED an als User Feedback für Pause                   
                 }   
                 else
                 { 
                    Count();
-                   AsyncElegantOTA.loop();
-                }                 
+                }
+                AsyncElegantOTA.loop();                     
             }
             break;
 
-        // this is the RESET state where we Reset the Clock as feedback to the user,
-        // but we also need to wait for the user to release the button, i.e. end the
-        // long press, before moving to the ON/OFF state again.
-        
-        case RESET:
-            //ms = millis();
+       
+        case ONOFF:
             if (myBtn_T.wasReleased())
             {
-                resetState = true;
+                smartControl = false;
+                Heltec.display->displayOn();
+                playPause();
+                
+            }
+            
+            else if (myBtn_T.pressedFor(LONG_PRESS))
+            {
+                smartControl = false;
+                Heltec.display->displayOn();
+                resetClockByHWButton(true);
+                STATE = RESET;
+            }
+                
+           /* else if (myBtn_R_P.wasReleased())
+            {
+                resetClockByHWButton(true);
+            }
+
+            else if (myBtn_R_S.wasReleased())
+            {
+                resetClockByHWButton(false);
+            }
+             */   
+            else
+            {
+                if (playState == false)
+                {
+                   stopCount();                 // aktuell: schaltet LED an als User Feedback für Pause                   
+                }   
+                else
+                { 
+                   Count();
+                }
+                AsyncElegantOTA.loop();                     
+            }
+            break;
+        
+        case RESET:
+            
+            if (myBtn_T.wasReleased())
+            {
                 STATE = ONOFF;
             }    
             else
             {
-                if (resetState == true)
-                {
-                   resetClockByHWButton();
-                   resetState = false;
-                }
                 Count();
             }    
             break;
