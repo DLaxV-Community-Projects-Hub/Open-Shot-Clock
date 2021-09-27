@@ -671,10 +671,25 @@ void loop()
             {
                 STATE = ONOFF;
             }    
+            else if (myBtn_T.pressedFor(2500))
+            {
+                smartControl = false;
+                Heltec.display->displayOn();
+                resetClockByHWButton(false);
+                STATE = TOONOFF;
+            }
             else
             {
-                Count();
-            }    
+                if (playState == false)
+                {
+                   stopCount();                 // aktuell: schaltet LED an als User Feedback für Pause                   
+                }   
+                else
+                { 
+                   Count();
+                }
+                AsyncElegantOTA.loop();                     
+            }   
             break;
     }
 }

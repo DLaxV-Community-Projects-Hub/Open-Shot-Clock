@@ -30,8 +30,8 @@
 
 //const char* ssid = "ShotClockBlue1";
 //const char* ssid = "ShotClockBlue2";
-//const char* ssid = "ShotClockRed1";
-const char* ssid = "ShotClockRed2";
+const char* ssid = "ShotClockRed1";
+//const char* ssid = "ShotClockRed2";
 const char* password = "12345678";
 
 AsyncWebServer server(80);
@@ -39,7 +39,7 @@ AsyncWebServer server(80);
 
 #include <Adafruit_PWMServoDriver.h>
 
-int B = 200; //Brightness between 0 and 4096
+int B = 200; //Brightness between 0 and 4096, not active 
 
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 
