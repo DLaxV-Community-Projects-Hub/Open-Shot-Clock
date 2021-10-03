@@ -232,7 +232,7 @@ void resetClock(bool play)
 void resetClockByHWButton(bool play)
 {
     resetClock(play);
-    FLEX_INTERVAL -= LONG_PRESS; 
+    //FLEX_INTERVAL -= LONG_PRESS; 
     intervalState = false;
 }    
 
@@ -638,10 +638,11 @@ void loop()
                 smartControl = false;
                 Heltec.display->displayOn();
                 resetClockByHWButton(true);
+                FLEX_INTERVAL -= LONG_PRESS;
                 STATE = RESET;
             }
                 
-           /* else if (myBtn_R_P.wasReleased())
+            else if (myBtn_R_P.wasReleased())
             {
                 resetClockByHWButton(true);
             }
@@ -650,7 +651,7 @@ void loop()
             {
                 resetClockByHWButton(false);
             }
-             */   
+                
             else
             {
                 if (playState == false)
