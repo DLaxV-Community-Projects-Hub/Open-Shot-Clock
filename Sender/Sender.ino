@@ -90,7 +90,7 @@ unsigned long msLastStopCount;     // last time count/send in stop mode
 unsigned long abweichung = 0;  // zählt die gesamte Abweichung
 
 const byte
-    BUTTON_PIN_T(12),              // connect a button switch from this pin to ground
+    BUTTON_PIN_T(32),              // connect a button switch from this pin to ground
     BUTTON_PIN_R_P(13),
     BUTTON_PIN_R_S(17),  
     LED_PIN(25);                // heltec specific pin 25
@@ -269,6 +269,10 @@ void playPause()
 }
   
 void setTime(int T) {
+    
+    smartControl = true;
+    Heltec.display->displayOff();
+      
     ClockStart = T;
     if (ClockStart < 1){
       ClockStart = 1;
@@ -280,12 +284,12 @@ void setTime(int T) {
     startState = true;
     sendStartTime(ClockStart);
 
-    if (smartControl == false){
+    /*if (smartControl == false){
       Heltec.display->clear();
       Set_Pause_Display();
       Set_Data_Display();
       Heltec.display->display();
-    }
+    }*/
 }    
 
 void set_channel(int ch){
@@ -315,9 +319,13 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
     data[len] = 0;
     if (strcmp((char*)data, "reset") == 0) {
+      smartControl = true;
+      Heltec.display->displayOff();
       resetClock(true);
     }
     if (strcmp((char*)data, "playpause") == 0) {
+      smartControl = true;
+      Heltec.display->displayOff();
       playPause();
     }
     if (strcmp((char*)data, "setTime30") == 0) {
@@ -342,6 +350,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       setTime(ClockStart-1);    
     }            
     if (strcmp((char*)data, "SW") == 0) {
+      smartControl = true;
+      Heltec.display->displayOff();
       sendStartTime(ClockStart);   
     }      
   }
