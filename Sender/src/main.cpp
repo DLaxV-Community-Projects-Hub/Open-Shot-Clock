@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 /*
   This is a simple example show the Heltec.LoRa sended data in OLED.
 
@@ -48,8 +50,8 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
 //Enter your SSID and PASSWORD
-//const char* ssid = "ControllerBlue";
-const char* ssid = "ControllerRed";
+const char* ssid = "ControllerBlue";
+//const char* ssid = "ControllerRed";
 const char* password = "12345678";
 
 #include <Preferences.h>
@@ -57,7 +59,7 @@ const char* password = "12345678";
 Preferences preferences;
 
 int channel;
-int default_channel = 4;
+int default_channel = 1;
 long band;
 
 String rssi = "RSSI --";
@@ -123,6 +125,49 @@ void Set_Data_Display(){
     Heltec.display->drawString(64, 52, "Channel " + String(channel));
 }
 
+
+void notifyClients(String message) {
+  ws.textAll(message);
+}
+
+void lorasend (String Msg){
+  
+    if (Clock < 10) {
+      ClockStr = "0" + String(Clock);
+    }
+    else{
+      ClockStr = String(Clock);
+    }
+
+  if (smartControl == false){
+      Heltec.display->clear();
+      Set_Data_Display();
+  
+    if (!playState){
+      Set_Pause_Display();
+    } 
+    Heltec.display->display();
+  }
+
+  // send packet
+  unsigned long ms2 = millis();
+  LoRa.beginPacket();
+  
+/*
+ * LoRa.setTxPower(txPower,RFOUT_pin);
+ * txPower -- 0 ~ 20
+ * RFOUT_pin could be RF_PACONFIG_PASELECT_PABOOST or RF_PACONFIG_PASELECT_RFO
+ *   - RF_PACONFIG_PASELECT_PABOOST -- LoRa single output via PABOOST, maximum output 20dBm
+ *   - RF_PACONFIG_PASELECT_RFO     -- LoRa single output via RFO_HF / RFO_LF, maximum output 14dBm
+*/
+
+  LoRa.print(Msg);
+  LoRa.endPacket();
+  unsigned long ms3 = millis();
+  Serial.print("Dauer Senden: ");
+  Serial.print(ms3-ms2);
+  Serial.print(" -- ");
+  }
 
 void Count()
 {
@@ -267,6 +312,13 @@ void playPause()
       }
   }
 }
+
+
+void sendStartTime(int T) {
+    String SW = "SW";
+    String SWM = SW + T;
+    notifyClients(SWM); 
+}
   
 void setTime(int T) {
     
@@ -303,16 +355,7 @@ void set_channel(int ch){
 }
 
 
-void sendStartTime(int T) {
-    String SW = "SW";
-    String SWM = SW + T;
-    notifyClients(SWM); 
-}
 
-
-void notifyClients(String message) {
-  ws.textAll(message);
-}
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
   AwsFrameInfo *info = (AwsFrameInfo*)arg;
@@ -381,44 +424,6 @@ void initWebSocket() {
 }
 
 
-void lorasend (String Msg){
-  
-    if (Clock < 10) {
-      ClockStr = "0" + String(Clock);
-    }
-    else{
-      ClockStr = String(Clock);
-    }
-
-  if (smartControl == false){
-      Heltec.display->clear();
-      Set_Data_Display();
-  
-    if (!playState){
-      Set_Pause_Display();
-    } 
-    Heltec.display->display();
-  }
-
-  // send packet
-  unsigned long ms2 = millis();
-  LoRa.beginPacket();
-  
-/*
- * LoRa.setTxPower(txPower,RFOUT_pin);
- * txPower -- 0 ~ 20
- * RFOUT_pin could be RF_PACONFIG_PASELECT_PABOOST or RF_PACONFIG_PASELECT_RFO
- *   - RF_PACONFIG_PASELECT_PABOOST -- LoRa single output via PABOOST, maximum output 20dBm
- *   - RF_PACONFIG_PASELECT_RFO     -- LoRa single output via RFO_HF / RFO_LF, maximum output 14dBm
-*/
-
-  LoRa.print(Msg);
-  LoRa.endPacket();
-  unsigned long ms3 = millis();
-  Serial.print("Dauer Senden: ");
-  Serial.print(ms3-ms2);
-  Serial.print(" -- ");
-  }
 
 
 //===============================================================
@@ -582,7 +587,9 @@ void loop()
     myBtn_T.read();                      // read the button
     myBtn_R_P.read();                      // read the button 
     myBtn_R_S.read();                      // read the button     
-  
+
+// hier OTA_Loop
+   
     switch (STATE)
     {
         // this state watches for short and long presses, switches ON/OFF for

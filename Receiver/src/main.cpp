@@ -1,3 +1,4 @@
+#include <Arduino.h>
 /*
   This is a simple example show the Heltec.LoRa recived data in OLED.
 
@@ -17,20 +18,20 @@
   this project also realess in GitHub:
   https://github.com/Heltec-Aaron-Lee/WiFi_Kit_series
 */
-#include "heltec.h" 
+#include <heltec.h>
 #include "images.h"
 #include "channel.h"
 #include "font.h"
 
-#include <Arduino.h>
+
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <AsyncElegantOTA.h>
 
-//const char* ssid = "ShotClockBlue1";
+const char* ssid = "ShotClockBlue1";
 //const char* ssid = "ShotClockBlue2";
-const char* ssid = "ShotClockRed1";
+//const char* ssid = "ShotClockRed1";
 //const char* ssid = "ShotClockRed2";
 const char* password = "12345678";
 
@@ -48,7 +49,7 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 Preferences preferences;
 
 int channel;
-int default_channel = 4;
+int default_channel = 1;
 long band;
 String rssi = "RSSI --";
 String packSize = "--";
@@ -159,10 +160,10 @@ void horn(){
   if (Clock == 0 && pClock != 0){
       pwm.setPWM(7, 4096, 0); // Horn an
     }
-  else if (Clock == 0 && pClock == 0){
+  else if (Clock == 0 && pClock == 0){  // in ein else zusammenfassen
       pwm.setPWM(7, 0, 4096); // Horn aus
     }
-  else if (Clock != 0){
+  else if (Clock != 0){   //if nicht notwendig --> ändern
       pwm.setPWM(7, 0, 4096); // Horn aus
     }
 }
