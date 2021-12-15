@@ -50,7 +50,7 @@
 		}
 		clock.className = "number is-red";
 		playPauseButton.disabled = true;
-		playPauseButton.className = "pp-button pp-is-disabled";
+		playPauseButton.className = "pp-is-disabled";  //vorher "pp-button pp-is-disabled"
 	} else if (number <= 7 && number > 0) {
 		if (aonoff) {
 		   piep.play();
