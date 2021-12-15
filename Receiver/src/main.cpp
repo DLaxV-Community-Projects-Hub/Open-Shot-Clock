@@ -54,6 +54,7 @@ long band;
 String rssi = "RSSI --";
 String packSize = "--";
 String packet ;
+String resetString = "restarting...reset your wifi connection";
 unsigned long ms;
 unsigned long lms;
 unsigned long diff;
@@ -304,6 +305,19 @@ void set_channel(int ch){
   ESP.restart();
 }
 
+String processor(const String& var){
+  String links = "";
+  if(var == "LINKPLACEHOLDER"){
+    for(int c = 1; c <= 4; c++){
+      links += "<a class=\"pp-button";
+      links += channel == c ? " pp-is-active" : "";
+      links += "\" href=\"/" + String(c) + "\">Channel " + String(c) + "</a>";
+    }
+  }   
+  return links;
+}
+
+
 
 
 void setup() {
@@ -350,26 +364,26 @@ void setup() {
   });
 
   server.on("/channel", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/html", channel_html);
+    request->send_P(200, "text/html", channel_html, processor);
   });
 
   server.on("/1", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", "restarting...");
+    request->send(200, "text/plain", resetString);
     set_channel(1);
   });
 
   server.on("/2", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", "restarting...");
+    request->send(200, "text/plain", resetString);
     set_channel(2);
   });  
 
   server.on("/3", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", "restarting...");
+    request->send(200, "text/plain", resetString);
     set_channel(3);    
   });  
 
   server.on("/4", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", "restarting...");
+    request->send(200, "text/plain", resetString);
     set_channel(4);
   });
 
