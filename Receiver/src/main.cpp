@@ -31,8 +31,8 @@
 
 //const char* ssid = "ShotClockBlue1";
 //const char* ssid = "ShotClockBlue2";
-//const char* ssid = "ShotClockRed1";
-const char* ssid = "ShotClockRed2";
+const char* ssid = "ShotClockRed1";
+//const char* ssid = "ShotClockRed2";
 const char* password = "12345678";
 
 AsyncWebServer server(80);
@@ -42,20 +42,20 @@ AsyncWebServer server(80);
 
 //initial Brightness Level 8 (max)
 
-int B_Level = 1;
+int B_Level = 8;
 uint16_t on_tick = 4096;
 uint16_t off_tick = 0;
 
 uint16_t ticks[9][2]={
   {0, 4096},           // 0 (aus)
   {0, 32},       // 1
-  {0, 32*2},       // 2 (25%)
-  {0, 32*3},       // 3
-  {0, 32*4},       // 4 (50%)
-  {0, 32*5},       // 5
-  {0, 32*6},       // 6 (75%)
-  {0, 32*7},       // 7
-  {4096, 0}       // 8 (an, 100%)
+  {0, 64},       // 2 (25%)
+  {0, 64*2},       // 3
+  {0, 64*2*2},       // 4 (50%)
+  {0, 64*2*2*2},       // 5
+  {0, 64*2*2*2*2},       // 6 (75%)
+  {0, 64*2*2*2*2*2},       // 7
+  {4096, 0}                    // 8 (an, 100%)
 };
 
 //int B = 200; //Brightness between 0 and 4096, not active 
