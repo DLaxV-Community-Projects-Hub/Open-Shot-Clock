@@ -50,8 +50,8 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
 //Enter your SSID and PASSWORD
-const char* ssid = "ControllerBlue";
-//const char* ssid = "ControllerRed";
+//const char* ssid = "ControllerBlue";
+const char* ssid = "ControllerMultiButton";
 const char* password = "12345678";
 
 #include <Preferences.h>
@@ -59,7 +59,7 @@ const char* password = "12345678";
 Preferences preferences;
 
 int channel;
-int default_channel = 1;
+int default_channel = 4;
 long band;
 
 String rssi = "RSSI --";
@@ -84,6 +84,7 @@ bool smartControl = false;
 int ClockStart = 30;
 int Clock = ClockStart;               // Start Zahl
 String ClockStr = "30";
+int B_Level = 8;
 
 
 unsigned long ms;                 // current time from millis()
@@ -93,15 +94,17 @@ unsigned long msLastCount;           // last time count down
 unsigned long msLastStopCount;     // last time count/send in stop mode
 unsigned long abweichung = 0;  // zählt die gesamte Abweichung
 
-const byte
-    BUTTON_PIN_T(32),              // connect a button switch from this pin to ground
-    BUTTON_PIN_R_P(13),
-    BUTTON_PIN_R_S(17),  
+const byte                      // connect a button switch from this pin to ground
+    BUTTON_PIN_T(32),           // Button for Play/Pause
+    BUTTON_PIN_P_P(2),           // Button for Play/Pause   
+    BUTTON_PIN_R_P(13),         // Button for Reset-Paused
+    BUTTON_PIN_R_S(17),         // Button for Reset-started
     LED_PIN(25);                // heltec specific pin 25
 
 
     
 Button myBtn_T(BUTTON_PIN_T),      // define the button
+       myBtn_P_P(BUTTON_PIN_P_P),
        myBtn_R_P(BUTTON_PIN_R_P),
        myBtn_R_S(BUTTON_PIN_R_S);
        
@@ -153,6 +156,7 @@ void lorasend (String Msg){
 
   // send packet
   unsigned long ms2 = millis();
+  LoRa.setTxPower(9, PA_OUTPUT_RFO_PIN); //test im loop, ob veränderung?
   LoRa.beginPacket();
   
 /*
@@ -207,9 +211,15 @@ void Count()
           if (Clock < ClockStart){
             FLEX_INTERVAL = 1000;
           }
-                    
+
           String Command_T = "T";
-          String ClockMsg = Command_T + Clock;
+          String ClockMsg;
+          if (Clock < 10){
+            ClockMsg = Command_T + 0 + Clock + B_Level;
+          }
+          else{          
+            ClockMsg = Command_T + Clock + B_Level;
+          }
           //ledStateMsg += ledState;
           lorasend(ClockMsg);
           notifyClients(String(Clock));
@@ -242,7 +252,15 @@ void stopCount()
     if (ms - msLastStopCount >= 1000)
     {
       String Command_T = "T";
-      String ClockMsg = Command_T + Clock;
+      String ClockMsg;
+      if (Clock < 10){
+        ClockMsg = Command_T + 0 + Clock + B_Level;
+      }
+      else{          
+        ClockMsg = Command_T + Clock + B_Level;
+      }
+      /*String Command_T = "T";
+      String ClockMsg = Command_T + Clock;*/
       //ledStateMsg += ledState;
       lorasend(ClockMsg);
       notifyClients(String(Clock));
@@ -257,7 +275,15 @@ void resetClock(bool play)
 {
     Clock = ClockStart;
     String Command_T = "T";
-    String ClockMsg = Command_T + Clock;
+    String ClockMsg;
+      if (Clock < 10){
+        ClockMsg = Command_T + 0 + Clock + B_Level;
+      }
+      else{          
+        ClockMsg = Command_T + Clock + B_Level;
+      }
+    /*String Command_T = "T";
+    String ClockMsg = Command_T + Clock;*/
     lorasend(ClockMsg);
     notifyClients(String(Clock));
     ws.cleanupClients();    
@@ -466,7 +492,7 @@ void setup(){
    
   preferences.end();
   
-  Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, true /*PABOOST Enable*/, band /*long BAND*/);
+  Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
 
   if(!SPIFFS.begin()){
     Serial.println("An Error has occurred while mounting SPIFFS");
@@ -562,7 +588,7 @@ void setup(){
   AsyncElegantOTA.begin(&server);    // Start ElegantOTA
   server.begin();                  //Start server
 
-  LoRa.setTxPower(20,RF_PACONFIG_PASELECT_PABOOST);
+  LoRa.setTxPower(9, PA_OUTPUT_RFO_PIN);
   LoRa.setSpreadingFactor(7);
 
   Heltec.display->clear();
@@ -575,6 +601,7 @@ void setup(){
 //BUTTON
     
   myBtn_T.begin();                    // initialize the button object
+  myBtn_P_P.begin();
   myBtn_R_P.begin();
   myBtn_R_S.begin();
   pinMode(LED_PIN, OUTPUT);         // set the LED pin as an output
@@ -598,6 +625,7 @@ void loop()
     static states_t STATE;             // current state machine state
     ms = millis();                     // record the current time
     myBtn_T.read();                      // read the button
+    myBtn_P_P.read();                      // read the button 
     myBtn_R_P.read();                      // read the button 
     myBtn_R_S.read();                      // read the button     
 
@@ -611,6 +639,16 @@ void loop()
         
         case INITIAL:
             if (myBtn_T.wasPressed())
+            {
+                //Serial.println("Initial done");   //Initial State wird benötigt, weil anscheinend 
+                                                    //beim Start einmal ein Button Release ausgelöst wird.
+                smartControl = false;
+                Heltec.display->displayOn();
+
+                playPause();
+                STATE = TOONOFF;                                    
+            }
+            if (myBtn_P_P.wasPressed())
             {
                 //Serial.println("Initial done");   //Initial State wird benötigt, weil anscheinend 
                                                     //beim Start einmal ein Button Release ausgelöst wird.
@@ -639,6 +677,10 @@ void loop()
             {        
             STATE = ONOFF;                                    
             }
+            if (myBtn_P_P.wasReleased())
+            {        
+            STATE = ONOFF;                                    
+            }
             else
             {
                 if (playState == false)
@@ -662,7 +704,14 @@ void loop()
                 playPause();
                 
             }
-            
+            else if (myBtn_P_P.wasPressed())
+            {
+                smartControl = false;
+                Heltec.display->displayOn();
+                playPause();
+                
+            }
+
             else if (myBtn_T.pressedFor(LONG_PRESS))
             {
                 smartControl = false;
@@ -672,12 +721,12 @@ void loop()
                 STATE = RESET;
             }
                 
-            else if (myBtn_R_P.wasReleased())
+            else if (myBtn_R_P.wasPressed())
             {
                 resetClockByHWButton(true);
             }
 
-            else if (myBtn_R_S.wasReleased())
+            else if (myBtn_R_S.wasPressed())
             {
                 resetClockByHWButton(false);
             }

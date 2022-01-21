@@ -29,10 +29,10 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncElegantOTA.h>
 
-const char* ssid = "ShotClockBlue1";
+//const char* ssid = "ShotClockBlue1";
 //const char* ssid = "ShotClockBlue2";
 //const char* ssid = "ShotClockRed1";
-//const char* ssid = "ShotClockRed2";
+const char* ssid = "ShotClockRed2";
 const char* password = "12345678";
 
 AsyncWebServer server(80);
@@ -40,7 +40,25 @@ AsyncWebServer server(80);
 
 #include <Adafruit_PWMServoDriver.h>
 
-int B = 200; //Brightness between 0 and 4096, not active 
+//initial Brightness Level 8 (max)
+
+int B_Level = 1;
+uint16_t on_tick = 4096;
+uint16_t off_tick = 0;
+
+uint16_t ticks[9][2]={
+  {0, 4096},           // 0 (aus)
+  {0, 32},       // 1
+  {0, 32*2},       // 2 (25%)
+  {0, 32*3},       // 3
+  {0, 32*4},       // 4 (50%)
+  {0, 32*5},       // 5
+  {0, 32*6},       // 6 (75%)
+  {0, 32*7},       // 7
+  {4096, 0}       // 8 (an, 100%)
+};
+
+//int B = 200; //Brightness between 0 and 4096, not active 
 
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 
@@ -49,7 +67,7 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 Preferences preferences;
 
 int channel;
-int default_channel = 1;
+int default_channel = 44;
 long band;
 String rssi = "RSSI --";
 String packSize = "--";
@@ -120,22 +138,26 @@ String waitingOLED[5]={
 void segment(int seg, bool on){
   
   if(on) {
-    //pwm.setPWM(seg, 0, B); // an 10%
-    pwm.setPWM(seg+8, 4096, 0); // an 100%
+    /*pwm.setPWM(seg, 0, B); // an 10%
+    pwm.setPWM(seg+8, 4096, 0); // an 100%*/
+    pwm.setPWM(seg+8, ticks[B_Level][0], ticks[B_Level][1]); // nach Brightness Level
   }
   else {
-    pwm.setPWM(seg+8, 0, 4096); // aus
+    //pwm.setPWM(seg+8, 0, 4096); // aus
+    pwm.setPWM(seg+8, ticks[0][0], ticks[0][1]); // aus
   }
 }
 
 void segment10(int seg, bool on){
 
   if(on) {      
-    //pwm.setPWM(seg + 7, 0, B); // an 10%
-    pwm.setPWM(seg, 4096, 0); // an 100%
+    /*pwm.setPWM(seg + 7, 0, B); // an 10%
+    pwm.setPWM(seg, 4096, 0); // an 100%*/
+    pwm.setPWM(seg, ticks[B_Level][0], ticks[B_Level][1]); // nach Brightness Level
   }
   else {
-    pwm.setPWM(seg, 0, 4096); // aus
+    //pwm.setPWM(seg, 0, 4096); // aus
+    pwm.setPWM(seg, ticks[0][0], ticks[0][1]); // aus
   }
 }
 
@@ -219,8 +241,8 @@ void waiting(){
   w_diff = w_ms - w_lms;
   if (w_diff >= interval) {
     all_Segments_off();
-    pwm.setPWM(waiting1er[waitingNR], 4096, 0); // an 100%
-    pwm.setPWM(waiting10er[waitingNR], 4096, 0); // an 100%
+    pwm.setPWM(waiting1er[waitingNR], ticks[B_Level][0], ticks[B_Level][1]); // an 100%
+    pwm.setPWM(waiting10er[waitingNR], ticks[B_Level][0], ticks[B_Level][1]); // an 100%
 
     Heltec.display->clear();
     Heltec.display->drawHorizontalLine(2, 50, 124);  
@@ -248,8 +270,8 @@ void client_check(){
     clientFlag = false;
     waitingNR = 1;
     all_Segments_off();
-    pwm.setPWM(waiting1er[waitingNR], 4096, 0); // an 100%
-    pwm.setPWM(waiting10er[waitingNR], 4096, 0); // an 100%
+    pwm.setPWM(waiting1er[waitingNR], ticks[B_Level][0], ticks[B_Level][1]); // an 100%
+    pwm.setPWM(waiting10er[waitingNR], ticks[B_Level][0], ticks[B_Level][1]); // an 100%
 
     }
 }
@@ -258,15 +280,20 @@ void showNewData(){
   
   String ClockCommand = "T";
   if (packet.startsWith(ClockCommand)){
-    packet.remove(0, 1);
+    //packet.remove(0, 1);
     pClock = Clock;
-    Clock = packet.toInt();
-    if (Clock < 10) {
+    String StClock = packet.substring(1,3);
+    //Clock = packet.toInt();
+    Clock = StClock.toInt();
+    ClockStr = StClock;
+    /*if (Clock < 10) {
       ClockStr = "0" + String(Clock);
     }
     else{
       ClockStr = String(Clock);
-  }
+    }*/
+    String StBrighness = packet.substring(3);
+    B_Level = StBrighness.toInt();
   Serial.println(Clock);              // Serial.println(receivedChars);      //and determining if it's what is expected
   displayClock(Clock);
   horn();
@@ -330,7 +357,7 @@ void setup() {
    
   preferences.end();
   
-  Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, true /*PABOOST Enable*/, band /*long BAND*/);
+  Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
      
   pwm.begin();
   pwm.setPWMFreq(200);  // This is the maximum recommended PWM frequency for LEDs
@@ -348,7 +375,7 @@ void setup() {
   //Heltec.display->drawString(0, 0, "Wait for incoming data...");
   Heltec.display->display();
   
-  LoRa.setTxPower(20,RF_PACONFIG_PASELECT_PABOOST);
+  LoRa.setTxPower(9,RF_PACONFIG_PASELECT_RFO);
   LoRa.setSpreadingFactor(7);
 
   //ESP32 As access point
@@ -399,8 +426,8 @@ void setup() {
 
   lms = millis();
   w_lms = millis();
-  pwm.setPWM(waiting1er[waitingNR], 4096, 0); // an 100%
-  pwm.setPWM(waiting10er[waitingNR], 4096, 0); // an 100%
+  pwm.setPWM(waiting1er[waitingNR], ticks[B_Level][0], ticks[B_Level][1]); // an 100%
+  pwm.setPWM(waiting10er[waitingNR], ticks[B_Level][0], ticks[B_Level][1]); // an 100%
   waitingNR++;
 
   Heltec.display->clear();
