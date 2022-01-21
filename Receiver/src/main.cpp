@@ -43,8 +43,6 @@ AsyncWebServer server(80);
 //initial Brightness Level 8 (max)
 
 int B_Level = 8;
-uint16_t on_tick = 4096;
-uint16_t off_tick = 0;
 
 uint16_t ticks[9][2]={
   {0, 4096},           // 0 (aus)
