@@ -51,6 +51,7 @@ AsyncWebSocket ws("/ws");
 
 //Enter your SSID and PASSWORD
 //const char* ssid = "ControllerBlue";
+//const char* ssid = "ControllerRed";
 const char* ssid = "ControllerMultiButton";
 const char* password = "12345678";
 
@@ -478,6 +479,34 @@ String processor(const String& var){
   return links;
 }
 
+String settingsProcessor(const String& var){
+  if(var == "SELECTED_BRIGHTNESS_LEVEL1" && B_Level == 1){
+    return "selected";
+  }
+  else if(var == "SELECTED_BRIGHTNESS_LEVEL2" && B_Level == 2){
+    return "selected";
+  }
+  else if(var == "SELECTED_BRIGHTNESS_LEVEL3" && B_Level == 3){
+    return "selected";
+  }
+  else if(var == "SELECTED_BRIGHTNESS_LEVEL4" && B_Level == 4){
+    return "selected";
+  }
+  else if(var == "SELECTED_BRIGHTNESS_LEVEL5" && B_Level == 5){
+    return "selected";
+  }
+  else if(var == "SELECTED_BRIGHTNESS_LEVEL6" && B_Level == 6){
+    return "selected";
+  }
+  else if(var == "SELECTED_BRIGHTNESS_LEVEL7" && B_Level == 7){
+    return "selected";
+  }
+  else if(var == "SELECTED_BRIGHTNESS_LEVEL8" && B_Level == 8){
+    return "selected";
+  }
+  return String();
+}
+
 //===============================================================
 // Setup
 //===============================================================
@@ -526,6 +555,20 @@ void setup(){
     request->send(SPIFFS, "/controller.html", String(), false);
     smartControl = true;
     Heltec.display->displayOff();
+  });
+
+    server.on("/settings/", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, "/settings.html", String(), false, settingsProcessor);
+  });
+
+    server.on("/brightness", HTTP_GET, [](AsyncWebServerRequest *request){
+    if (request->hasParam("b")){
+      B_Level = request->getParam("b")->value().toInt();
+      request->send_P(200, "text/html", "brightness changed");
+    }
+    else{
+      request->send(400, "text/plain", "missing parameters");
+    }
   });
   
   // Route to load style.css file
