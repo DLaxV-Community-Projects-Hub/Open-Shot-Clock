@@ -52,7 +52,8 @@ AsyncWebSocket ws("/ws");
 //Enter your SSID and PASSWORD
 //const char* ssid = "ControllerBlue";
 //const char* ssid = "ControllerRed";
-const char* ssid = "ControllerMultiButton";
+//const char* ssid = "ControllerMultiButton";
+const char* ssid = "ControllerMultiButtonBox";
 const char* password = "12345678";
 
 #include <Preferences.h>
@@ -97,9 +98,9 @@ unsigned long abweichung = 0;  // zählt die gesamte Abweichung
 
 const byte                      // connect a button switch from this pin to ground
     BUTTON_PIN_T(32),           // Button for Play/Pause
-    BUTTON_PIN_P_P(2),           // Button for Play/Pause   
-    BUTTON_PIN_R_P(13),         // Button for Reset-Paused
-    BUTTON_PIN_R_S(17),         // Button for Reset-started
+    BUTTON_PIN_P_P(17),           // Button for Play/Pause // previously 2  
+    BUTTON_PIN_R_P(2),         // Button for Reset-Paused // previously 13
+    BUTTON_PIN_R_S(13),         // Button for Reset-started // previously 17
     LED_PIN(25);                // heltec specific pin 25
 
 
