@@ -52,8 +52,8 @@ AsyncWebSocket ws("/ws");
 //Enter your SSID and PASSWORD
 //const char* ssid = "ControllerBlue";
 //const char* ssid = "ControllerRed";
-//const char* ssid = "ControllerMultiButton";
-const char* ssid = "ControllerMultiButtonBox";
+//const char* ssid = "ControllerMultiButtonBox";
+const char* ssid = "ControllerMultiButton";
 const char* password = "12345678";
 
 #include <Preferences.h>
