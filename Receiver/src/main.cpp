@@ -443,7 +443,7 @@ void setup() {
   });
 
   server.on("/temp", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", temperature.readTemperatureC());
+    request->send(200, "text/plain", String(temperature.readTemperatureC()));
   });
 
   server.on("/channel", HTTP_GET, [](AsyncWebServerRequest *request) {
