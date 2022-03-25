@@ -29,6 +29,8 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncElegantOTA.h>
 
+#include <Temperature_LM75_Derived.h>
+
 //const char* ssid = "ShotClockBlue1";
 //const char* ssid = "ShotClockBlue2";
 const char* ssid = "ShotClockRed1";
@@ -64,6 +66,17 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 
 Preferences preferences;
 
+//Temp
+
+// Which Arduino pin has the sensor's ALERT output been connected to?
+#define SENSOR_ALERT_PIN 13
+
+// Should the internal pullup be enabled on the ALERT pin? If not, comment out.
+#define SENSOR_ALERT_PULLUP
+
+
+Generic_LM75 temperature;
+
 int channel;
 int default_channel = 44;
 long band;
@@ -78,6 +91,11 @@ unsigned long w_ms;
 unsigned long w_lms;
 unsigned long w_diff;
 unsigned long interval = 150;
+unsigned long t_ms;
+unsigned long t_lms;
+unsigned long t_diff;
+unsigned long t_interval = 60*1000;
+int fan_temp_min = 30;
 bool clientFlag = false;
 long int Clock = 88;
 long int pClock = 88;
@@ -297,6 +315,9 @@ void showNewData(){
   horn();
     
   Heltec.display->clear();
+
+ // Heltec.display->drawString(0 , 0, temperature.readTemperatureC());
+
   Heltec.display->drawHorizontalLine(2, 50, 124);  
   Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
   Heltec.display->setFont(DSEG14_Classic_Mini_Regular_40);
@@ -342,6 +363,30 @@ String processor(const String& var){
   return links;
 }
 
+void thermal_management(){
+  t_ms = millis();
+  t_diff = t_ms - t_lms;
+  if (w_diff >= t_interval) {
+    int temp = temperature.readTemperatureC();
+    if (temp <= fan_temp_min) {
+      pwm.setPWM(15, 0, 4096); // aus
+    }
+    else {
+      pwm.setPWM(15, 4096, 0); // erstmal 100% an, später temperaturabhängig Einstellung möglich
+    }
+  }
+
+  /*if (w_diff >= t_interval) {  // 
+    bool alert_state = digitalRead(SENSOR_ALERT_PIN);
+    if (alert_state) {
+      pwm.setPWM(15, 4096, 0); // 100%
+    }
+    else {
+      pwm.setPWM(15, 0, 4096); // aus
+    }
+  }*/
+}
+
 
 
 
@@ -354,9 +399,18 @@ void setup() {
   band = band_select[channel];
    
   preferences.end();
+
+  #ifdef SENSOR_ALERT_PULLUP
+  // Enable the internal pullup
+  pinMode(SENSOR_ALERT_PIN, INPUT_PULLUP);
+#endif
   
   Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
-     
+
+  temperature.setAlertActiveHigh();
+  temperature.setTemperatureHighC(30.0);
+  temperature.setTemperatureLowC(27.0);
+
   pwm.begin();
   pwm.setPWMFreq(200);  // This is the maximum recommended PWM frequency for LEDs
 
@@ -386,6 +440,10 @@ void setup() {
   
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(200, "text/plain", "Hi! I am Shot-Clock Blue 1");
+  });
+
+  server.on("/temp", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", temperature.readTemperatureC());
   });
 
   server.on("/channel", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -451,5 +509,6 @@ void loop() {
   else{
     client_check();
     }
+  thermal_management(); 
   AsyncElegantOTA.loop(); 
 }
