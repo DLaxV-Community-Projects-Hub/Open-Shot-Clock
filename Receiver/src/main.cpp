@@ -69,7 +69,7 @@ Preferences preferences;
 //Temp
 
 // Which Arduino pin has the sensor's ALERT output been connected to?
-#define SENSOR_ALERT_PIN 13
+#define SENSOR_ALERT_PIN 17
 
 // Should the internal pullup be enabled on the ALERT pin? If not, comment out.
 #define SENSOR_ALERT_PULLUP
