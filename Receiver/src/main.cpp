@@ -78,7 +78,7 @@ Preferences preferences;
 Generic_LM75 temperature;
 
 int channel;
-int default_channel = 44;
+int default_channel = 4;
 long band;
 String rssi = "RSSI --";
 String packSize = "--";
@@ -94,7 +94,7 @@ unsigned long interval = 150;
 unsigned long t_ms;
 unsigned long t_lms;
 unsigned long t_diff;
-unsigned long t_interval = 60*1000;
+unsigned long t_interval = 1000;
 int fan_temp_min = 30;
 bool clientFlag = false;
 long int Clock = 88;
@@ -313,10 +313,35 @@ void showNewData(){
   Serial.println(Clock);              // Serial.println(receivedChars);      //and determining if it's what is expected
   displayClock(Clock);
   horn();
+/*
+  int temp = temperature.readTemperatureC();
+    Serial.println(String(temp));
+    if (temp <= fan_temp_min) {
+      pwm.setPWM(15, 0, 4096); // aus
+      Serial.println("Lüfter aus");
+    }
+    else {
+      pwm.setPWM(15, 4096, 0); // erstmal 100% an, später temperaturabhängig Einstellung möglich
+      Serial.println("Lüfter an");
+    }*/
+  bool alert_state = digitalRead(SENSOR_ALERT_PIN);
+  int temp = temperature.readTemperatureC();
+    Serial.println(String(temp)); 
+    Serial.println(alert_state); 
+    if (alert_state == LOW) {
+      pwm.setPWM(15, 4096, 0); // 100%
+      Serial.println("Lüfter an");
+    }
+    else {
+      pwm.setPWM(15, 0, 4096); // aus
+      Serial.println("Lüfter aus");
+    }
+
+
     
   Heltec.display->clear();
 
- // Heltec.display->drawString(0 , 0, temperature.readTemperatureC());
+  //Heltec.display->drawString(0 , 0, temperature.readTemperatureC());
 
   Heltec.display->drawHorizontalLine(2, 50, 124);  
   Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
@@ -368,6 +393,7 @@ void thermal_management(){
   t_diff = t_ms - t_lms;
   if (w_diff >= t_interval) {
     int temp = temperature.readTemperatureC();
+    Serial.println(String(temp));
     if (temp <= fan_temp_min) {
       pwm.setPWM(15, 0, 4096); // aus
       Serial.println("Lüfter aus");
@@ -376,6 +402,7 @@ void thermal_management(){
       pwm.setPWM(15, 4096, 0); // erstmal 100% an, später temperaturabhängig Einstellung möglich
       Serial.println("Lüfter an");
     }
+    t_lms = t_ms;
   }
 
   /*if (w_diff >= t_interval) {  // 
@@ -411,9 +438,10 @@ void setup() {
   
   Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
 
-  temperature.setAlertActiveHigh();
-  temperature.setTemperatureHighC(30.0);
-  temperature.setTemperatureLowC(27.0);
+  temperature.setAlertActiveLow();
+  //temperature.setAlertActiveHigh();
+  temperature.setTemperatureHighC(40.0);
+  temperature.setTemperatureLowC(35.0);
 
   pwm.begin();
   pwm.setPWMFreq(200);  // This is the maximum recommended PWM frequency for LEDs
@@ -513,6 +541,6 @@ void loop() {
   else{
     client_check();
     }
-  thermal_management(); 
+  //thermal_management(); 
   AsyncElegantOTA.loop(); 
 }
