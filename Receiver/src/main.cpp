@@ -370,9 +370,11 @@ void thermal_management(){
     int temp = temperature.readTemperatureC();
     if (temp <= fan_temp_min) {
       pwm.setPWM(15, 0, 4096); // aus
+      Serial.println("Lüfter aus");
     }
     else {
       pwm.setPWM(15, 4096, 0); // erstmal 100% an, später temperaturabhängig Einstellung möglich
+      Serial.println("Lüfter an");
     }
   }
 
@@ -380,9 +382,11 @@ void thermal_management(){
     bool alert_state = digitalRead(SENSOR_ALERT_PIN);
     if (alert_state) {
       pwm.setPWM(15, 4096, 0); // 100%
+      Serial.println("Lüfter an");
     }
     else {
       pwm.setPWM(15, 0, 4096); // aus
+      Serial.println("Lüfter aus");
     }
   }*/
 }
