@@ -36,6 +36,8 @@
 
 #include <SPIFFS.h>
 
+#include "driver/rtc_io.h"
+
 long band_select[5]={
   433000000,   //  not needed
   433000000,   //  Kanal 1
@@ -95,20 +97,25 @@ unsigned long msLastPlay;        // last time Button Play
 unsigned long msLastCount;           // last time count down
 unsigned long msLastStopCount;     // last time count/send in stop mode
 unsigned long abweichung = 0;  // zählt die gesamte Abweichung
+unsigned long m_factor  = 60*1000;
+unsigned long msLastInteraction;
+
 
 const byte                      // connect a button switch from this pin to ground
     BUTTON_PIN_T(32),           // Button for Play/Pause
     BUTTON_PIN_P_P(17),           // Button for Play/Pause // previously 2  
     BUTTON_PIN_R_P(2),         // Button for Reset-Paused // previously 13
     BUTTON_PIN_R_S(13),         // Button for Reset-started // previously 17
+    BUTTON_PIN_PRG(0),          // used for statring deep sleep
     LED_PIN(25);                // heltec specific pin 25
 
 
     
-Button myBtn_T(BUTTON_PIN_T),      // define the button
-       myBtn_P_P(BUTTON_PIN_P_P),
-       myBtn_R_P(BUTTON_PIN_R_P),
-       myBtn_R_S(BUTTON_PIN_R_S);
+Button myBtn_T(BUTTON_PIN_T, 50, true, true),      // define the button
+       myBtn_P_P(BUTTON_PIN_P_P, 50, true, true),
+       myBtn_R_P(BUTTON_PIN_R_P, 50, true, true),
+       myBtn_R_S(BUTTON_PIN_R_S, 50, true, true),
+       myBtn_PRG(BUTTON_PIN_PRG, 50, false, true);
        
 void setStart ()
 {
@@ -508,11 +515,42 @@ String settingsProcessor(const String& var){
   return String();
 }
 
+void go_into_stand_by(){
+  //esp_sleep_enable_ext0_wakeup(GPIO_NUM_32,0);
+  esp_sleep_enable_ext0_wakeup(GPIO_NUM_17,0);
+  //esp_sleep_enable_ext0_wakeup(GPIO_NUM_2,0);
+  //esp_sleep_enable_ext0_wakeup(GPIO_NUM_13,0);
+  esp_sleep_enable_ext0_wakeup(GPIO_NUM_0,0);
+  Serial.println("Going to sleep now");
+  esp_deep_sleep_start();
+}
+
+void stand_by_watch_dog(int m){
+  //unsigned long stand_by_interval = m*m_factor;
+  unsigned long stand_by_interval = 10000;
+  ms = millis();
+  unsigned long diff = ms - msLastInteraction;
+  if (diff >= stand_by_interval){
+    go_into_stand_by();
+  }
+}
+
+void reset_last_interaction(){
+  msLastInteraction = millis();
+}
+
+
 //===============================================================
 // Setup
 //===============================================================
 
 void setup(){
+
+  rtc_gpio_deinit(GPIO_NUM_0);
+  //rtc_gpio_deinit(GPIO_NUM_32);
+  rtc_gpio_deinit(GPIO_NUM_17);
+  //rtc_gpio_deinit(GPIO_NUM_2);
+  //rtc_gpio_deinit(GPIO_NUM_13);
 
   preferences.begin("shot-clock", false);
 
@@ -521,6 +559,7 @@ void setup(){
   band = band_select[channel];
    
   preferences.end();
+
   
   Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
 
@@ -648,6 +687,7 @@ void setup(){
   myBtn_P_P.begin();
   myBtn_R_P.begin();
   myBtn_R_S.begin();
+  myBtn_PRG.begin();
   pinMode(LED_PIN, OUTPUT);         // set the LED pin as an output
   //digitalWrite(LED_PIN, ledState);  // LED an, da zu Beginn Pause
   ms = millis();
@@ -671,7 +711,10 @@ void loop()
     myBtn_T.read();                      // read the button
     myBtn_P_P.read();                      // read the button 
     myBtn_R_P.read();                      // read the button 
-    myBtn_R_S.read();                      // read the button     
+    myBtn_R_S.read();                      // read the button  
+    myBtn_PRG.read();
+
+    stand_by_watch_dog(10);
 
 // hier OTA_Loop
    
@@ -689,6 +732,8 @@ void loop()
                 smartControl = false;
                 Heltec.display->displayOn();
 
+                reset_last_interaction();
+
                 playPause();
                 STATE = TOONOFF;                                    
             }
@@ -699,8 +744,14 @@ void loop()
                 smartControl = false;
                 Heltec.display->displayOn();
 
+                reset_last_interaction();
+
                 playPause();
                 STATE = TOONOFF;                                    
+            }
+            else if (myBtn_PRG.wasPressed())
+            {
+                go_into_stand_by();
             }
             else
             {
@@ -745,6 +796,7 @@ void loop()
             {
                 smartControl = false;
                 Heltec.display->displayOn();
+                reset_last_interaction();
                 playPause();
                 
             }
@@ -752,6 +804,7 @@ void loop()
             {
                 smartControl = false;
                 Heltec.display->displayOn();
+                reset_last_interaction();
                 playPause();
                 
             }
@@ -760,6 +813,7 @@ void loop()
             {
                 smartControl = false;
                 Heltec.display->displayOn();
+                reset_last_interaction();
                 resetClockByHWButton(true);
                 FLEX_INTERVAL -= LONG_PRESS;
                 STATE = RESET;
@@ -767,12 +821,18 @@ void loop()
                 
             else if (myBtn_R_P.wasPressed())
             {
+                reset_last_interaction();
                 resetClockByHWButton(true);
             }
 
             else if (myBtn_R_S.wasPressed())
             {
+                reset_last_interaction();
                 resetClockByHWButton(false);
+            }
+            else if (myBtn_PRG.wasPressed())
+            {
+                go_into_stand_by();
             }
                 
             else
@@ -793,14 +853,20 @@ void loop()
             
             if (myBtn_T.wasReleased())
             {
+                reset_last_interaction();
                 STATE = ONOFF;
             }    
             else if (myBtn_T.pressedFor(2500))
             {
                 smartControl = false;
                 Heltec.display->displayOn();
+                reset_last_interaction();
                 resetClockByHWButton(false);
                 STATE = TOONOFF;
+            }
+            else if (myBtn_PRG.wasPressed())
+            {
+                go_into_stand_by();
             }
             else
             {
