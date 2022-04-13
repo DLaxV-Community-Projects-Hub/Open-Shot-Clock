@@ -95,14 +95,20 @@ unsigned long msLastPlay;        // last time Button Play
 unsigned long msLastCount;           // last time count down
 unsigned long msLastStopCount;     // last time count/send in stop mode
 unsigned long abweichung = 0;  // zählt die gesamte Abweichung
-
+/*
 const byte                      // connect a button switch from this pin to ground
-    BUTTON_PIN_T(32),           // Button for Play/Pause
+    BUTTON_PIN_T(32),           // Button for Play/Pause - one Button
     BUTTON_PIN_P_P(17),           // Button for Play/Pause // previously 2  
     BUTTON_PIN_R_P(2),         // Button for Reset-Paused // previously 13
     BUTTON_PIN_R_S(13),         // Button for Reset-started // previously 17
     LED_PIN(25);                // heltec specific pin 25
-
+*/
+const byte                      // connect a button switch from this pin to ground
+    BUTTON_PIN_T(12),           // Button for One Button
+    BUTTON_PIN_P_P(33),           // Button for Play/Pause 
+    BUTTON_PIN_R_P(2),         // Button for Cancel
+    BUTTON_PIN_R_S(23),         // Button for Reset
+    LED_PIN(25);                // heltec specific pin 25
 
     
 Button myBtn_T(BUTTON_PIN_T),      // define the button
