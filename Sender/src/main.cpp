@@ -164,7 +164,7 @@ void lorasend (String Msg){
 
   // send packet
   unsigned long ms2 = millis();
-  LoRa.setTxPower(9, PA_OUTPUT_RFO_PIN); //test im loop, ob veränderung?
+  LoRa.setTxPower(20, PA_OUTPUT_RFO_PIN); //test im loop, ob veränderung?
   LoRa.beginPacket();
   
 /*
@@ -638,7 +638,7 @@ void setup(){
   AsyncElegantOTA.begin(&server);    // Start ElegantOTA
   server.begin();                  //Start server
 
-  LoRa.setTxPower(9, PA_OUTPUT_RFO_PIN);
+  LoRa.setTxPower(20, PA_OUTPUT_RFO_PIN);
   LoRa.setSpreadingFactor(7);
 
   Heltec.display->clear();
