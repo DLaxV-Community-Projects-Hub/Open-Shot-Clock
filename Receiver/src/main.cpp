@@ -33,8 +33,8 @@
 //const char* ssid = "ShotClockBlue2";
 //const char* ssid = "ShotClockRed1";
 //const char* ssid = "ShotClockRed2";
-//const char* ssid = "OSC_Hannover_Set1_No1";
-const char* ssid = "OSC_Hannover_Set1_No2";
+const char* ssid = "OSC_Hannover_Set1_No1";
+//const char* ssid = "OSC_Hannover_Set1_No2";
 const char* password = "12345678";
 
 AsyncWebServer server(80);
@@ -67,7 +67,7 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 Preferences preferences;
 
 int channel;
-int default_channel = 4;
+int default_channel = 3;
 long band;
 String rssi = "RSSI --";
 String packSize = "--";
@@ -375,7 +375,7 @@ void setup() {
   //Heltec.display->drawString(0, 0, "Wait for incoming data...");
   Heltec.display->display();
   
-  LoRa.setTxPower(9,RF_PACONFIG_PASELECT_RFO);
+  LoRa.setTxPower(20,RF_PACONFIG_PASELECT_RFO);
   LoRa.setSpreadingFactor(7);
 
   //ESP32 As access point
