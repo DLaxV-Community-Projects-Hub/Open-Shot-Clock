@@ -29,6 +29,14 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncElegantOTA.h>
 
+//RS-485
+#define RXD2 12
+#define TXD2 13
+
+String inputString = "";         // a String to hold incoming data
+bool stringComplete = false;  // whether the string is complete
+
+
 //const char* ssid = "ShotClockBlue1";
 //const char* ssid = "ShotClockBlue2";
 //const char* ssid = "ShotClockRed1";
@@ -305,7 +313,7 @@ void showNewData(){
   Heltec.display->drawString(64 , 1 , ClockStr);
   Heltec.display->setFont(ArialMT_Plain_10);
   Heltec.display->drawString(30, 52, "Channel " + String(channel));
-  Heltec.display->drawString(95, 52, rssi);
+  //Heltec.display->drawString(95, 52, rssi);
   Heltec.display->display();
   }
 }
@@ -356,7 +364,13 @@ void setup() {
   band = band_select[channel];
    
   preferences.end();
+
+    //RS-485
+  Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
   
+  inputString.reserve(200);
+  
+
   Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
      
   pwm.begin();
@@ -447,6 +461,21 @@ void loop() {
   yield();                                    // to mitigate random occuring hang issue when recieving data
   if (packetSize) { cbk(packetSize);  }
   
+  //RS-485 Test
+  // print the string when a newline arrives:
+  if (stringComplete) {
+    Serial.println(packet);
+
+    lms = millis();
+    clientFlag = true;
+    showNewData();
+
+    // clear the string:
+    packet = "";
+    stringComplete = false;
+  }
+
+
   if (clientFlag == false){
     waiting();
     }
@@ -454,4 +483,18 @@ void loop() {
     client_check();
     }
   AsyncElegantOTA.loop(); 
+}
+
+void serialEvent() {
+  while (Serial2.available()) {
+    // get the new byte:
+    char inChar = (char)Serial.read();
+    // add it to the inputString:
+    packet += inChar;
+    // if the incoming character is a newline, set a flag so the main loop can
+    // do something about it:
+    if (inChar == '\n') {
+      stringComplete = true;
+    }
+  }
 }
