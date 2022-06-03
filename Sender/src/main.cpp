@@ -106,8 +106,8 @@ const byte                      // connect a button switch from this pin to grou
 const byte                      // connect a button switch from this pin to ground
     BUTTON_PIN_T(12),           // Button for One Button
     BUTTON_PIN_P_P(33),           // Button for Play/Pause 
-    BUTTON_PIN_R_P(2),         // Button for Cancel
-    BUTTON_PIN_R_S(23),         // Button for Reset
+    BUTTON_PIN_R_P(2),         // Button for Reset
+    BUTTON_PIN_R_S(23),         // Button for Cancel
     LED_PIN(25);                // heltec specific pin 25
 
     
