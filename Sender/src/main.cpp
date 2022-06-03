@@ -36,6 +36,11 @@
 
 #include <SPIFFS.h>
 
+//RS-485
+#define RXD2 12
+#define TXD2 13
+
+
 long band_select[5]={
   433000000,   //  not needed
   433000000,   //  Kanal 1
@@ -145,7 +150,7 @@ void notifyClients(String message) {
 
 void lorasend (String Msg){
   
-    if (Clock < 10) {
+    if (Clock < 10) {      // wird das noch gebraucht?? redundant??
       ClockStr = "0" + String(Clock);
     }
     else{
@@ -164,7 +169,7 @@ void lorasend (String Msg){
 
   // send packet
   unsigned long ms2 = millis();
-  LoRa.setTxPower(20, PA_OUTPUT_RFO_PIN); //test im loop, ob veränderung?
+  LoRa.setTxPower(20, PA_OUTPUT_RFO_PIN); //test im loop, ob veränderung? was ist das Ergebnis??? bis jetzt nichts aufgefallen
   LoRa.beginPacket();
   
 /*
@@ -229,7 +234,13 @@ void Count()
             ClockMsg = Command_T + Clock + B_Level;
           }
           //ledStateMsg += ledState;
-          lorasend(ClockMsg);
+          //lorasend(ClockMsg); //für RS-485 Test abgeschaltet
+
+
+          //RS-485 Test
+         Serial2.println(ClockMsg);
+
+
           notifyClients(String(Clock));
           ws.cleanupClients();
           Serial.println(ClockMsg);
@@ -527,6 +538,9 @@ void setup(){
   band = band_select[channel];
    
   preferences.end();
+
+  //RS-485
+  Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
   
   Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
 
