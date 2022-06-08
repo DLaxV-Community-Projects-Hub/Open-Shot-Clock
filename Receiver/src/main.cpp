@@ -1,4 +1,4 @@
-#include <Arduino.h>
+
 /*
   This is a simple example show the Heltec.LoRa recived data in OLED.
 
@@ -18,6 +18,8 @@
   this project also realess in GitHub:
   https://github.com/Heltec-Aaron-Lee/WiFi_Kit_series
 */
+#include <Arduino.h>
+
 #include <heltec.h>
 #include "images.h"
 #include "channel.h"
@@ -30,8 +32,10 @@
 #include <AsyncElegantOTA.h>
 
 //RS-485
-#define RXD2 12
-#define TXD2 13
+#define RXD2 13
+#define TXD2 12
+
+#define Vext 21
 
 String inputString = "";         // a String to hold incoming data
 bool stringComplete = false;  // whether the string is complete
@@ -352,10 +356,35 @@ String processor(const String& var){
   return links;
 }
 
+void RS485receive() {
+   //while (RS485Serial.available()) {
+   while (Serial2.available()) {
 
+     //char inChar = (char)RS485Serial.read(); // Get the next byte
+     char inChar = (char)Serial2.read(); // Get the next byte
+
+     if (inChar == '\n') // If the incoming character is a newline break while loop
+     {
+       stringComplete = true;
+       break;
+     }
+
+     packet += inChar; // Add value to inputstring
+
+    if (packet.length() > 100) // If inputString is too long break while loop
+    {
+      Serial.println("ERROR");
+      break;
+    }
+  }
+}
 
 
 void setup() {
+
+  pinMode(Vext,OUTPUT);
+  
+  digitalWrite(Vext, HIGH);
 
   preferences.begin("shot-clock", false);
 
@@ -377,6 +406,10 @@ void setup() {
   pwm.setPWMFreq(200);  // This is the maximum recommended PWM frequency for LEDs
 
   all_Segments_off();
+
+  delay(50);
+
+  digitalWrite(Vext, LOW);
   
   Heltec.display->init();
   Heltec.display->flipScreenVertically();  
@@ -462,6 +495,8 @@ void loop() {
   if (packetSize) { cbk(packetSize);  }
   
   //RS-485 Test
+  RS485receive();
+
   // print the string when a newline arrives:
   if (stringComplete) {
     Serial.println(packet);
@@ -485,6 +520,9 @@ void loop() {
   AsyncElegantOTA.loop(); 
 }
 
+
+
+/*
 void serialEvent() {
   while (Serial2.available()) {
     // get the new byte:
@@ -498,3 +536,4 @@ void serialEvent() {
     }
   }
 }
+*/
