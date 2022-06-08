@@ -1,4 +1,4 @@
-#include <Arduino.h>
+
 
 /*
   This is a simple example show the Heltec.LoRa sended data in OLED.
@@ -19,6 +19,7 @@
   this project also realess in GitHub:
   https://github.com/Heltec-Aaron-Lee/WiFi_Kit_series
 */
+#include <Arduino.h>
 
 #include <heltec.h>
 #include "images.h"
@@ -37,8 +38,10 @@
 #include <SPIFFS.h>
 
 //RS-485
-#define RXD2 12
-#define TXD2 13
+#define RXD2 13
+#define TXD2 12
+
+#define Vext 21
 
 
 long band_select[5]={
@@ -109,7 +112,7 @@ const byte                      // connect a button switch from this pin to grou
     LED_PIN(25);                // heltec specific pin 25
 */
 const byte                      // connect a button switch from this pin to ground
-    BUTTON_PIN_T(12),           // Button for One Button
+    BUTTON_PIN_T(32),           // Button for One Button
     BUTTON_PIN_P_P(33),           // Button for Play/Pause 
     BUTTON_PIN_R_P(2),         // Button for Reset
     BUTTON_PIN_R_S(23),         // Button for Cancel
@@ -180,8 +183,14 @@ void lorasend (String Msg){
  *   - RF_PACONFIG_PASELECT_RFO     -- LoRa single output via RFO_HF / RFO_LF, maximum output 14dBm
 */
 
-  LoRa.print(Msg);
-  LoRa.endPacket();
+  //LoRa.print(Msg);
+  //LoRa.endPacket();
+
+
+   //RS-485 Test
+  Serial2.println(Msg);
+
+
   unsigned long ms3 = millis();
   Serial.print("Dauer Senden: ");
   Serial.print(ms3-ms2);
@@ -234,11 +243,7 @@ void Count()
             ClockMsg = Command_T + Clock + B_Level;
           }
           //ledStateMsg += ledState;
-          //lorasend(ClockMsg); //für RS-485 Test abgeschaltet
-
-
-          //RS-485 Test
-         Serial2.println(ClockMsg);
+          lorasend(ClockMsg); //für RS-485 Test abgeschaltet
 
 
           notifyClients(String(Clock));
@@ -531,6 +536,10 @@ String settingsProcessor(const String& var){
 
 void setup(){
 
+  pinMode(Vext,OUTPUT);
+  
+  digitalWrite(Vext, HIGH);
+
   preferences.begin("shot-clock", false);
 
   channel = preferences.getInt("channel", default_channel);
@@ -552,6 +561,10 @@ void setup(){
   Serial.println();
   Serial.print("MAC: ");
   Serial.println(WiFi.macAddress());
+
+  delay(50);
+
+  digitalWrite(Vext, LOW);
  
   Heltec.display->init();
   //Heltec.display->flipScreenVertically();  
