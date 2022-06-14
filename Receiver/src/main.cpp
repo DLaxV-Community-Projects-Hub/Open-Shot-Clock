@@ -40,12 +40,14 @@
 String inputString = "";         // a String to hold incoming data
 bool stringComplete = false;  // whether the string is complete
 
+bool RS485mode = false;
 
 //const char* ssid = "ShotClockBlue1";
 //const char* ssid = "ShotClockBlue2";
+const char* ssid = "OSC_Blue";
 //const char* ssid = "ShotClockRed1";
 //const char* ssid = "ShotClockRed2";
-const char* ssid = "OSC_Hannover_Set1_No1";
+//const char* ssid = "OSC_Hannover_Set1_No1";
 //const char* ssid = "OSC_Hannover_Set1_No2";
 const char* password = "12345678";
 
@@ -79,7 +81,7 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 Preferences preferences;
 
 int channel;
-int default_channel = 3;
+int default_channel = 1;
 long band;
 String rssi = "RSSI --";
 String packSize = "--";
@@ -280,6 +282,7 @@ void client_check(){
   //lms = ms;
   if (diff >= 2100) {
     clientFlag = false;
+    RS485mode = false;
     waitingNR = 1;
     all_Segments_off();
     pwm.setPWM(waiting1er[waitingNR], ticks[B_Level][0], ticks[B_Level][1]); // an 100%
@@ -330,6 +333,7 @@ void cbk(int packetSize) {
   rssi = "RSSI " + String(LoRa.packetRssi(), DEC) ;
   lms = millis();
   clientFlag = true;
+  Serial.println("LoRa");
   showNewData();
   LoRa.receive(); // Test, ob Aufhängen vermieden wird durch "Erinnern" der Lora Funktion
 }
@@ -366,6 +370,7 @@ void RS485receive() {
      if (inChar == '\n') // If the incoming character is a newline break while loop
      {
        stringComplete = true;
+       RS485mode = true;
        break;
      }
 
@@ -382,9 +387,9 @@ void RS485receive() {
 
 void setup() {
 
-  pinMode(Vext,OUTPUT);
+  //pinMode(Vext,OUTPUT);
   
-  digitalWrite(Vext, HIGH);
+  //digitalWrite(Vext, HIGH);
 
   preferences.begin("shot-clock", false);
 
@@ -407,9 +412,9 @@ void setup() {
 
   all_Segments_off();
 
-  delay(50);
+  //delay(50);
 
-  digitalWrite(Vext, LOW);
+  //digitalWrite(Vext, LOW);
   
   Heltec.display->init();
   Heltec.display->flipScreenVertically();  
@@ -490,16 +495,18 @@ void setup() {
 
 void loop() {
 
+  if (RS485mode == false){
   int packetSize = LoRa.parsePacket();
   yield();                                    // to mitigate random occuring hang issue when recieving data
   if (packetSize) { cbk(packetSize);  }
-  
+  }
   //RS-485 Test
   RS485receive();
 
   // print the string when a newline arrives:
   if (stringComplete) {
-    Serial.println(packet);
+    Serial.println("RS485");
+    
 
     lms = millis();
     clientFlag = true;
