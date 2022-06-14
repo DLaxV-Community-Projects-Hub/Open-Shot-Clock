@@ -69,7 +69,7 @@ const char* password = "12345678";
 Preferences preferences;
 
 int channel;
-int default_channel = 3;
+int default_channel = 1;
 long band;
 
 String rssi = "RSSI --";
@@ -183,8 +183,8 @@ void lorasend (String Msg){
  *   - RF_PACONFIG_PASELECT_RFO     -- LoRa single output via RFO_HF / RFO_LF, maximum output 14dBm
 */
 
-  //LoRa.print(Msg);
-  //LoRa.endPacket();
+  LoRa.print(Msg);
+  LoRa.endPacket();
 
 
    //RS-485 Test
@@ -536,9 +536,9 @@ String settingsProcessor(const String& var){
 
 void setup(){
 
-  pinMode(Vext,OUTPUT);
+  //pinMode(Vext,OUTPUT);
   
-  digitalWrite(Vext, HIGH);
+  //digitalWrite(Vext, HIGH);
 
   preferences.begin("shot-clock", false);
 
@@ -562,9 +562,9 @@ void setup(){
   Serial.print("MAC: ");
   Serial.println(WiFi.macAddress());
 
-  delay(50);
+  //delay(50);
 
-  digitalWrite(Vext, LOW);
+  //digitalWrite(Vext, LOW);
  
   Heltec.display->init();
   //Heltec.display->flipScreenVertically();  
