@@ -44,12 +44,13 @@ bool RS485mode = false;
 
 //const char* ssid = "ShotClockBlue1";
 //const char* ssid = "ShotClockBlue2";
-const char* ssid = "OSC_Blue";
-//const char* ssid = "ShotClockRed1";
-//const char* ssid = "ShotClockRed2";
-//const char* ssid = "OSC_Hannover_Set1_No1";
-//const char* ssid = "OSC_Hannover_Set1_No2";
-const char* password = "12345678";
+// const char* ssid = "OSC_Blue";
+const char* ssid = "ShotClockRed1";
+// const char* ssid = "ShotClockRed2";
+// const char* ssid = "OSC_Hannover_Set1_No1";
+// const char* ssid = "OSC_Hannover_Set1_No2";
+// const char* password = "12345678";
+const char* password = "EM2022LAX";
 
 AsyncWebServer server(80);
 
@@ -100,6 +101,11 @@ long int pClock = 88;
 String ClockStr = "88";
 int waitingNR = 1;
 
+bool isHonking = false;
+unsigned long honkStartTime = 0;
+const int HONK_DURATION = 1000;
+bool isHonkRequest = false;
+
 
 // 1 Array mit 10 Daten Zeilen mit jeweils 7 Datensätzen Typ Bool (0 bis 9)
 bool segs[10][7]={
@@ -147,6 +153,16 @@ String waitingOLED[5]={
   "X"
 };
 
+// Function Prototypes
+void drawLoraInfo();
+void drawRS485Info();
+void handleHorn();
+bool honkIsRequested();
+bool isHonkTimeOver();
+void startHonking();
+void stopHonking();
+bool timeIsUp();
+
 // ANZEIGE //
 
 void segment(int seg, bool on){
@@ -192,17 +208,42 @@ void displayClock(byte c)
   }
 }
 
+void handleHorn() {
+  if(honkIsRequested() && !isHonking) {
+    startHonking();
+  } else if (isHonking && isHonkTimeOver()) {
+    stopHonking();
+  }
+}
 
-void horn(){
-  if (Clock == 0 && pClock != 0){
-      pwm.setPWM(7, 4096, 0); // Horn an
-    }
-  else if (Clock == 0 && pClock == 0){  // in ein else zusammenfassen
-      pwm.setPWM(7, 0, 4096); // Horn aus
-    }
-  else if (Clock != 0){   //if nicht notwendig --> ändern
-      pwm.setPWM(7, 0, 4096); // Horn aus
-    }
+bool honkIsRequested(){
+  if (timeIsUp() || isHonkRequest ){
+    isHonkRequest = false;
+    return true;
+  }
+  return false;
+}
+
+bool timeIsUp() {
+  return Clock == 0 && pClock != 0;
+}
+
+bool isHonkTimeOver() {
+  if (millis() - honkStartTime > HONK_DURATION) {
+    return true;
+  }
+  return false;
+}
+
+void startHonking() {
+  pwm.setPWM(7, 4096, 0); // Horn an
+  isHonking = true;
+  honkStartTime = millis();
+}
+
+void stopHonking() {
+  pwm.setPWM(7, 0, 4096); // Horn aus
+  isHonking = false;
 }
 
 void all_Segments_off(){
@@ -293,8 +334,10 @@ void client_check(){
 
 void showNewData(){
   
-  String ClockCommand = "T";
-  if (packet.startsWith(ClockCommand)){
+  String ClockCommand_T = "T";
+  String ClockCommand_Honk = "H";
+  String ClockCommand_B = "B";
+  if (packet.startsWith(ClockCommand_T)){
     //packet.remove(0, 1);
     pClock = Clock;
     String StClock = packet.substring(1,3);
@@ -311,7 +354,6 @@ void showNewData(){
     B_Level = StBrighness.toInt();
   Serial.println(Clock);              // Serial.println(receivedChars);      //and determining if it's what is expected
   displayClock(Clock);
-  horn();
     
   Heltec.display->clear();
   Heltec.display->drawHorizontalLine(2, 50, 124);  
@@ -322,6 +364,8 @@ void showNewData(){
   Heltec.display->drawString(30, 52, "Channel " + String(channel));
   //Heltec.display->drawString(95, 52, rssi);
   Heltec.display->display();
+  } else if (packet.startsWith(ClockCommand_Honk)){
+    startHonking();
   }
 }
 
@@ -333,7 +377,7 @@ void cbk(int packetSize) {
   rssi = "RSSI " + String(LoRa.packetRssi(), DEC) ;
   lms = millis();
   clientFlag = true;
-  Serial.println("LoRa");
+  drawLoraInfo();
   showNewData();
   LoRa.receive(); // Test, ob Aufhängen vermieden wird durch "Erinnern" der Lora Funktion
 }
@@ -417,7 +461,7 @@ void setup() {
   //digitalWrite(Vext, LOW);
   
   Heltec.display->init();
-  Heltec.display->flipScreenVertically();  
+  // Heltec.display->flipScreenVertically();  
   Heltec.display->setFont(ArialMT_Plain_10);
   
   Heltec.display->clear();
@@ -493,6 +537,18 @@ void setup() {
   Heltec.display->display();
 }
 
+void drawLoraInfo() {
+  Heltec.display->drawString(90, 52, "LoRa");
+  Heltec.display->display();
+  Serial.println("LoRa");
+}
+
+void drawRS485Info() {
+  Heltec.display->drawString(90, 52, "RS485");
+  Heltec.display->display();
+  Serial.println("RS485");
+}
+
 void loop() {
 
   if (RS485mode == false){
@@ -505,12 +561,13 @@ void loop() {
 
   // print the string when a newline arrives:
   if (stringComplete) {
-    Serial.println("RS485");
     
 
     lms = millis();
     clientFlag = true;
     showNewData();
+    handleHorn();
+    drawRS485Info();
 
     // clear the string:
     packet = "";
