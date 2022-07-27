@@ -62,7 +62,8 @@ AsyncWebSocket ws("/ws");
 //const char* ssid = "ControllerRed";
 //const char* ssid = "Controller3Button";
 const char* ssid = "Controller6Button";
-const char* password = "12345678";
+// const char* password = "12345678";
+const char* password = "EM2022LAX";
 
 #include <Preferences.h>
 
@@ -112,17 +113,25 @@ const byte                      // connect a button switch from this pin to grou
     LED_PIN(25);                // heltec specific pin 25
 */
 const byte                      // connect a button switch from this pin to ground
-    BUTTON_PIN_T(32),           // Button for One Button
+    BUTTON_PIN_T(22),           // Button for One Button
     BUTTON_PIN_P_P(33),           // Button for Play/Pause 
     BUTTON_PIN_R_P(2),         // Button for Reset
     BUTTON_PIN_R_S(23),         // Button for Cancel
+    BUTTON_PIN_H(32),             // Button for honking
+    BUTTON_PIN_B(17),             // Button for nothing
     LED_PIN(25);                // heltec specific pin 25
 
     
 Button myBtn_T(BUTTON_PIN_T),      // define the button
        myBtn_P_P(BUTTON_PIN_P_P),
        myBtn_R_P(BUTTON_PIN_R_P),
+       myBtn_H(BUTTON_PIN_H),
+       myBtn_B(BUTTON_PIN_B),
        myBtn_R_S(BUTTON_PIN_R_S);
+
+  
+// function prototypes
+void sendToClock(String);
        
 void setStart ()
 {
@@ -170,8 +179,18 @@ void lorasend (String Msg){
     Heltec.display->display();
   }
 
-  // send packet
   unsigned long ms2 = millis();
+  
+  sendToClock(Msg);
+
+  unsigned long ms3 = millis();
+  Serial.print("Dauer Senden: ");
+  Serial.print(ms3-ms2);
+  Serial.print(" -- ");
+}
+
+void sendToClock(String Msg) {
+    // send packet
   LoRa.setTxPower(20, PA_OUTPUT_RFO_PIN); //test im loop, ob veränderung? was ist das Ergebnis??? bis jetzt nichts aufgefallen
   LoRa.beginPacket();
   
@@ -189,13 +208,7 @@ void lorasend (String Msg){
 
    //RS-485 Test
   Serial2.println(Msg);
-
-
-  unsigned long ms3 = millis();
-  Serial.print("Dauer Senden: ");
-  Serial.print(ms3-ms2);
-  Serial.print(" -- ");
-  }
+}
 
 void Count()
 {
@@ -475,7 +488,15 @@ void initWebSocket() {
   server.addHandler(&ws);
 }
 
+void startHonking() {
+  String command_H = "H";
+  sendToClock(command_H);
+}
 
+void sendBCommand() {
+  String command_B = "B";
+  sendToClock(command_B);
+}
 
 
 //===============================================================
@@ -681,6 +702,8 @@ void setup(){
   myBtn_P_P.begin();
   myBtn_R_P.begin();
   myBtn_R_S.begin();
+  myBtn_H.begin();
+  myBtn_B.begin();
   pinMode(LED_PIN, OUTPUT);         // set the LED pin as an output
   //digitalWrite(LED_PIN, ledState);  // LED an, da zu Beginn Pause
   ms = millis();
@@ -705,6 +728,8 @@ void loop()
     myBtn_P_P.read();                      // read the button 
     myBtn_R_P.read();                      // read the button 
     myBtn_R_S.read();                      // read the button     
+    myBtn_H.read();                      // read the button     
+    myBtn_B.read();                      // read the button     
 
 // hier OTA_Loop
    
@@ -806,6 +831,12 @@ void loop()
             else if (myBtn_R_S.wasPressed())
             {
                 resetClockByHWButton(false);
+            }
+            else if (myBtn_H.wasReleased()) {
+              startHonking();
+            }
+            else if (myBtn_B.wasReleased()) {
+              sendBCommand();
             }
                 
             else
