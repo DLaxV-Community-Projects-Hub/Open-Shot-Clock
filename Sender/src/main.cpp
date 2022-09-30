@@ -1,4 +1,4 @@
-#include <Arduino.h>
+
 
 /*
   This is a simple example show the Heltec.LoRa sended data in OLED.
@@ -19,6 +19,7 @@
   this project also realess in GitHub:
   https://github.com/Heltec-Aaron-Lee/WiFi_Kit_series
 */
+#include <Arduino.h>
 
 #include <heltec.h>
 #include "images.h"
@@ -35,6 +36,13 @@
 #include <AsyncElegantOTA.h>
 
 #include <SPIFFS.h>
+
+//RS-485
+#define RXD2 13
+#define TXD2 12
+
+#define Vext 21
+
 
 long band_select[5]={
   433000000,   //  not needed
@@ -54,14 +62,15 @@ AsyncWebSocket ws("/ws");
 //const char* ssid = "ControllerRed";
 //const char* ssid = "Controller3Button";
 const char* ssid = "Controller6Button";
-const char* password = "12345678";
+// const char* password = "12345678";
+const char* password = "EM2022LAX";
 
 #include <Preferences.h>
 
 Preferences preferences;
 
 int channel;
-int default_channel = 3;
+int default_channel = 1;
 long band;
 
 String rssi = "RSSI --";
@@ -104,17 +113,25 @@ const byte                      // connect a button switch from this pin to grou
     LED_PIN(25);                // heltec specific pin 25
 */
 const byte                      // connect a button switch from this pin to ground
-    BUTTON_PIN_T(12),           // Button for One Button
+    BUTTON_PIN_T(22),           // Button for One Button
     BUTTON_PIN_P_P(33),           // Button for Play/Pause 
     BUTTON_PIN_R_P(2),         // Button for Reset
     BUTTON_PIN_R_S(23),         // Button for Cancel
+    BUTTON_PIN_H(32),             // Button for honking
+    BUTTON_PIN_B(17),             // Button for nothing
     LED_PIN(25);                // heltec specific pin 25
 
     
 Button myBtn_T(BUTTON_PIN_T),      // define the button
        myBtn_P_P(BUTTON_PIN_P_P),
        myBtn_R_P(BUTTON_PIN_R_P),
+       myBtn_H(BUTTON_PIN_H),
+       myBtn_B(BUTTON_PIN_B),
        myBtn_R_S(BUTTON_PIN_R_S);
+
+  
+// function prototypes
+void sendToClock(String);
        
 void setStart ()
 {
@@ -145,7 +162,7 @@ void notifyClients(String message) {
 
 void lorasend (String Msg){
   
-    if (Clock < 10) {
+    if (Clock < 10) {      // wird das noch gebraucht?? redundant??
       ClockStr = "0" + String(Clock);
     }
     else{
@@ -162,9 +179,19 @@ void lorasend (String Msg){
     Heltec.display->display();
   }
 
-  // send packet
   unsigned long ms2 = millis();
-  LoRa.setTxPower(20, PA_OUTPUT_RFO_PIN); //test im loop, ob veränderung?
+  
+  sendToClock(Msg);
+
+  unsigned long ms3 = millis();
+  Serial.print("Dauer Senden: ");
+  Serial.print(ms3-ms2);
+  Serial.print(" -- ");
+}
+
+void sendToClock(String Msg) {
+    // send packet
+  LoRa.setTxPower(20, PA_OUTPUT_RFO_PIN); //test im loop, ob veränderung? was ist das Ergebnis??? bis jetzt nichts aufgefallen
   LoRa.beginPacket();
   
 /*
@@ -177,11 +204,11 @@ void lorasend (String Msg){
 
   LoRa.print(Msg);
   LoRa.endPacket();
-  unsigned long ms3 = millis();
-  Serial.print("Dauer Senden: ");
-  Serial.print(ms3-ms2);
-  Serial.print(" -- ");
-  }
+
+
+   //RS-485 Test
+  Serial2.println(Msg);
+}
 
 void Count()
 {
@@ -229,7 +256,9 @@ void Count()
             ClockMsg = Command_T + Clock + B_Level;
           }
           //ledStateMsg += ledState;
-          lorasend(ClockMsg);
+          lorasend(ClockMsg); //für RS-485 Test abgeschaltet
+
+
           notifyClients(String(Clock));
           ws.cleanupClients();
           Serial.println(ClockMsg);
@@ -459,7 +488,15 @@ void initWebSocket() {
   server.addHandler(&ws);
 }
 
+void startHonking() {
+  String command_H = "H";
+  sendToClock(command_H);
+}
 
+void sendBCommand() {
+  String command_B = "B";
+  sendToClock(command_B);
+}
 
 
 //===============================================================
@@ -520,6 +557,10 @@ String settingsProcessor(const String& var){
 
 void setup(){
 
+  //pinMode(Vext,OUTPUT);
+  
+  //digitalWrite(Vext, HIGH);
+
   preferences.begin("shot-clock", false);
 
   channel = preferences.getInt("channel", default_channel);
@@ -527,6 +568,9 @@ void setup(){
   band = band_select[channel];
    
   preferences.end();
+
+  //RS-485
+  Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
   
   Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
 
@@ -538,6 +582,10 @@ void setup(){
   Serial.println();
   Serial.print("MAC: ");
   Serial.println(WiFi.macAddress());
+
+  //delay(50);
+
+  //digitalWrite(Vext, LOW);
  
   Heltec.display->init();
   //Heltec.display->flipScreenVertically();  
@@ -654,6 +702,8 @@ void setup(){
   myBtn_P_P.begin();
   myBtn_R_P.begin();
   myBtn_R_S.begin();
+  myBtn_H.begin();
+  myBtn_B.begin();
   pinMode(LED_PIN, OUTPUT);         // set the LED pin as an output
   //digitalWrite(LED_PIN, ledState);  // LED an, da zu Beginn Pause
   ms = millis();
@@ -678,6 +728,8 @@ void loop()
     myBtn_P_P.read();                      // read the button 
     myBtn_R_P.read();                      // read the button 
     myBtn_R_S.read();                      // read the button     
+    myBtn_H.read();                      // read the button     
+    myBtn_B.read();                      // read the button     
 
 // hier OTA_Loop
    
@@ -779,6 +831,12 @@ void loop()
             else if (myBtn_R_S.wasPressed())
             {
                 resetClockByHWButton(false);
+            }
+            else if (myBtn_H.wasReleased()) {
+              startHonking();
+            }
+            else if (myBtn_B.wasReleased()) {
+              sendBCommand();
             }
                 
             else

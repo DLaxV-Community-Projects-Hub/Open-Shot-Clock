@@ -1,4 +1,4 @@
-#include <Arduino.h>
+
 /*
   This is a simple example show the Heltec.LoRa recived data in OLED.
 
@@ -18,6 +18,8 @@
   this project also realess in GitHub:
   https://github.com/Heltec-Aaron-Lee/WiFi_Kit_series
 */
+#include <Arduino.h>
+
 #include <heltec.h>
 #include "images.h"
 #include "channel.h"
@@ -29,13 +31,26 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncElegantOTA.h>
 
+//RS-485
+#define RXD2 13
+#define TXD2 12
+
+#define Vext 21
+
+String inputString = "";         // a String to hold incoming data
+bool stringComplete = false;  // whether the string is complete
+
+bool RS485mode = false;
+
 //const char* ssid = "ShotClockBlue1";
 //const char* ssid = "ShotClockBlue2";
-//const char* ssid = "ShotClockRed1";
-//const char* ssid = "ShotClockRed2";
-const char* ssid = "OSC_Hannover_Set1_No1";
-//const char* ssid = "OSC_Hannover_Set1_No2";
-const char* password = "12345678";
+// const char* ssid = "OSC_Blue";
+const char* ssid = "ShotClockRed1";
+// const char* ssid = "ShotClockRed2";
+// const char* ssid = "OSC_Hannover_Set1_No1";
+// const char* ssid = "OSC_Hannover_Set1_No2";
+// const char* password = "12345678";
+const char* password = "EM2022LAX";
 
 AsyncWebServer server(80);
 
@@ -67,7 +82,7 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 Preferences preferences;
 
 int channel;
-int default_channel = 3;
+int default_channel = 1;
 long band;
 String rssi = "RSSI --";
 String packSize = "--";
@@ -85,6 +100,11 @@ long int Clock = 88;
 long int pClock = 88;
 String ClockStr = "88";
 int waitingNR = 1;
+
+bool isHonking = false;
+unsigned long honkStartTime = 0;
+const int HONK_DURATION = 1000;
+bool isHonkRequest = false;
 
 
 // 1 Array mit 10 Daten Zeilen mit jeweils 7 Datensätzen Typ Bool (0 bis 9)
@@ -133,6 +153,16 @@ String waitingOLED[5]={
   "X"
 };
 
+// Function Prototypes
+void drawLoraInfo();
+void drawRS485Info();
+void handleHorn();
+bool honkIsRequested();
+bool isHonkTimeOver();
+void startHonking();
+void stopHonking();
+bool timeIsUp();
+
 // ANZEIGE //
 
 void segment(int seg, bool on){
@@ -178,17 +208,42 @@ void displayClock(byte c)
   }
 }
 
+void handleHorn() {
+  if(honkIsRequested() && !isHonking) {
+    startHonking();
+  } else if (isHonking && isHonkTimeOver()) {
+    stopHonking();
+  }
+}
 
-void horn(){
-  if (Clock == 0 && pClock != 0){
-      pwm.setPWM(7, 4096, 0); // Horn an
-    }
-  else if (Clock == 0 && pClock == 0){  // in ein else zusammenfassen
-      pwm.setPWM(7, 0, 4096); // Horn aus
-    }
-  else if (Clock != 0){   //if nicht notwendig --> ändern
-      pwm.setPWM(7, 0, 4096); // Horn aus
-    }
+bool honkIsRequested(){
+  if (timeIsUp() || isHonkRequest ){
+    isHonkRequest = false;
+    return true;
+  }
+  return false;
+}
+
+bool timeIsUp() {
+  return Clock == 0 && pClock != 0;
+}
+
+bool isHonkTimeOver() {
+  if (millis() - honkStartTime > HONK_DURATION) {
+    return true;
+  }
+  return false;
+}
+
+void startHonking() {
+  pwm.setPWM(7, 4096, 0); // Horn an
+  isHonking = true;
+  honkStartTime = millis();
+}
+
+void stopHonking() {
+  pwm.setPWM(7, 0, 4096); // Horn aus
+  isHonking = false;
 }
 
 void all_Segments_off(){
@@ -268,6 +323,7 @@ void client_check(){
   //lms = ms;
   if (diff >= 2100) {
     clientFlag = false;
+    RS485mode = false;
     waitingNR = 1;
     all_Segments_off();
     pwm.setPWM(waiting1er[waitingNR], ticks[B_Level][0], ticks[B_Level][1]); // an 100%
@@ -278,8 +334,10 @@ void client_check(){
 
 void showNewData(){
   
-  String ClockCommand = "T";
-  if (packet.startsWith(ClockCommand)){
+  String ClockCommand_T = "T";
+  String ClockCommand_Honk = "H";
+  String ClockCommand_B = "B";
+  if (packet.startsWith(ClockCommand_T)){
     //packet.remove(0, 1);
     pClock = Clock;
     String StClock = packet.substring(1,3);
@@ -296,7 +354,6 @@ void showNewData(){
     B_Level = StBrighness.toInt();
   Serial.println(Clock);              // Serial.println(receivedChars);      //and determining if it's what is expected
   displayClock(Clock);
-  horn();
     
   Heltec.display->clear();
   Heltec.display->drawHorizontalLine(2, 50, 124);  
@@ -305,8 +362,10 @@ void showNewData(){
   Heltec.display->drawString(64 , 1 , ClockStr);
   Heltec.display->setFont(ArialMT_Plain_10);
   Heltec.display->drawString(30, 52, "Channel " + String(channel));
-  Heltec.display->drawString(95, 52, rssi);
+  //Heltec.display->drawString(95, 52, rssi);
   Heltec.display->display();
+  } else if (packet.startsWith(ClockCommand_Honk)){
+    startHonking();
   }
 }
 
@@ -318,6 +377,7 @@ void cbk(int packetSize) {
   rssi = "RSSI " + String(LoRa.packetRssi(), DEC) ;
   lms = millis();
   clientFlag = true;
+  drawLoraInfo();
   showNewData();
   LoRa.receive(); // Test, ob Aufhängen vermieden wird durch "Erinnern" der Lora Funktion
 }
@@ -344,10 +404,36 @@ String processor(const String& var){
   return links;
 }
 
+void RS485receive() {
+   //while (RS485Serial.available()) {
+   while (Serial2.available()) {
 
+     //char inChar = (char)RS485Serial.read(); // Get the next byte
+     char inChar = (char)Serial2.read(); // Get the next byte
+
+     if (inChar == '\n') // If the incoming character is a newline break while loop
+     {
+       stringComplete = true;
+       RS485mode = true;
+       break;
+     }
+
+     packet += inChar; // Add value to inputstring
+
+    if (packet.length() > 100) // If inputString is too long break while loop
+    {
+      Serial.println("ERROR");
+      break;
+    }
+  }
+}
 
 
 void setup() {
+
+  //pinMode(Vext,OUTPUT);
+  
+  //digitalWrite(Vext, HIGH);
 
   preferences.begin("shot-clock", false);
 
@@ -356,16 +442,26 @@ void setup() {
   band = band_select[channel];
    
   preferences.end();
+
+    //RS-485
+  Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
   
+  inputString.reserve(200);
+  
+
   Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
      
   pwm.begin();
   pwm.setPWMFreq(200);  // This is the maximum recommended PWM frequency for LEDs
 
   all_Segments_off();
+
+  //delay(50);
+
+  //digitalWrite(Vext, LOW);
   
   Heltec.display->init();
-  Heltec.display->flipScreenVertically();  
+  // Heltec.display->flipScreenVertically();  
   Heltec.display->setFont(ArialMT_Plain_10);
   
   Heltec.display->clear();
@@ -441,12 +537,44 @@ void setup() {
   Heltec.display->display();
 }
 
+void drawLoraInfo() {
+  Heltec.display->drawString(90, 52, "LoRa");
+  Heltec.display->display();
+  Serial.println("LoRa");
+}
+
+void drawRS485Info() {
+  Heltec.display->drawString(90, 52, "RS485");
+  Heltec.display->display();
+  Serial.println("RS485");
+}
+
 void loop() {
 
+  if (RS485mode == false){
   int packetSize = LoRa.parsePacket();
   yield();                                    // to mitigate random occuring hang issue when recieving data
   if (packetSize) { cbk(packetSize);  }
-  
+  }
+  //RS-485 Test
+  RS485receive();
+
+  // print the string when a newline arrives:
+  if (stringComplete) {
+    
+
+    lms = millis();
+    clientFlag = true;
+    showNewData();
+    handleHorn();
+    drawRS485Info();
+
+    // clear the string:
+    packet = "";
+    stringComplete = false;
+  }
+
+
   if (clientFlag == false){
     waiting();
     }
@@ -455,3 +583,21 @@ void loop() {
     }
   AsyncElegantOTA.loop(); 
 }
+
+
+
+/*
+void serialEvent() {
+  while (Serial2.available()) {
+    // get the new byte:
+    char inChar = (char)Serial.read();
+    // add it to the inputString:
+    packet += inChar;
+    // if the incoming character is a newline, set a flag so the main loop can
+    // do something about it:
+    if (inChar == '\n') {
+      stringComplete = true;
+    }
+  }
+}
+*/
