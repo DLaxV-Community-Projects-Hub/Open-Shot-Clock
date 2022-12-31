@@ -6,6 +6,7 @@ Open Shot Clock is an Open Source and DIY Project aiming for minimizing the berr
 
 - Design Documents for Open Shot Clock Displays and Controller
 - DIY Building Instructions
+- BOM for Displays and Controller
 - User Manual
 - Source Code for running Displays and Controller
 - Project Wiki (planned, not started yet)
