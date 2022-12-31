@@ -18,8 +18,9 @@ Open Shot Clock is an Open Source and DIY Project aiming for minimizing the berr
 - Tackle issues
 - Build up Wiki with design insights, project history and roadmap
 - Source code refactoring
-- design and test mdf display case as cost reduction opportunity
-- assist first builders and gather feedback
+- Design and test mdf display case as cost reduction opportunity
+- Assist first builders and gather feedback
+- Offer english version of documents (if sufficiently demanded)
 
 ## Authors
 
