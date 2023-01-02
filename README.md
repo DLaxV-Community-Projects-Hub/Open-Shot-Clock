@@ -4,7 +4,7 @@
 Open Shot Clock is an Open Source and DIY Project aiming for minimizing the barriers of entry for shot-clock-aided sports like Boxlacrosse and Sixes and maximizing the pure sports experience.
 
 
-## What´s Included?
+## What´s Included
 
 - Design Documentation for Open Shot Clock Displays and Controller
     - CAD and PCB designs
@@ -58,7 +58,7 @@ You can find the source code for the controller and the displays in the code fol
   - source code
  
 
-## What´s left to do?
+## What´s left to do
 
 - Tackle issues
 - Build up Wiki with design insights, project history and roadmap
