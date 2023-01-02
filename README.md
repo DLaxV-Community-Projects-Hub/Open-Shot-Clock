@@ -1,7 +1,7 @@
 
 # Open Shot Clock
 
-Open Shot Clock is an Open Source and DIY Project aiming for minimizing the berries of entry for shot-clock-aided sports like Boxlacrosse and Sixes and maximizing the pure sports experience.
+Open Shot Clock is an Open Source and DIY Project aiming for minimizing the barriers of entry for shot-clock-aided sports like Boxlacrosse and Sixes and maximizing the pure sports experience.
 
 
 ## What´s Included?
