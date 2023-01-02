@@ -1,0 +1,200 @@
+html {
+  font-family: 'SevenSeg', Arial, Helvetica, sans-serif;
+  text-align: center;
+}
+  
+body {
+  margin: 0;
+  background-color: black;
+  height: 100%;
+}
+ 
+@font-face {
+  font-family: 'SevenSeg';
+  font-style: normal;
+  src: url("/digital-7-mono.woff2") format('woff2'), url("/digital-7-mono.woff") format('woff'); 
+}
+
+  body {
+    margin: 0;
+    background-color: black;
+    height: 100%;
+  }
+
+  .number {
+    color: white; 
+    font-size: 70vw;
+	  line-height: 0.9;
+  }
+  
+  .is-red {
+    color: red;
+  }
+  
+  .bg-number {
+	  position: absolute;
+    color: rgba(255,255,255, 0.05);
+  }
+  
+  .is-red {
+    color: red;
+  }
+  
+  .container {
+    display: flex;
+  	flex-direction: column;
+	  align-items: center;
+  	user-select: none;
+  	-webkit-touch-callout: none;
+  	-webkit-user-select: none;
+  }
+  
+  .a-button {
+    align-self: flex-end;
+	  height: 40px;
+    width: 40px; 
+    padding: 0px 0px 0px 0px;	
+    font-size: 20px;
+    font-family: Arial;
+    text-align: center;
+    color: rgba(255, 165, 0, 1);
+    background-color: rgba(255, 165, 0, 0.2);
+	  border: 1px solid black;
+	  border-radius: 50%;
+	  box-shadow: 0px 0px 0px 1px rgba(255, 165, 0, 0.2);
+	  margin-top: 1em;
+  	margin-right: 1em;
+	  margin-bottom: 0.5em;
+  } 
+  
+  .a-button:active {
+    background-color: rgba(255, 165, 0, 0.15);
+	  box-shadow: 0px 0px 0px 2px rgba(255, 165, 0, 0.15);
+  }
+  
+  .a-is-active {
+	  color: rgba(0, 255, 0, 1);
+    background-color: rgba(0, 255, 0, 0.2);
+	  box-shadow: 0px 0px 0px 1px rgba(0, 255, 0, 0.2);
+  }
+  
+  .a-is-active:active {
+    background-color: rgba(0, 255, 0, 0.15);
+	  box-shadow: 0px 0px 0px 2px rgba(0, 255, 0, 0.15);
+  }
+     
+  .reset-button {
+	  height: 90px;
+    width: 90px;  
+    font-size: 18px;
+    font-family: Arial;
+    text-align: center;
+	  text-decoration: none;
+    outline: none;
+    color: rgba(255, 255, 255, 1);
+    background-color: rgba(105, 105, 105, 0.3);
+    border: 2px solid black;
+	  border-radius: 50%;
+	  box-shadow: 0px 0px 0px 2px rgba(105, 105, 105, 0.3);
+  }
+
+  .reset-button:active {
+    background-color: rgba(105, 105, 105, 0.2);
+	  box-shadow: 0px 0px 0px 2px rgba(105, 105, 105, 0.2);
+  }
+  
+  .reset-is-disabled {
+    color: rgba(105, 105, 105, 1);  
+  	background-color: rgba(105, 105, 105, 0.2);
+	  box-shadow: 0px 0px 0px 2px rgba(105, 105, 105, 0.2);
+    pointer-events:none;  
+  }	  
+ 
+  .pp-button {
+	  height: 90px;
+    width: 90px;  
+    font-size: 18px;
+    font-family: Arial;
+    text-align: center;
+	  text-decoration: none;
+    outline: none;
+    color: rgba(255, 165, 0, 1);
+    background-color: rgba(255, 165, 0, 0.2);
+	  border: 2px solid black;
+  	border-radius: 50%;
+	  box-shadow: 0px 0px 0px 2px rgba(255, 165, 0, 0.2);
+	  margin-top: 1em;
+  } 
+  
+  .pp-button:active {
+    background-color: rgba(255, 165, 0, 0.15);
+	  box-shadow: 0px 0px 0px 2px rgba(255, 165, 0, 0.15);
+  }
+  
+  .pp-is-active {
+	  color: rgba(0, 255, 0, 1);
+    background-color: rgba(0, 255, 0, 0.2);
+	  box-shadow: 0px 0px 0px 2px rgba(0, 255, 0, 0.2);
+  }
+  
+  .pp-is-active:active {
+    background-color: rgba(0, 255, 0, 0.15);
+	  box-shadow: 0px 0px 0px 2px rgba(0, 255, 0, 0.15);
+  }
+
+  .pp-is-disabled {
+	  color: rgba(105, 105, 105, 1);  
+	  background-color: rgba(105, 105, 105, 0.2);
+	  box-shadow: 0px 0px 0px 2px rgba(105, 105, 105, 0.2);
+	  height: 90px;
+    width: 90px;  
+    font-size: 18px;
+    text-align: center;
+	  text-decoration: none;
+    outline: none;
+	  border: 2px solid black;
+  	border-radius: 50%;
+	  margin-top: 1em;
+    pointer-events:none;	
+	/*display: none;*/
+  }
+ 
+  .container-settime {
+    display: flex;
+	  flex-direction: row;
+	  justify-content:space-evenly;
+  	align-items: center;
+	  user-select: none;
+  	-webkit-touch-callout: none;
+  	-webkit-user-select: none; 
+  }
+ 
+  .settime-button {
+    font-family: 'SevenSeg';
+  	height: 60px;
+    width: 60px; 
+    padding: 0px 0px 0px 0px;	
+    font-size: 30px;
+    text-align: center;
+  	text-decoration: none;
+    outline: none;
+    color: rgba(255, 165, 0, 1);
+    background-color: rgba(255, 165, 0, 0.2);
+  	border: 2px solid black;
+  	border-radius: 50%;
+  	box-shadow: 0px 0px 0px 2px rgba(255, 165, 0, 0.2);
+    margin-top: 3em;
+    margin-bottom: 2em;	
+  }
+  
+  .settime-button:active {
+    background-color: rgba(255, 165, 0, 0.15);
+  	box-shadow: 0px 0px 0px 2px rgba(255, 165, 0, 0.15);
+  }
+
+  .settime-is-active {
+  	color: rgba(0, 255, 0, 1);
+    background-color: rgba(0, 255, 0, 0.2);
+  	box-shadow: 0px 0px 0px 2px rgba(0, 255, 0, 0.2);
+  }  
+

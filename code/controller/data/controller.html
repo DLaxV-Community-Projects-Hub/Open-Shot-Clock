@@ -1,0 +1,63 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>LaxShotClock - Controller</title>
+  <meta name="viewport" content="width=device-width, user-scalable=no">
+  <link rel="icon" href="data:,">
+  <link type="text/css" rel="stylesheet" href="/style.css">
+  <script type="application/javascript" src="/javascript.js"></script>
+</head>
+
+<style>
+
+  @media (max-aspect-ratio: 1/1) {
+    .number {  
+      font-size: 80vw;
+    }
+  }
+  
+  @media (min-aspect-ratio: 1/1) {
+    .number {  
+      font-size: 110vh;
+    }
+  }
+</style>
+
+<body>
+  <div class="container">
+	<button id="audio-button" class="a-button">A</button>
+	<div class="number-container">
+	  <div class="number bg-number">88</div>
+  	  <div id="clock" class="number"></div>
+	</div>
+  </div>
+  
+  <div class="container">
+    <button id="reset-button" class="reset-button">Reset</button>
+    <button id="playpause-button" class="pp-button pp-is-active">Play</button>
+  </div>
+  <div class="container-settime">
+	<button id="setTimeMinus10-button" class="settime-button">-10  </button>
+	<button id="setTimeMinus1-button" class="settime-button">-1  </button>
+	<button id="setTime30-button" class="settime-button settime-is-active">30  </button>
+	<button id="setTimePlus1-button" class="settime-button">+1  </button>
+	<button id="setTimePlus10-button" class="settime-button">+10  </button>
+  </div>  
+</body> 
+<script>
+
+  function initButtonsSpecial() {
+    document.getElementById('audio-button').addEventListener('click', audioonoff); 
+	  document.getElementById('reset-button').addEventListener('click', reset);
+    document.getElementById('playpause-button').addEventListener('click', playPause);
+	  document.getElementById('setTimeMinus10-button').addEventListener('click', setTimeMinus10);
+	  document.getElementById('setTimeMinus1-button').addEventListener('click', setTimeMinus1);	
+	  document.getElementById('setTime30-button').addEventListener('click', setTime30);
+	  document.getElementById('setTimePlus1-button').addEventListener('click', setTimePlus1);
+	  document.getElementById('setTimePlus10-button').addEventListener('click', setTimePlus10);
+	
+  }
+
+</script>
+</html>
