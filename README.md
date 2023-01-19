@@ -49,14 +49,13 @@ When you have all parts available please follow the DIY Building Instructions Ma
 
 ### How to set up the firmware
 
-You can find the source code for the controller and the displays in the code folder. Pleas just copy this repo to your VS Code with Plaformio extansion and open both as projects. Fill in your prefered wifi credentials for setting up local device wifi networks to change settings.
+You can find the source code for the controller and the displays in the code folder. Pleas just copy this repo to your VS Code with Plaformio extansion and open both as projects. Fill in your prefered wifi credentials for setting up local device wifi networks to change settings. It is recommended to use different credentials for the controller and the displays to make sure you access the right devices settings.
 
 - flash controller
   - SPIFFS
   - source code
 - flash displays
   - source code
- 
 
 ## What´s left to do
 
