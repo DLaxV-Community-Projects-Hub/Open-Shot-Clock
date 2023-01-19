@@ -25,7 +25,7 @@ For building your own Open Shot Clock you can find all documents/information in 
 
 Please go through the BOM to make shure you have all needed parts available. In the BOM we have included recommendation links where we recently purchased needed parts. Be aware that you can choose from different design features which you have to cover in your purchases. The developement is stil ongoing so some design features are not yet tested or even sufficiently developed, there could be a risk either in implementic them or even not.
 
-In the current design 3d printing is requried. Make sure you print the necessary parts before starting to build or let them print by a printing service. Make sure the parts are printed with a head and impact resistant 3d printing material. You can find recommented materials in the BOM.
+In the current design 3d printing is requried. Make sure you print the necessary parts before starting to build or let them print by a printing service. Make sure the parts are printed with a heat and impact resistant 3d printing material. You can find recommented materials in the BOM.
 
 For the PCBs you can use the design files to order them at a PCB manufacturer like [PCBWay](https://www.pcbway.com/) or you can get in touch with us, there are still some prototyping PCBs left of the current version. In the near future the PCB design has to be adepted to the new Heltec Lora 32 version 3.0, up to now the new version is not supported yet)
 
