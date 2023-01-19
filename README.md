@@ -79,6 +79,9 @@ Feel free to customize your Open Shot Clock to your needs. For this purpose you 
 - [@ChangeD20](https://github.com/ChangeD20)
 - [@devdrik](https://github.com/devdrik)
 
+## Contact
+
+github@dlaxv.de
 
 ## License
 
