@@ -1,3 +1,5 @@
+![theme](https://github.com/DLaxV-Community-Projects-Hub/Open-Shot-Clock/blob/10ff644c1dac15ff775df245b1cfb819968d605b/assets/theme.svg)
+
 
 # Open Shot Clock
 
