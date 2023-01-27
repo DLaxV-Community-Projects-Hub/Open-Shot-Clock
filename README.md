@@ -5,7 +5,7 @@
 
 Open Shot Clock is an Open Source and DIY Project aiming for minimizing the barriers of entry for shot-clock-aided sports like Boxlacrosse and Sixes and maximizing the pure sports experience.
 
-For more information have a look to our [wiki](https://github.com/DLaxV-Community-Projects-Hub/Open-Shot-Clock/wiki/Open-Shot-Clock-Wiki)!
+For more information have a look to our [wiki](https://github.com/DLaxV-Community-Projects-Hub/Open-Shot-Clock/wiki/Open-Shot-Clock-Wiki) or this [blog](https://devdrik.de/blog/) made [@devdrik](https://github.com/devdrik).
 
 
 ## What´s Included
@@ -31,7 +31,7 @@ Please go through the BOM to make shure you have all needed parts available. In 
 
 In the current design 3d printing is requried. Make sure you print the necessary parts before starting to build or let them print by a printing service. Make sure the parts are printed with a heat and impact resistant 3d printing material. You can find recommented materials in the BOM.
 
-For the PCBs you can use the design files to order them at a PCB manufacturer like [PCBWay](https://www.pcbway.com/) or you can get in touch with us, there are still some prototyping PCBs left of the current version. In the near future the PCB design has to be adepted to the new Heltec Lora 32 version 3.0, up to now the new version is not supported yet)
+For the PCBs you can use the design files to order them at a PCB manufacturer like [PCBWay](https://www.pcbway.com/) or you can get in touch with us, there are still some prototyping PCBs left of the current version. In the near future the PCB design has to be adepted to the new Heltec Lora 32 version 3.0, up to now the new version is not supported yet). For more information check this [blog artical](https://devdrik.de/open-shot-clock-hannover/) from [@devdrik](https://github.com/devdrik).
 
 ### List of optional design features:
 
@@ -48,7 +48,7 @@ For the PCBs you can use the design files to order them at a PCB manufacturer li
 
 ### Assembling
 
-When you have all parts available please follow the DIY Building Instructions Manual for assembling your Open Shot Clocks. Some parts like the base-, front- and back-plates need to be modified before they can be assembled. You can do the needed modification by using the drawings of these parts or you can get in touch with us, there are still some back plates left in our stock.
+When you have all parts available please follow the DIY Building Instructions Manual for assembling your Open Shot Clocks. Some parts like the base-, front- and back-plates or the aliminium extursion profiles need to be modified before they can be assembled. You can do the needed modification by using the drawings of these parts or you can get in touch with us, there are still some back plates left in our stock. In this [video](https://www.youtube.com/watch?v=pQqHoa6__Ms) you can see Hendrik performing the whole assembing process of an Open Shot Clock.
 
 
 ### How to set up the firmware
