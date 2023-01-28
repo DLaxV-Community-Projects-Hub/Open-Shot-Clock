@@ -9,7 +9,7 @@ Open Shot Clock is an Open Source and DIY Project aiming for minimizing the barr
 
 - 10" super bright LED digits (in color of your choice)
 - indoor and outdoor usage
-    - impact and water resistant design
+    - impact and water resistant portable design
     - LED brightness adjustable to your needs
 - wirless and cable connection
 - 12V input supply (portable battery or mains operation by AC-DC power supply)
