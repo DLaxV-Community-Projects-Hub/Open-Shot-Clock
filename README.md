@@ -3,12 +3,29 @@
 
 # Open Shot Clock
 
-Open Shot Clock is an Open Source and DIY Project aiming for minimizing the barriers of entry for shot-clock-aided sports like Boxlacrosse and Sixes and maximizing the pure sports experience.
+Open Shot Clock is an Open Source and DIY Project aiming for minimizing the barriers of entry for shot-clock-aided sports like Boxlacrosse and Sixes and maximizing the pure sports experience to an affordable price.
 
-For more information have a look to our [wiki](https://github.com/DLaxV-Community-Projects-Hub/Open-Shot-Clock/wiki/Open-Shot-Clock-Wiki) or this [blog](https://devdrik.de/blog/) made [@devdrik](https://github.com/devdrik).
+## Details
+
+- 10" super bright LED digits (in color of your choice)
+- indoor and outdoor usage
+    - impact and water resistant design
+    - LED brightness adjustable to your needs
+- wirless and cable connection
+- 12V input supply (portable battery or mains operation by AC-DC power supply)
+- handheld controller
+- wifi connection to smartphone
+    - control option
+    - settings change
+    - firmware updates
+- external horn for each display
+- tripod stands ~2 meter height
 
 
-## What´s Included
+For more information have a look at our [wiki](https://github.com/DLaxV-Community-Projects-Hub/Open-Shot-Clock/wiki/Open-Shot-Clock-Wiki) or this [blog](https://devdrik.de/blog/) made by [@devdrik](https://github.com/devdrik).
+
+
+## What´s Included Here
 
 - Design Documentation for Open Shot Clock Displays and Controller
     - CAD and PCB designs
@@ -20,12 +37,11 @@ For more information have a look to our [wiki](https://github.com/DLaxV-Communit
 - Project Wiki (still in build)
 
 
-
 ## Usage
 
 For building your own Open Shot Clock you can find all documents/information in the documentation folder.
 
-### Getting all the parts
+### Getting All the Parts Needed
 
 Please go through the BOM to make shure you have all needed parts available. In the BOM we have included recommendation links where we recently purchased needed parts. Be aware that you can choose from different design features which you have to cover in your purchases. The developement is stil ongoing so some design features are not yet tested or even sufficiently developed, there could be a risk either in implementic them or even not.
 
@@ -33,7 +49,7 @@ In the current design 3d printing is requried. Make sure you print the necessary
 
 For the PCBs you can use the design files to order them at a PCB manufacturer like [PCBWay](https://www.pcbway.com/) or you can get in touch with us, there are still some prototyping PCBs left of the current version. In the near future the PCB design has to be adepted to the new Heltec Lora 32 version 3.0, up to now the new version is not supported yet). For more information check this [blog artical](https://devdrik.de/open-shot-clock-hannover/) from [@devdrik](https://github.com/devdrik).
 
-### List of optional design features:
+### List of Optional Design Features:
 
 - Display Temperature Managment (up to now we don´t know if a temperature management is necessary, to find out we integrated a temp sensor socket on the display pcbs, tests are still in planning)
 
@@ -48,10 +64,10 @@ For the PCBs you can use the design files to order them at a PCB manufacturer li
 
 ### Assembling
 
-When you have all parts available please follow the DIY Building Instructions Manual for assembling your Open Shot Clocks. Some parts like the base-, front- and back-plates or the aliminium extursion profiles need to be modified before they can be assembled. You can do the needed modification by using the drawings of these parts or you can get in touch with us, there are still some back plates left in our stock. In this [video](https://www.youtube.com/watch?v=pQqHoa6__Ms) you can see Hendrik performing the whole assembing process of an Open Shot Clock.
+When you have all parts available please follow the DIY Building Instructions Manual for assembling your Open Shot Clocks. Some parts like the base-, front- and back-plates or the aliminium extursion profiles need to be modified before they can be assembled. You can do the needed modification by using the drawings of these parts or you can get in touch with us, there are still some back plates left in our stock. In this [youtube playlist](https://www.youtube.com/watch?v=pQqHoa6__Ms&list=PLql27Iz3RF6tFwROZiCufJEf_9jadfyL8) you can see videos of [@devdrik] performing the assembing process of an Open Shot Clock. In the future the playlist will be extended to cover all parts of the assembling process.
 
 
-### How to set up the firmware
+### How to Set Up the Firmware
 
 You can find the source code for the controller and the displays in the code folder. Pleas just copy this repo to your VS Code with Plaformio extansion and open both as projects. Fill in your prefered wifi credentials for setting up local device wifi networks to change settings. It is recommended to use different credentials for the controller and the displays to make sure you access the right devices settings.
 
@@ -61,7 +77,7 @@ You can find the source code for the controller and the displays in the code fol
 - flash displays
   - source code
 
-## What´s left to do
+## What´s Left to Do
 
 - Tackle issues
 - Build up Wiki with design insights, project history and roadmap
@@ -73,7 +89,7 @@ You can find the source code for the controller and the displays in the code fol
 - to be continued
 
 
-## How to contribute
+## How to Contribute
 
 Feel free to customize your Open Shot Clock to your needs. For this purpose you can find the design files in the cad and pcb folders and the source code in the code folder. If you have ideas how to improve the Open Shot Clock and you need support for the integration or you want to share the benefits with the community please get in touch with us.
 
