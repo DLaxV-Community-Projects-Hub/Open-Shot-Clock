@@ -64,7 +64,7 @@ For the PCBs you can use the design files to order them at a PCB manufacturer li
 
 ### Assembling
 
-When you have all parts available please follow the DIY Building Instructions Manual for assembling your Open Shot Clocks. Some parts like the base-, front- and back-plates or the aliminium extursion profiles need to be modified before they can be assembled. You can do the needed modification by using the drawings of these parts or you can get in touch with us, there are still some back plates left in our stock. In this [youtube playlist](https://www.youtube.com/watch?v=pQqHoa6__Ms&list=PLql27Iz3RF6tFwROZiCufJEf_9jadfyL8) you can see videos of [@devdrik] performing the assembing process of an Open Shot Clock. In the future the playlist will be extended to cover all parts of the assembling process.
+When you have all parts available please follow the DIY Building Instructions Manual for assembling your Open Shot Clocks. Some parts like the base-, front- and back-plates or the aliminium extursion profiles need to be modified before they can be assembled. You can do the needed modification by using the drawings of these parts or you can get in touch with us, there are still some back plates left in our stock. In this [youtube playlist](https://www.youtube.com/watch?v=pQqHoa6__Ms&list=PLql27Iz3RF6tFwROZiCufJEf_9jadfyL8) you can see videos of [@devdrik](https://github.com/devdrik) performing the assembing process of an Open Shot Clock. In the future the playlist will be extended to cover all parts of the assembling process.
 
 
 ### How to Set Up the Firmware
