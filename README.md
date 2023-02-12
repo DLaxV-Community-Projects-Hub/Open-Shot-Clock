@@ -21,9 +21,16 @@ Open Shot Clock is an Open Source and DIY Project aiming for minimizing the barr
 - external horn for each display
 - tripod stands ~2 meter height
 
+The price tag is around 1000€ for materials and accessories, depending on whicht design and batterie options you choose.
+
 
 For more information have a look at our [wiki](https://github.com/DLaxV-Community-Projects-Hub/Open-Shot-Clock/wiki/Open-Shot-Clock-Wiki) or this [blog](https://devdrik.de/blog/) made by [@devdrik](https://github.com/devdrik).
 
+You want to see the Open Shot Clock in action?! Check out the following recordings of recent Lacrosse high lights from Germany:
+
+- [Men´s European Box Lacrosse Championship 2022 - Final: England vs. Germany](https://sportdeutschland.tv/germanylacrosse/european-box-lacrosse-championship-final-england-vs-germany)
+- [Women´s German Indoor Championchip 2022 - Final: HLC Rot-Weiss München vs. HTHC Hamburg A](https://sportdeutschland.tv/germanylacrosse/finale-lacrosse-damen-indoor-meisterschaft-2022)
+- [Men´s German Box Lacrosse Championchip 2022- Final: Spreewölfe Berlin vs. KKHT SW Köln](https://sportdeutschland.tv/germanylacrosse/deutsche-meisterschaften-box-lacrosse-2022-spreewoelfe-berlin-vs-kkht-sw-koeln)
 
 ## What´s Included Here
 
@@ -31,7 +38,7 @@ For more information have a look at our [wiki](https://github.com/DLaxV-Communit
     - CAD and PCB designs
     - 3d printing files
     - DIY Building Instructions Manual (german)
-    - BOM for Displays and Controller (german)
+    - BOM for Displays, Controller and accessories (german)
     - User Manual (german)
     - Source Code for running Displays and Controller
 - Project Wiki (still in build)
