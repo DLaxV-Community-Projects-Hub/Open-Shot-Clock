@@ -26,7 +26,9 @@ The price tag is around 1000€ for materials and accessories, depending on whic
 
 For more information have a look at our [wiki](https://github.com/DLaxV-Community-Projects-Hub/Open-Shot-Clock/wiki/Open-Shot-Clock-Wiki) or this [blog](https://devdrik.de/blog/) made by [@devdrik](https://github.com/devdrik).
 
-You want to see the Open Shot Clock in action?! Check out the following recordings of recent Lacrosse high lights from Germany:
+## You want to see the Open Shot Clock in action?!
+
+Check out the following recordings of recent Lacrosse high lights from Germany:
 
 - [Men´s European Box Lacrosse Championship 2022 - Final: England vs. Germany](https://sportdeutschland.tv/germanylacrosse/european-box-lacrosse-championship-final-england-vs-germany)
 - [Women´s German Indoor Championchip 2022 - Final: HLC Rot-Weiss München vs. HTHC Hamburg A](https://sportdeutschland.tv/germanylacrosse/finale-lacrosse-damen-indoor-meisterschaft-2022)
