@@ -22,7 +22,7 @@ Open Shot Clock is an Open Source and DIY Project aiming for minimizing the barr
 - tripod stands ~2 meter height
 - tested under competition conditions
 
-The price tag is around 1000€ for materials and accessories, depending on whicht design and batterie options you choose.
+The price tag is around 1000€ for materials and accessories, depending on whicht design and batterie options you choose it might cost more.
 
 
 For more information have a look at our [wiki](https://github.com/DLaxV-Community-Projects-Hub/Open-Shot-Clock/wiki/Open-Shot-Clock-Wiki) or this [blog](https://devdrik.de/blog/) made by [@devdrik](https://github.com/devdrik).
