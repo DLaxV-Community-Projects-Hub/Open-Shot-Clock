@@ -61,15 +61,19 @@ For the PCBs you can use the design files to order them at a PCB manufacturer li
 
 ### List of Optional Design Features:
 
-- Display Temperature Managment (up to now we don´t know if a temperature management is necessary, to find out we integrated a temp sensor socket on the display pcbs, tests are still in planning)
+- Displays - 19 mm thick highly machined base plate or 8 mm thick easy to build base plate
+  - 19 mm makes a more stable design and is tested well
+  - 8 mm base plate is much easier to build with less special machinery, but it´s not tested yet (there might be clashes with electronic parts inside the case)
+
+- Displays - Temperature Managment (up to now we don´t know if a temperature management is necessary, to find out we integrated a temp sensor socket on the display pcbs, tests are still in planning)
 
   - No Cooling
   - Fan grids on the back for passiv cooling (default)
   - Active Fan with fan grids on the back (fan can be installed behind one fan grid and operated by one mosfet output, this feature is not yet included in the sourc code)
 
-- Batteries (you can find different battery options in the BOM from which you can choose)
-- Accessories (you can find different accessory options in the BOM from which you can choose)
-- Type-Plate customization (for having your own type-plate text you can get in touch with us, we can change the text for you)
+- Displays - Batteries (you can find different battery options in the BOM from which you can choose)
+- Accessories - you can find different accessory options in the BOM from which you can choose
+- Displays - Type-Plate customization (for having your own type-plate text you can get in touch with us, we can change the text for you)
 - to be continued
 
 ### Assembling
