@@ -56,8 +56,8 @@ AsyncWebSocket ws("/ws");
 // const char* ssid = "ControllerRed";
 // const char* ssid = "Controller3Button";
 const char *ssid = "Controller6Button";
-// const char* password = "12345678";
-const char *password = "EM2022LAX";
+ const char* password = "12345678";
+//const char *password = "EM2022LAX";
 
 #include <Preferences.h>
 
