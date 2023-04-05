@@ -1,4 +1,4 @@
-![theme](https://github.com/DLaxV-Community-Projects-Hub/Open-Shot-Clock/blob/main/assets/theme.pptx.svg)
+![theme](https://github.com/DLaxV-Community-Projects-Hub/Open-Shot-Clock/blob/assets/assets/theme.pptx.svg)
 
 
 # Open Shot Clock
