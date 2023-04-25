@@ -31,9 +31,11 @@ For more information have a look at our [wiki](https://github.com/DLaxV-Communit
 
 To see the Open Shot Clock in action check out the following recordings of recent Lacrosse high lights from Germany:
 
-- [Men´s European Box Lacrosse Championship 2022 - Final: England vs. Germany](https://sportdeutschland.tv/germanylacrosse/european-box-lacrosse-championship-final-england-vs-germany)
-- [Women´s German Indoor Championchip 2022 - Final: HLC Rot-Weiss München vs. HTHC Hamburg A](https://sportdeutschland.tv/germanylacrosse/finale-lacrosse-damen-indoor-meisterschaft-2022)
-- [Men´s German Box Lacrosse Championchip 2022- Final: Spreewölfe Berlin vs. KKHT SW Köln](https://sportdeutschland.tv/germanylacrosse/deutsche-meisterschaften-box-lacrosse-2022-spreewoelfe-berlin-vs-kkht-sw-koeln)
+- [Men´s European Box Lacrosse Championship 2022 - Final: England vs. Germany](https://sportdeutschland.tv/germanylacrosse/european-box-lacrosse-championship-final-england-vs-germany) (face off at 0:07:20)
+- [Women´s German Indoor Championchip 2023 - Final: HLC Rot-Weiss München vs. HTHC Hamburg A](https://sportdeutschland.tv/germanylacrosse/deutsche-indoor-lacrosse-meisterschaft-2023-finale) (draw at 0:07:35)
+- [Men´s German Box Lacrosse Championchip 2023- Final: SG Süd vs. SC Frankfurt 1880](https://sportdeutschland.tv/germanylacrosse/deutsche-box-lacrosse-meisterschaft-2023-finale) (face off at 0:10:15)
+- [Women´s German Indoor Championchip 2022 - Final: HLC Rot-Weiss München vs. HTHC Hamburg A](https://sportdeutschland.tv/germanylacrosse/finale-lacrosse-damen-indoor-meisterschaft-2022) (draw at 0:09:20)
+- [Men´s German Box Lacrosse Championchip 2022- Final: Spreewölfe Berlin vs. KKHT SW Köln](https://sportdeutschland.tv/germanylacrosse/deutsche-meisterschaften-box-lacrosse-2022-spreewoelfe-berlin-vs-kkht-sw-koeln) (starting at Part 2)
 
 ## What´s Included Here
 
@@ -107,6 +109,9 @@ You can find the source code for the controller and the displays in the code fol
 
 Feel free to customize your Open Shot Clock to your needs. For this purpose you can find the design files in the cad and pcb folders and the source code in the code folder. If you have ideas how to improve the Open Shot Clock and you need support for the integration or you want to share the benefits with the community please get in touch with us.
 
+## Acknowledgement
+
+Many thanks to [Ulf](https://github.com/ulf) for some initial inspiration in the approach to develop a LED shot clock. If you are looking out for a minimal and cheap setup for small indoor fields without obsticals have a look to [Ulf´s basketball shot clock tutotial](http://shotclock.de/)! With minor changes to the app it is possible to start with 30 seconds on the clock for lacrosse instead of 24 as for basketball. 
 
 ## Authors
 
