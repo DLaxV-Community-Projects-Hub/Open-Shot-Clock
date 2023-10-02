@@ -15,5 +15,5 @@ const char* password = "12345678";
 
 //RS-485
 #define RXD2 13
-#define TXD2 12
+#define TXD2 14
 #define Vext 21
