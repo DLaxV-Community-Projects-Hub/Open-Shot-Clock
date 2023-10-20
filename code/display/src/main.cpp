@@ -38,6 +38,17 @@
 #include "LEDs.h"
 #include "Horn.h"
 
+#include <RadioLib.h>
+
+#if defined(WIFI_LoRa_32_V3)
+  SX1262 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
+#endif
+
+#if defined(WIFI_LoRa_32_V2)
+  SX1276 radio = new Module(SS, DIO0, RST_LoRa, DIO0);
+#endif
+
+
 String inputString = "";         // a String to hold incoming data
 bool stringComplete = false;  // whether the string is complete
 
@@ -83,6 +94,21 @@ bool timeIsUp() {
   return currentTime == 0 && previousTime != 0;
 }
 
+// flag to indicate that a packet was received
+volatile bool receivedFlag = false;
+
+// this function is called when a complete packet
+// is received by the module
+// IMPORTANT: this function MUST be 'void' type
+//            and MUST NOT have any arguments!
+#if defined(ESP8266) || defined(ESP32)
+  ICACHE_RAM_ATTR
+#endif
+void setLoRaReceiveFlag(void) {
+  // we got a packet, set the flag
+  receivedFlag = true;
+}
+
 void waitingHeltecDisplay(){
     Heltec.display->clear();
     Heltec.display->drawHorizontalLine(2, 50, 124);  
@@ -108,6 +134,9 @@ void client_check(){
 }
 
 void handlePacket(){
+
+  Serial.print("Incoming msg: ");
+  Serial.println(packet);
   
   String setTimeCommand = "T";
   String honkCommand = "H";
@@ -135,17 +164,12 @@ void handlePacket(){
   }
 }
 
-void cbk(int packetSize) {
-  packet ="";
-  packSize = String(packetSize,DEC);
-  for (int i = 0; i < packetSize; i++){ 
-    packet += (char) LoRa.read(); }
-  rssi = "RSSI " + String(LoRa.packetRssi(), DEC) ;
+void readLoraMessage() {
+  int state = radio.readData(packet);
   lms = millis();
   clientFlag = true;
   drawLoraInfo();
   handlePacket();
-  LoRa.receive(); // Test, ob Aufhängen vermieden wird durch "Erinnern" der Lora Funktion
 }
 
 void set_channel(int ch){
@@ -235,6 +259,33 @@ void initChannelFromEEPROM(){
   preferences.end();
 }
 
+void setupRadio() {
+  // initialize SX12xx with default settings
+  Serial.print(F("[SX12xx] Initializing ... "));
+  int state = radio.begin();
+  if (state == RADIOLIB_ERR_NONE) {
+    Serial.println(F("success!"));
+  } else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    while (true);
+  }
+
+  // set the function that will be called
+  // when new packet is received
+  radio.setPacketReceivedAction(setLoRaReceiveFlag);
+
+  // start listening for LoRa packets
+  Serial.print(F("[SX12xx] Starting to listen ... "));
+  state = radio.startReceive();
+  if (state == RADIOLIB_ERR_NONE) {
+    Serial.println(F("success!"));
+  } else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    while (true);
+  }
+}
 
 void setup() {
 
@@ -246,7 +297,9 @@ void setup() {
   inputString.reserve(200);
   
 
-  Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
+  Heltec.begin(true /*Display Enable*/, false /*LoRa Enable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
+
+  setupRadio();
      
   pwm.begin();
   pwm.setPWMFreq(200);  // This is the maximum recommended PWM frequency for LEDs
@@ -264,8 +317,6 @@ void setup() {
   //Heltec.display->drawString(0, 0, "Wait for incoming data...");
   Heltec.display->display();
   
-  LoRa.setTxPower(20,RF_PACONFIG_PASELECT_RFO);
-  LoRa.setSpreadingFactor(7);
 
   //ESP32 As access point
   WiFi.mode(WIFI_AP); //Access Point mode
@@ -282,10 +333,6 @@ void setup() {
   Serial.println("HTTP server started");
 
   
-  //delay(1000);  // not necessary?
-  //LoRa.onReceive(cbk);  // aus Beispiel auskommentiert übernommen
-  LoRa.receive();
-
   leds.showWaitingAnimation();
   waitingHeltecDisplay();
 }
@@ -293,7 +340,6 @@ void setup() {
 void drawLoraInfo() {
   Heltec.display->drawString(90, 52, "LoRa");
   Heltec.display->display();
-  Serial.println("LoRa");
 }
 
 void drawRS485Info() {
@@ -305,9 +351,10 @@ void drawRS485Info() {
 void loop() {
 
   if (RS485mode == false){
-  int packetSize = LoRa.parsePacket();
-  yield();                                    // to mitigate random occuring hang issue when recieving data
-  if (packetSize) { cbk(packetSize);  }
+    if (receivedFlag) { 
+      readLoraMessage();
+      receivedFlag = false;
+    }
   }
   //RS-485 Test
   RS485receive();
