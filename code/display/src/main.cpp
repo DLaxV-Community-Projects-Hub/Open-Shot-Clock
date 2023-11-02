@@ -306,7 +306,7 @@ void setup() {
 
   initChannelFromEEPROM();
 
-    //RS-485
+  //RS-485
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
   
   inputString.reserve(200);
