@@ -40,14 +40,6 @@
 
 #include <RadioLib.h>
 
-#if defined(WIFI_LoRa_32_V3)
-  SX1262 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
-#endif
-
-#if defined(WIFI_LoRa_32_V2)
-  SX1276 radio = new Module(SS, DIO0, RST_LoRa, DIO0);
-#endif
-
 
 String inputString = "";         // a String to hold incoming data
 bool stringComplete = false;  // whether the string is complete
@@ -56,10 +48,24 @@ bool RS485mode = false;
 
 AsyncWebServer server(80);
 
-Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
+#if defined(WIFI_LoRa_32_V2)
+  // Use the SX1276 Radio
+  SX1276 radio = new Module(SS, DIO0, RST_LoRa, DIO0);
+  // Create PWM object using the same Wire object (i2c) that the OLED uses
+  Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
+#endif
+
+#if defined(WIFI_LoRa_32_V3)
+  // Use the SX1262 Radio
+  SX1262 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
+  // Create a new TwoWire Object, because OLED uses the other one, that is not usable through pins
+  TwoWire I2C = TwoWire(1);
+  // Create PWM object using the new Wire object (i2c)
+  Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, I2C);
+#endif
+
 LEDs leds(pwm);
 Horn horn(pwm);
-
 
 Preferences preferences;
 
@@ -287,6 +293,15 @@ void setupRadio() {
   }
 }
 
+void initI2C() {
+  #if defined(WIFI_LoRa_32_V3)
+    I2C.setPins(SDA, SCL);
+  #endif
+
+  pwm.begin();
+  pwm.setPWMFreq(200);  // This is the maximum recommended PWM frequency for LEDs
+}
+
 void setup() {
 
   initChannelFromEEPROM();
@@ -300,9 +315,8 @@ void setup() {
   Heltec.begin(true /*Display Enable*/, false /*LoRa Enable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
 
   setupRadio();
-     
-  pwm.begin();
-  pwm.setPWMFreq(200);  // This is the maximum recommended PWM frequency for LEDs
+
+  initI2C();
 
   leds.allSegmentsOff();
 
