@@ -51,18 +51,19 @@ AsyncWebServer server(80);
 #if defined(WIFI_LoRa_32_V2)
   // Use the SX1276 Radio
   SX1276 radio = new Module(SS, DIO0, RST_LoRa, DIO0);
+  Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 #endif
 
 #if defined(WIFI_LoRa_32_V3)
   // Use the SX1262 Radio
   SX1262 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
+  // Create a new TwoWire Object, because OLED uses the other one, that is not usable through pins
+  TwoWire I2C = TwoWire(1);
+  // Create PWM object using the new Wire object (i2c)
+  Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, I2C);
 #endif
 
 
-// Create a new TwoWire Object, because OLED uses the other one, that is not usable through pins
-TwoWire I2C = TwoWire(1);
-// Create PWM object using the new Wire object (i2c)
-Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, I2C);
 
 LEDs leds(pwm);
 Horn horn(pwm);
@@ -294,7 +295,9 @@ void setupRadio() {
 }
 
 void initI2C() {
-  I2C.setPins(SDA_LED, SCL_LED);
+  #ifdef WIFI_LoRa_32_V3
+    I2C.setPins(SDA_LED, SCL_LED);
+  #endif
 
   pwm.begin();
   pwm.setPWMFreq(200);  // This is the maximum recommended PWM frequency for LEDs

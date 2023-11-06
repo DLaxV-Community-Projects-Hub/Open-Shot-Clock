@@ -9,7 +9,7 @@ const char* password = "12345678";
 
 // PCB config
 
-#define DISPLAY_PCB_VERSION V0_2_HACK
+#define DISPLAY_PCB_VERSION V0_2
 
 //Pin config
 
@@ -25,10 +25,7 @@ const char* password = "12345678";
 #endif
 
 //I2C
-#if DISPLAY_PCB_VERSION == V0_2
-    static const uint8_t SDA_LED = SDA_OLED;
-    static const uint8_t SCL_LED = SCL_OLED;
-#elif DISPLAY_PCB_VERSION >= V0_2_HACK
+#if DISPLAY_PCB_VERSION >= V0_2_HACK
     #ifdef WIFI_LoRa_32_V3
         static const uint8_t SDA_LED = 38;
         static const uint8_t SCL_LED = 39;
