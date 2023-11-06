@@ -86,10 +86,11 @@ When you have all parts available please follow the DIY Building Instructions Ma
 
 The V2 module is hard to get at the moment, so we added support for the new V3 version of the module, that is easy to source. To use V3 with PCBs designed for V2, you need to rewire some connections. So make sure not to use a V3 on a V2 PCB without modification!
 
-What to do to use a V3 on a PCB for V2 (display):
-- Do not connect GPIO41, GPIO42, GPIO21 and GPIO48 to the display PCB
-- Connect GPIO41 to the display PCB where GPIO21 would be
-- Connect GPIO42 to the display PCB where GPIO48 would be
+What to do to use a V3 on a Display PCB v0.2:
+- Do not connect GPIO21 and GPIO48 of the V3 to the display PCB
+- Connect GPIO38 to the display PCB where GPIO21 would be
+- Connect GPIO39 to the display PCB where GPIO48 would be
+- In [config.h](code/display/include/config.h) set ```DISPLAY_PCB_VERSION V0_2_HACK```
 
 What to do to use a V3 on a PCB for V2 (controller):
 - Button BUTTON_PIN_B can not be used anymore
