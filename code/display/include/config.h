@@ -1,3 +1,5 @@
+#include "board_definitions.h"
+
 // WiFi config
 
 const char* ssid = "WiFiName";
@@ -5,7 +7,11 @@ const char* ssid = "WiFiName";
 const char* password = "12345678";
 
 
-// Pin config
+// PCB config
+
+#define DISPLAY_PCB_VERSION V0_2_HACK
+
+//Pin config
 
 //RS-485
 #if defined(WIFI_LoRa_32_V2)
@@ -16,4 +22,22 @@ const char* password = "12345678";
 #if defined(WIFI_LoRa_32_V3)
     #define RXD2 6
     #define TXD2 5
+#endif
+
+//I2C
+#if DISPLAY_PCB_VERSION == V0_2
+    static const uint8_t SDA_LED = SDA_OLED;
+    static const uint8_t SCL_LED = SCL_OLED;
+#elif DISPLAY_PCB_VERSION >= V0_2_HACK
+    #ifdef WIFI_LoRa_32_V3
+        // static const uint8_t SDA_LED = SDA;
+        // static const uint8_t SCL_LED = SCL;
+        static const uint8_t SDA_LED = 38;
+        static const uint8_t SCL_LED = 39;
+    #elif defined(WIFI_LoRa_32_V2)
+        // static const uint8_t SDA_LED = 23;
+        // static const uint8_t SCL_LED = 33;
+        static const uint8_t SDA_LED = 33;
+        static const uint8_t SCL_LED = 32;
+    #endif
 #endif
