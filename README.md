@@ -1,6 +1,5 @@
 ![theme](https://github.com/DLaxV-Community-Projects-Hub/Open-Shot-Clock/blob/assets/assets/theme.pptx.svg)
 
-
 # Open Shot Clock
 
 Open Shot Clock is an Open Source and DIY Project aiming to minimize the barriers of entry for shot-clock-aided sports like Boxlacrosse and Sixes and maximizing the pure sports experience to an affordable price.
@@ -91,6 +90,8 @@ What to do to use a V3 on a Display PCB v0.2:
 - Connect GPIO38 to the display PCB where GPIO21 would be
 - Connect GPIO39 to the display PCB where GPIO48 would be
 - In [config.h](code/display/include/config.h) set ```DISPLAY_PCB_VERSION V0_2_HACK```
+
+![v3 Mod pins](https://github.com/DLaxV-Community-Projects-Hub/Open-Shot-Clock/blob/assets/assets/Heltec_v3_mod.png)
 
 What to do to use a V3 on a PCB for V2 (controller):
 - Button BUTTON_PIN_B can not be used anymore
