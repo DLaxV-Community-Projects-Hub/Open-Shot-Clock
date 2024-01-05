@@ -97,6 +97,13 @@ What to do to use a V3 on a PCB for V2 (controller):
 - Button BUTTON_PIN_B can not be used anymore
 - We might need some pull-ups (to be tested)
 
+##### 5V Hack
+
+Some Mosfet modules do not work with 3.3V on gate. To fix this on a v0.2 shotclock display PCB, we can disconnect the 3V3 pins from the of the heltec module and connect the corresponding pins on the display PCB to 5V of the heltec module.
+This will bring all 3V3 on the display PCB to 5V, so be careful if you use a temperature sensor!
+
+![5V Mod pins](https://github.com/DLaxV-Community-Projects-Hub/Open-Shot-Clock/blob/assets/assets/Heltec_5V_mod.png)
+
 ### How to Set Up the Firmware
 
 You can find the source code for the controller and the displays in the code folder. Please just copy this repo to your VS Code with Plaformio extension and open both as projects. Fill in your preferred wifi credentials for setting up local device wifi networks to change settings. It is recommended to use different credentials for the controller and the displays to make sure you access the right devices settings.
