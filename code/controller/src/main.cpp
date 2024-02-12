@@ -37,8 +37,9 @@
 
 #include <SPIFFS.h>
 
-#include "pinconfig.h"
+#include "config.h"
 
+#include <Preferences.h>
 #include <RadioLib.h>
 
 long band_select[5] = {
@@ -53,15 +54,6 @@ long band_select[5] = {
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
-// Enter your SSID and PASSWORD
-// const char* ssid = "ControllerBlue";
-// const char* ssid = "ControllerRed";
-// const char* ssid = "Controller3Button";
-const char *ssid = "Controller6Button";
- const char* password = "12345678";
-//const char *password = "EM2022LAX";
-
-#include <Preferences.h>
 
 Preferences preferences;
 
@@ -108,30 +100,21 @@ const byte                      // connect a button switch from this pin to grou
 */
 
 #if defined(WIFI_LoRa_32_V2)
-SX1276 radio = new Module(SS, DIO0, RST_LoRa, DIO0);
-// Heltec V2 Buttons
-const byte              // connect a button switch from this pin to ground
-    BUTTON_PIN_T(22),   // Button for One Button
-    BUTTON_PIN_P_P(33), // Button for Play/Pause
-    BUTTON_PIN_R_P(2),  // Button for Reset
-    BUTTON_PIN_R_S(23), // Button for Cancel
-    BUTTON_PIN_H(32),   // Button for honking
-    // BUTTON_PIN_B(17),   // Button for nothing
-    LED_PIN(25);        // heltec specific pin 
+  SX1276 radio = new Module(SS, DIO0, RST_LoRa, DIO0);
 #endif
 
 #if defined(WIFI_LoRa_32_V3)
-SX1262 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
-// Heltec V3 Buttons
-const byte              // connect a button switch from this pin to ground
-    BUTTON_PIN_T(39),   // Button for One Button
-    BUTTON_PIN_P_P(38), // Button for Play/Pause
-    BUTTON_PIN_R_P(26),  // Button for Reset
-    BUTTON_PIN_R_S(34), // Button for Cancel
-    BUTTON_PIN_H(39),   // Button for honking
-    // BUTTON_PIN_B(17),   // Button for nothing
-    LED_PIN(25);        // heltec specific pin 25
+  SX1262 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
 #endif
+
+const byte              // connect a button switch from this pin to ground
+    BUTTON_PIN_P_P(PIN_P_P), // Button for Play/Pause
+    BUTTON_PIN_R_P(PIN_R_P),  // Button for Reset
+    BUTTON_PIN_R_S(PIN_R_S), // Button for Cancel
+    BUTTON_PIN_T(PIN_T),   // Button for One Button
+    BUTTON_PIN_H(PIN_H),   // Button for honking
+    BUTTON_PIN_B(PIN_B),   // Button for nothing
+    LED_PIN(PIN_LED);        // heltec specific pin 25
 
 Button myBtn_T(BUTTON_PIN_T), // define the button
     myBtn_P_P(BUTTON_PIN_P_P),
