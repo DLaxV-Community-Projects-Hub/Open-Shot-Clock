@@ -191,12 +191,14 @@ void lorasend(String Msg)
 
 void sendToClock(String Msg)
 {
+  // send serial for cabled clock over RS485
+  Serial2.println(Msg);
+
+  // send lora
   int state = radio.transmit(Msg);
+
   Serial.print("Msg sent: ");
   Serial.println(Msg);
-
-  // RS-485 Test
-  Serial2.println(Msg);
 }
 
 void Count()
@@ -698,7 +700,11 @@ void setup()
   Serial.println(WiFi.macAddress());
 
   Heltec.display->init();
-  // Heltec.display->flipScreenVertically();
+
+  #ifdef FLIPSCREEN
+    Heltec.display->flipScreenVertically();
+  #endif
+
   Heltec.display->setFont(ArialMT_Plain_10);
 
   // ESP32 As access point

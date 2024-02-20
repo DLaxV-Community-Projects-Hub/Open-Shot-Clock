@@ -8,6 +8,9 @@ const char *ssid = "Controller6Button";
 const char* password = "12345678";
 //const char *password = "EM2022LAX";
 
+// Screen
+// uncomment to flip screen
+// #define FLIPSCREEN
 
 // PCB config
 
@@ -19,12 +22,12 @@ const char* password = "12345678";
 
 #if CONTROLLER_PCB_VERSION == NO_BOARD
     #ifdef WIFI_LoRa_32_V2
-        static const uint8_t PIN_P_P = 12;
-        static const uint8_t PIN_R_P = 13;
-        static const uint8_t PIN_R_S = 17;
-        static const uint8_t PIN_T = 2;
-        static const uint8_t PIN_H = 2;
-        static const uint8_t PIN_B = 2;
+        static const uint8_t PIN_P_P = 17;
+        static const uint8_t PIN_R_P = 2;
+        static const uint8_t PIN_R_S = 13;
+        static const uint8_t PIN_T = 22;
+        static const uint8_t PIN_H = 32;
+        static const uint8_t PIN_B = 100;
         static const uint8_t PIN_LED = 25;
     #elif defined(WIFI_LoRa_32_V3)
         static const uint8_t PIN_P_P = 6;
