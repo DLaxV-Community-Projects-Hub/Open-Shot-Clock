@@ -68,7 +68,7 @@ String packet;
 String resetString = "restarting...reset your wifi connection";
 
 const unsigned long
-    LONG_PRESS(500),          // we define a "long press" to be 1000 milliseconds.
+    LONG_PRESS(400),          // we define a "long press" to be 400 milliseconds.
     BLINK_INTERVAL_LONG(950), // the LED just Blinks for 50ms when a Second counted full down
     BLINK_INTERVAL_SHORT(50);
 
@@ -79,7 +79,8 @@ bool playState = false; // count on/off, starts off
 bool startState = true;
 bool intervalState = true;
 bool smartControl = false;
-int ClockStart = 30;
+int defaultClockStart = 30;
+int ClockStart = defaultClockStart;
 int Clock = ClockStart; // Start Zahl
 String ClockStr = "30";
 int B_Level = 8;
@@ -90,14 +91,25 @@ unsigned long msLastPlay;      // last time Button Play
 unsigned long msLastCount;     // last time count down
 unsigned long msLastStopCount; // last time count/send in stop mode
 unsigned long abweichung = 0;  // zählt die gesamte Abweichung
-/*
-const byte                      // connect a button switch from this pin to ground
-    BUTTON_PIN_T(32),           // Button for Play/Pause - one Button
-    BUTTON_PIN_P_P(17),           // Button for Play/Pause // previously 2
-    BUTTON_PIN_R_P(2),         // Button for Reset-Paused // previously 13
-    BUTTON_PIN_R_S(13),         // Button for Reset-started // previously 17
-    LED_PIN(25);                // heltec specific pin 25
-*/
+
+enum button_states_t
+{
+  H_PRESSED,
+  H_PRESSED_LONG,
+  B_PRESSED,
+  B_PRESSED_LONG,
+  T_PRESSED,
+  T_PRESSED_LONG,
+  P_PRESSED,
+  P_PRESSED_LONG,
+  R_PRESSED,
+  R_PRESSED_LONG,
+  C_PRESSED,
+  C_PRESSED_LONG,
+  NONE
+};
+
+button_states_t BUTTON_STATE = NONE;
 
 #if defined(WIFI_LoRa_32_V2)
   SX1276 radio = new Module(SS, DIO0, RST_LoRa, DIO0);
@@ -120,7 +132,7 @@ Button myBtn_T(BUTTON_PIN_T), // define the button
     myBtn_P_P(BUTTON_PIN_P_P),
     myBtn_R_P(BUTTON_PIN_R_P),
     myBtn_H(BUTTON_PIN_H),
-    // myBtn_B(BUTTON_PIN_B),
+    myBtn_B(BUTTON_PIN_B),
     myBtn_R_S(BUTTON_PIN_R_S);
 
 // function prototypes
@@ -303,8 +315,9 @@ void stopCount()
   }
 }
 
-void resetClock(bool play)
+void resetClock(bool play, int resetTime=defaultClockStart)
 {
+  ClockStart=resetTime;
   Clock = ClockStart;
   String Command_T = "T";
   String ClockMsg;
@@ -336,10 +349,9 @@ void resetClock(bool play)
   }
 }
 
-void resetClockByHWButton(bool play)
+void resetClockByHWButton(bool play, int resetTime=defaultClockStart)
 {
-  resetClock(play);
-  // FLEX_INTERVAL -= LONG_PRESS;
+  resetClock(play, resetTime);
   intervalState = false;
 }
 
@@ -656,8 +668,162 @@ void initButtons() {
   myBtn_R_P.begin();
   myBtn_R_S.begin();
   myBtn_H.begin();
-  // myBtn_B.begin();
+  myBtn_B.begin();
   pinMode(LED_PIN, OUTPUT); // set the LED pin as an output
+}
+
+void buttonPressed()
+{
+  smartControl = false;
+  Heltec.display->displayOn();
+
+  Heltec.display->clear();
+  Set_Data_Display();
+  if (!playState) {
+    Set_Pause_Display();
+  }
+  Heltec.display->display();
+}
+
+void handleButtonClicks()
+{
+  switch (BUTTON_STATE)
+  {
+  case H_PRESSED:
+    resetClockByHWButton(true, 30);
+    break;
+  case H_PRESSED_LONG:
+    resetClockByHWButton(false, 30);
+    break;
+  case B_PRESSED:
+    resetClockByHWButton(true, 60);
+    break;
+  case B_PRESSED_LONG:
+    resetClockByHWButton(false, 60);
+    break;
+  case T_PRESSED:
+    resetClockByHWButton(true, 90);
+    break;
+  case T_PRESSED_LONG:
+    resetClockByHWButton(false, 90);
+    break;
+  case P_PRESSED:
+    playPause();
+    break;
+  case P_PRESSED_LONG:
+    playPause();
+    break;
+  case R_PRESSED:
+    // nothing
+    break;
+  case R_PRESSED_LONG:
+    // nothing
+    break;
+  case C_PRESSED:
+    startHonking();
+    break;
+  case C_PRESSED_LONG:
+    startHonking();
+    break;
+
+  default:
+    break;
+  }
+}
+
+bool handledLongPress = false;
+
+void updateButtonState()
+{
+  myBtn_T.read();   // read the button
+  myBtn_P_P.read(); // read the button
+  myBtn_R_P.read(); // read the button
+  myBtn_R_S.read(); // read the button
+  myBtn_H.read();   // read the button
+  myBtn_B.read();   // read the button
+
+  if (myBtn_H.wasReleased() && !handledLongPress)
+  {
+    BUTTON_STATE = H_PRESSED;
+  }
+  else if (myBtn_H.wasReleased() && handledLongPress)
+  {
+    handledLongPress = false;
+  }
+  else if (myBtn_H.pressedFor(LONG_PRESS) && !handledLongPress)
+  {
+    BUTTON_STATE = H_PRESSED_LONG;
+    handledLongPress = true;
+  }
+  else if (myBtn_B.wasReleased() && !handledLongPress)
+  {
+    BUTTON_STATE = B_PRESSED;
+  }
+  else if (myBtn_B.wasReleased() && handledLongPress)
+  {
+    handledLongPress = false;
+  }
+  else if (myBtn_B.pressedFor(LONG_PRESS) && !handledLongPress)
+  {
+    BUTTON_STATE = B_PRESSED_LONG;
+    handledLongPress = true;
+  }
+  else if (myBtn_T.wasReleased() && !handledLongPress)
+  {
+    BUTTON_STATE = T_PRESSED;
+  }
+  else if (myBtn_T.wasReleased() && handledLongPress)
+  {
+    handledLongPress = false;
+  }
+  else if (myBtn_T.pressedFor(LONG_PRESS) && !handledLongPress)
+  {
+    BUTTON_STATE = T_PRESSED_LONG;
+    handledLongPress = true;
+  }
+  else if (myBtn_P_P.wasReleased() && !handledLongPress)
+  {
+    BUTTON_STATE = P_PRESSED;
+  }
+  else if (myBtn_P_P.wasReleased() && handledLongPress)
+  {
+    handledLongPress = false;
+  }
+  else if (myBtn_P_P.pressedFor(LONG_PRESS) && !handledLongPress)
+  {
+    BUTTON_STATE = P_PRESSED_LONG;
+    handledLongPress = true;
+  }
+  else if (myBtn_R_P.wasReleased() && !handledLongPress)
+  {
+    BUTTON_STATE = R_PRESSED;
+  }
+  else if (myBtn_R_P.wasReleased() && handledLongPress)
+  {
+    handledLongPress = false;
+  }
+  else if (myBtn_R_P.pressedFor(LONG_PRESS) && !handledLongPress)
+  {
+    BUTTON_STATE = R_PRESSED_LONG;
+    handledLongPress = true;
+  }
+  else if (myBtn_R_S.wasReleased() && !handledLongPress)
+  {
+    BUTTON_STATE = C_PRESSED;
+  }
+  else if (myBtn_R_S.wasReleased() && handledLongPress)
+  {
+    handledLongPress = false;
+  }
+  else if (myBtn_R_S.pressedFor(LONG_PRESS) && !handledLongPress)
+  {
+    BUTTON_STATE = C_PRESSED_LONG;
+    handledLongPress = true;
+  }
+  else
+  {
+    BUTTON_STATE = NONE;
+  }
 }
 
 //===============================================================
@@ -736,175 +902,24 @@ void setup()
   msLastStopCount = ms;
 }
 
-// the list of possible states for the state machine. This state machine has a fixed
-// sequence of states, i.e. ONOFF --> TO_RESET --> Reset --> TO_RESET --> ONOFF
-// note that while the user perceives two "modes", i.e. ON/OFF mode and rapid blink mode,
-// two extra states are needed in the state machine to transition between these modes.
-enum states_t
-{
-  INITIAL,
-  TOONOFF,
-  ONOFF,
-  RESET
-};
-
 void loop()
 {
 
-  static states_t STATE; // current state machine state
   ms = millis();         // record the current time
-  myBtn_T.read();        // read the button
-  myBtn_P_P.read();      // read the button
-  myBtn_R_P.read();      // read the button
-  myBtn_R_S.read();      // read the button
-  myBtn_H.read();        // read the button
-  // myBtn_B.read();        // read the button
 
-  // hier OTA_Loop
+  updateButtonState();
 
-  switch (STATE)
-  {
-    // this state watches for short and long presses, switches ON/OFF for
-    // short presses, and moves to the RESET state for long presses.
+  handleButtonClicks();
 
-  case INITIAL:
-    if (myBtn_T.wasPressed())
-    {
-      // Serial.println("Initial done");   //Initial State wird benötigt, weil anscheinend
-      // beim Start einmal ein Button Release ausgelöst wird.
-      smartControl = false;
-      Heltec.display->displayOn();
-
-      playPause();
-      STATE = TOONOFF;
+  if (BUTTON_STATE != NONE) {
+    buttonPressed();
+  } else {
+    if (playState == false) {
+      stopCount(); // aktuell: schaltet LED an als User Feedback für Pause
+    } else {
+      Count();
     }
-    if (myBtn_P_P.wasPressed())
-    {
-      // Serial.println("Initial done");   //Initial State wird benötigt, weil anscheinend
-      // beim Start einmal ein Button Release ausgelöst wird.
-      smartControl = false;
-      Heltec.display->displayOn();
-
-      playPause();
-      STATE = TOONOFF;
-    }
-    else
-    {
-      if (playState == false)
-      {
-        stopCount(); // aktuell: schaltet LED an als User Feedback für Pause
-      }
-      else
-      {
-        Count();
-      }
-      AsyncElegantOTA.loop();
-    }
-    break;
-
-  case TOONOFF:
-    if (myBtn_T.wasReleased())
-    {
-      STATE = ONOFF;
-    }
-    if (myBtn_P_P.wasReleased())
-    {
-      STATE = ONOFF;
-    }
-    else
-    {
-      if (playState == false)
-      {
-        stopCount(); // aktuell: schaltet LED an als User Feedback für Pause
-      }
-      else
-      {
-        Count();
-      }
-      AsyncElegantOTA.loop();
-    }
-    break;
-
-  case ONOFF:
-    if (myBtn_T.wasReleased())
-    {
-      smartControl = false;
-      Heltec.display->displayOn();
-      playPause();
-    }
-    else if (myBtn_P_P.wasPressed())
-    {
-      smartControl = false;
-      Heltec.display->displayOn();
-      playPause();
-    }
-
-    else if (myBtn_T.pressedFor(LONG_PRESS))
-    {
-      smartControl = false;
-      Heltec.display->displayOn();
-      resetClockByHWButton(true);
-      FLEX_INTERVAL -= LONG_PRESS;
-      STATE = RESET;
-    }
-
-    else if (myBtn_R_P.wasPressed())
-    {
-      resetClockByHWButton(true);
-    }
-
-    else if (myBtn_R_S.wasPressed())
-    {
-      resetClockByHWButton(false);
-    }
-    else if (myBtn_H.wasReleased())
-    {
-      startHonking();
-    }
-    // else if (myBtn_B.wasReleased())
-    // {
-    //   sendBCommand();
-    // }
-
-    else
-    {
-      if (playState == false)
-      {
-        stopCount(); // aktuell: schaltet LED an als User Feedback für Pause
-      }
-      else
-      {
-        Count();
-      }
-      AsyncElegantOTA.loop();
-    }
-    break;
-
-  case RESET:
-
-    if (myBtn_T.wasReleased())
-    {
-      STATE = ONOFF;
-    }
-    else if (myBtn_T.pressedFor(2500))
-    {
-      smartControl = false;
-      Heltec.display->displayOn();
-      resetClockByHWButton(false);
-      STATE = TOONOFF;
-    }
-    else
-    {
-      if (playState == false)
-      {
-        stopCount(); // aktuell: schaltet LED an als User Feedback für Pause
-      }
-      else
-      {
-        Count();
-      }
-      AsyncElegantOTA.loop();
-    }
-    break;
+    AsyncElegantOTA.loop();
   }
 }
+
