@@ -136,7 +136,7 @@ void client_check(){
     clientFlag = false;
     RS485mode = false;
     leds.showWaitingAnimation();
-
+    ESP.restart();
     }
 }
 
