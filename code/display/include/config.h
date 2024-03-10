@@ -2,7 +2,7 @@
 
 // WiFi config
 
-const char* ssid = "WiFiName";
+const char* ssid = "ShotClockDisplay";
 // password must have at least 8 characters
 const char* password = "12345678";
 
