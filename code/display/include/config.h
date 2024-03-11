@@ -9,7 +9,7 @@ const char* password = "12345678";
 
 // PCB config
 
-#define DISPLAY_PCB_VERSION V0_2
+#define DISPLAY_PCB_VERSION V0_2_HACK
 
 //Pin config
 
