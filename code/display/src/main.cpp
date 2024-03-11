@@ -70,8 +70,6 @@ Horn horn(pwm);
 
 Preferences preferences;
 
-int channel;
-int default_channel = 1;
 String rssi = "RSSI --";
 String packSize = "--";
 String packet ;
@@ -83,6 +81,8 @@ bool clientFlag = false;
 long int currentTime = 0;
 long int previousTime = 0;
 
+int channel;
+int default_channel = 1;
 uint8_t band_select[5]={
   '1',   //  not needed
   '1',   //  Kanal 1
@@ -90,7 +90,7 @@ uint8_t band_select[5]={
   '3',   //  Kanal 3  
   '4'    //  Kanal 4
 };
-uint8_t syncword = band_select[1];
+uint8_t syncword = band_select[default_channel];
 
 // Function Prototypes
 void drawLoraInfo();
@@ -277,7 +277,7 @@ void setupRadio() {
     Serial.println(state);
     while (true);
   }
-  
+
   radio.setSyncWord(syncword);
 
   // set the function that will be called

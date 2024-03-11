@@ -42,13 +42,6 @@
 #include <Preferences.h>
 #include <RadioLib.h>
 
-long band_select[5] = {
-    433000000, //  not needed
-    433000000, //  Kanal 1
-    433500000, //  Kanal 2
-    434000000, //  Kanal 3
-    434500000  //  Kanal 4
-};
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
@@ -59,7 +52,15 @@ Preferences preferences;
 
 int channel;
 int default_channel = 1;
-long band;
+
+uint8_t band_select[5] = {
+    '1', //  not needed
+    '1', //  Kanal 1
+    '2', //  Kanal 2
+    '3', //  Kanal 3
+    '4'  //  Kanal 4
+};
+uint8_t syncword = band_select[default_channel];
 
 String rssi = "RSSI --";
 String packSize = "--";
@@ -565,7 +566,7 @@ void loadChannelFromEEPROM()
 {
   preferences.begin("shot-clock", false);
   channel = preferences.getInt("channel", default_channel);
-  band = band_select[channel];
+  syncword = band_select[channel];
   preferences.end();
 }
 
@@ -675,6 +676,8 @@ void setupRadio() {
     Serial.println(state);
     while (true);
   }
+
+  radio.setSyncWord(syncword);
 }
 
 void setup()
@@ -685,6 +688,7 @@ void setup()
   // RS-485
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
 
+  long band = 434000000;  // not used anymore, because RadioLib handles LoRa
   Heltec.begin(true /*Display Enable*/, false /*LoRa Disable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
 
   setupRadio();
