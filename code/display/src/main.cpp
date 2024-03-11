@@ -72,7 +72,6 @@ Preferences preferences;
 
 int channel;
 int default_channel = 1;
-long band;
 String rssi = "RSSI --";
 String packSize = "--";
 String packet ;
@@ -84,13 +83,14 @@ bool clientFlag = false;
 long int currentTime = 0;
 long int previousTime = 0;
 
-long band_select[5]={
-  433000000,   //  not needed
-  433000000,   //  Kanal 1
-  433500000,   //  Kanal 2  
-  434000000,   //  Kanal 3  
-  434500000    //  Kanal 4
+uint8_t band_select[5]={
+  '1',   //  not needed
+  '1',   //  Kanal 1
+  '2',   //  Kanal 2  
+  '3',   //  Kanal 3  
+  '4'    //  Kanal 4
 };
+uint8_t syncword = band_select[1];
 
 // Function Prototypes
 void drawLoraInfo();
@@ -261,7 +261,7 @@ void initChannelFromEEPROM(){
 
   channel = preferences.getInt("channel", default_channel);
 
-  band = band_select[channel];
+  syncword = band_select[channel];
    
   preferences.end();
 }
@@ -277,6 +277,8 @@ void setupRadio() {
     Serial.println(state);
     while (true);
   }
+  
+  radio.setSyncWord(syncword);
 
   // set the function that will be called
   // when new packet is received
@@ -312,7 +314,7 @@ void setup() {
   
   inputString.reserve(200);
   
-
+  long band=434000000;  // not used anymore, because radioLib handles LoRa
   Heltec.begin(true /*Display Enable*/, false /*LoRa Enable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
 
   setupRadio();
