@@ -1,15 +1,25 @@
 #include "board_definitions.h"
 
-// WiFi config
+/**************************************/ 
+/********* user config ****************/
+/**************************************/
 
+// WiFi config
+// Enter your SSID and PASSWORD
 const char* ssid = "ShotClockDisplay";
 // password must have at least 8 characters
 const char* password = "12345678";
 
 
-// PCB config
+// PCB config 
+// see board_definitions.h for available configs
 
 #define DISPLAY_PCB_VERSION V0_2_HACK
+
+
+/**************************************/ 
+/********* auto config ****************/
+/**************************************/
 
 //Pin config
 

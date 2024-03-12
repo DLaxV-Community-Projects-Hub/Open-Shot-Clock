@@ -1,24 +1,28 @@
 #include "board_definitions.h"
 
+/**************************************/ 
+/********* user config ****************/
+/**************************************/
+
+// WiFi config
 // Enter your SSID and PASSWORD
-// const char* ssid = "ControllerBlue";
-// const char* ssid = "ControllerRed";
-// const char* ssid = "Controller3Button";
 const char *ssid = "Controller6Button";
+// password must have at least 8 characters
 const char* password = "12345678";
-//const char *password = "EM2022LAX";
 
 // Screen
 // uncomment to flip screen
 // #define FLIPSCREEN
 
-// PCB config
+// PCB config 
+// see board_definitions.h for available configs
 
-// #define CONTROLLER_PCB_VERSION NO_BOARD
 #define CONTROLLER_PCB_VERSION V0_1
 
 
-// auto config
+/**************************************/ 
+/********* auto config ****************/
+/**************************************/
 
 #if CONTROLLER_PCB_VERSION == NO_BOARD
     #ifdef WIFI_LoRa_32_V2
