@@ -53,12 +53,12 @@ Preferences preferences;
 int channel;
 int default_channel = 1;
 
-uint8_t band_select[5] = {
-    '1', //  not needed
-    '1', //  Kanal 1
-    '2', //  Kanal 2
-    '3', //  Kanal 3
-    '4'  //  Kanal 4
+uint8_t band_select[5]={
+  0x12,   //  not needed
+  0x12,   //  Kanal 1
+  0x23,   //  Kanal 2  
+  0x34,   //  Kanal 3  
+  0x45    //  Kanal 4
 };
 uint8_t syncword = band_select[default_channel];
 
