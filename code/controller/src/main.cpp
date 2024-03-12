@@ -175,7 +175,6 @@ void lorasend(String Msg)
     if (!playState)
     {
       Set_Pause_Display();
-      Serial.println("1");
     }
     Heltec.display->display();
   }
@@ -185,9 +184,6 @@ void lorasend(String Msg)
   sendToClock(Msg);
 
   unsigned long ms3 = millis();
-  // Serial.print("Dauer Senden: ");
-  // Serial.println(ms3 - ms2);
-  // Serial.print(" -- ");
 }
 
 void sendToClock(String Msg)
@@ -198,8 +194,6 @@ void sendToClock(String Msg)
   // send lora
   int state = radio.transmit(Msg);
 
-  Serial.print("Msg sent: ");
-  Serial.println(Msg);
 }
 
 void Count()
@@ -213,7 +207,6 @@ void Count()
     {
       ledState = true;
       // digitalWrite(LED_PIN, ledState);
-      // Serial.println("LED aus");
     }
 
     if (t >= FLEX_INTERVAL)
@@ -257,11 +250,9 @@ void Count()
 
       notifyClients(String(Clock));
       ws.cleanupClients();
-      // Serial.println(ClockMsg);
 
       ledState = false;
       // digitalWrite(LED_PIN, ledState);
-      // Serial.println("LED an");
 
       setStart();
     }
@@ -269,7 +260,7 @@ void Count()
   else
   {
     playState = !playState;
-    Serial.println("DÖÖÖÖÖÖÖÖÖHHD!!!");
+    // Serial.println("DÖÖÖÖÖÖÖÖÖHHD!!!");
   }
 }
 
@@ -309,6 +300,7 @@ void resetClock(bool play)
   Clock = ClockStart;
   String Command_T = "T";
   String ClockMsg;
+  
   if (Clock < 10)
   {
     ClockMsg = Command_T + 0 + Clock + B_Level;
@@ -317,14 +309,10 @@ void resetClock(bool play)
   {
     ClockMsg = Command_T + Clock + B_Level;
   }
-  /*String Command_T = "T";
-  String ClockMsg = Command_T + Clock;*/
+
   lorasend(ClockMsg);
   notifyClients(String(Clock));
   ws.cleanupClients();
-  // TelnetMsg(ClockMsg);
-  Serial.println("RESET");
-  // Serial.println(ClockMsg);
   setStart();
   playState = play;
   if (play == true)

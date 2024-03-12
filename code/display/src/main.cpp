@@ -142,9 +142,6 @@ void client_check(){
 
 void handlePacket(){
 
-  Serial.print("Incoming msg: ");
-  Serial.println(packet);
-  
   String setTimeCommand = "T";
   String honkCommand = "H";
   if (packet.startsWith(setTimeCommand)){
@@ -154,7 +151,6 @@ void handlePacket(){
 
     String brigthnessString = packet.substring(3);
     leds.setBrightnessLevel(brigthnessString.toInt());
-    Serial.println(currentTime);              // Serial.println(receivedChars);      //and determining if it's what is expected
     leds.displayClock(currentTime);
       
     Heltec.display->clear();
@@ -362,7 +358,6 @@ void drawLoraInfo() {
 void drawRS485Info() {
   Heltec.display->drawString(90, 52, "RS485");
   Heltec.display->display();
-  Serial.println("RS485");
 }
 
 void loop() {
