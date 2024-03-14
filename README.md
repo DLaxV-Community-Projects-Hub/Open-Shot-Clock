@@ -1,9 +1,8 @@
 ![theme](https://github.com/DLaxV-Community-Projects-Hub/Open-Shot-Clock/blob/assets/assets/theme.pptx.svg)
 
-
 # Open Shot Clock
 
-Open Shot Clock is an Open Source and DIY Project aiming for minimizing the barriers of entry for shot-clock-aided sports like Boxlacrosse and Sixes and maximizing the pure sports experience to an affordable price.
+Open Shot Clock is an Open Source and DIY Project aiming to minimize the barriers of entry for shot-clock-aided sports like Boxlacrosse and Sixes and maximizing the pure sports experience to an affordable price.
 
 ## Details
 
@@ -11,7 +10,7 @@ Open Shot Clock is an Open Source and DIY Project aiming for minimizing the barr
 - indoor and outdoor usage
     - impact and water resistant portable design
     - LED brightness adjustable to your needs
-- wirless and cable connection
+- wireless and cable connection
 - 12V input supply (portable battery or mains operation by AC-DC power supply)
 - handheld controller
 - wifi connection to smartphone
@@ -22,14 +21,14 @@ Open Shot Clock is an Open Source and DIY Project aiming for minimizing the barr
 - tripod stands ~2 meter height
 - tested under competition conditions
 
-The price tag is around 1000€ for materials and accessories, depending on which design and batterie options you choose it might cost more.
+The price tag is around 1000€ for materials and accessories. Depending on which design and battery options you choose, it might cost more.
 
 
 For more information have a look at our [wiki](https://github.com/DLaxV-Community-Projects-Hub/Open-Shot-Clock/wiki/Open-Shot-Clock-Wiki) or this [blog](https://devdrik.de/blog/) made by [@devdrik](https://github.com/devdrik).
 
 ## The Open Shot Clock in Action
 
-To see the Open Shot Clock in action check out the following recordings of recent Lacrosse high lights from Germany:
+To see the Open Shot Clock in action check out the following recordings of Lacrosse high lights in Germany:
 
 - [Men´s European Box Lacrosse Championship 2022 - Final: England vs. Germany](https://sportdeutschland.tv/germanylacrosse/european-box-lacrosse-championship-final-england-vs-germany) (face off at 0:07:20)
 - [Women´s German Indoor Championchip 2023 - Final: HLC Rot-Weiss München vs. HTHC Hamburg A](https://sportdeutschland.tv/germanylacrosse/deutsche-indoor-lacrosse-meisterschaft-2023-finale) (draw at 0:07:35)
@@ -45,21 +44,21 @@ To see the Open Shot Clock in action check out the following recordings of recen
     - DIY Building Instructions Manual (german)
     - BOM for Displays, Controller and accessories (german)
     - User Manual (german)
-    - Source Code for running Displays and Controller
-- Project Wiki (still in build)
+    - Source Code to run Displays and Controller
+- Project Wiki (work in progress)
 
 
 ## Usage
 
-For building your own Open Shot Clock you can find all documents/information in the documentation folder.
+To build your own Open Shot Clock you can find all documents/information in the [documentation](documentation/) folder.
 
 ### Getting All the Parts Needed
 
-Please go through the BOM to make shure you have all needed parts available. In the BOM we have included recommendation links where we recently purchased needed parts. Be aware that you can choose from different design features which you have to cover in your purchases. The developement is stil ongoing so some design features are not yet tested or even sufficiently developed, there could be a risk either in implementic them or even not.
+Please go through the BOM to make sure you have all parts needed available. In the BOM we have included recommendation links, where we recently purchased the parts. Be aware that you can choose from different design features which you have to cover in your purchases. The developement is stil ongoing so some design features are not yet tested or even sufficiently developed.
 
-In the current design 3d printing is requried. Make sure you print the necessary parts before starting to build or let them print by a printing service. Make sure the parts are printed with a heat and impact resistant 3d printing material. You can find recommented materials in the BOM.
+In the design 3d printing is requried. Make sure you print the necessary parts before starting to build or let them print by a printing service. Make sure the parts are printed with a heat and impact resistant 3d printing material. You can find recommended materials in the BOM.
 
-For the PCBs you can use the design files to order them at a PCB manufacturer like [PCBWay](https://www.pcbway.com/) or you can get in touch with us, there are still some prototyping PCBs left of the current version. In the near future the PCB design has to be adepted to the new Heltec Lora 32 version 3.0, up to now the new version is not supported yet). For more information check this [blog artical](https://devdrik.de/open-shot-clock-hannover/) from [@devdrik](https://github.com/devdrik).
+For the PCBs you can use the design files to order them at a PCB manufacturer like [PCBWay](https://www.pcbway.com/) or you can get in touch with us, there are still some prototyping PCBs left of the current version. In the near future the PCB design has to be adapted to the new Heltec Lora 32 version 3.0. For now the new version is supported through a workaround. For more information check this [blog artical](https://devdrik.de/open-shot-clock-hannover/) from [@devdrik](https://github.com/devdrik).
 
 ### List of Optional Design Features:
 
@@ -82,10 +81,33 @@ For the PCBs you can use the design files to order them at a PCB manufacturer li
 
 When you have all parts available please follow the DIY Building Instructions Manual for assembling your Open Shot Clocks. Some parts like the base-, front- and back-plates or the aliminium extursion profiles need to be modified before they can be assembled. You can do the needed modification by using the drawings of these parts or you can get in touch with us, there are still some back plates left in our stock. In this [youtube playlist](https://www.youtube.com/watch?v=pQqHoa6__Ms&list=PLql27Iz3RF6tFwROZiCufJEf_9jadfyL8) you can see videos of [@devdrik](https://github.com/devdrik) performing the assembing process of an Open Shot Clock. In the future the playlist will be extended to cover all parts of the assembling process.
 
+#### Heltec WiFi LoRa V2/V3
+
+The V2 module is hard to get at the moment, so we added support for the new V3 version of the module, that is easy to source. To use V3 with PCBs designed for V2, you need to rewire some connections. So make sure not to use a V3 on a V2 PCB without modification!
+
+What to do to use a V3 on a Display PCB v0.2:
+- Do not connect GPIO21 and GPIO48 of the V3 to the display PCB
+- Connect GPIO38 to the display PCB where GPIO21 would be
+- Connect GPIO39 to the display PCB where GPIO48 would be
+- In [config.h](code/display/include/config.h) set ```DISPLAY_PCB_VERSION V0_2_HACK```
+
+![v3 Mod pins](https://github.com/DLaxV-Community-Projects-Hub/Open-Shot-Clock/blob/assets/assets/Heltec_v3_mod.png)
+
+What to do to use a V3 on a PCB for V2 (controller):
+- Button BUTTON_PIN_B can not be used anymore
+- Add pull-ups to all buttons (to be tested)
+
+##### 5V Hack
+
+Some Mosfet modules do not work with 3.3V on gate. To fix this on a v0.2 shotclock display PCB, we can disconnect the 3V3 pins from the of the heltec module and connect the corresponding pins on the display PCB to 5V of the heltec module.
+This will bring all 3V3 on the display PCB to 5V, so be careful if you use a temperature sensor!
+
+![5V Mod pins](https://github.com/DLaxV-Community-Projects-Hub/Open-Shot-Clock/blob/assets/assets/Heltec_5V_mod.png)
 
 ### How to Set Up the Firmware
 
-You can find the source code for the controller and the displays in the code folder. Pleas just copy this repo to your VS Code with Plaformio extansion and open both as projects. Fill in your prefered wifi credentials for setting up local device wifi networks to change settings. It is recommended to use different credentials for the controller and the displays to make sure you access the right devices settings.
+You can find the source code for the controller and the displays in the code folder. Please just copy this repo to your VS Code with Plaformio extension and open both as projects. Fill in your preferred wifi credentials for setting up local device wifi networks to change settings. It is recommended to use different credentials for the controller and the displays to make sure you access the right devices settings.
+Make sure to select the environment that fits the board you are using.
 
 - flash controller
   - SPIFFS
@@ -111,7 +133,7 @@ Feel free to customize your Open Shot Clock to your needs. For this purpose you 
 
 ## Acknowledgement
 
-Many thanks to [Ulf](https://github.com/ulf) for some initial inspiration in the approach to develop a LED shot clock. If you are looking out for a minimal and cheap setup for small indoor fields without obsticals have a look to [Ulf´s basketball shot clock tutotial](http://shotclock.de/)! With minor changes to the app it is possible to start with 30 seconds on the clock for lacrosse instead of 24 as for basketball. 
+Many thanks to [Ulf](https://github.com/ulf) for some initial inspiration in the approach to develop a LED shot clock. If you are looking out for a minimal and cheap setup for small indoor fields without obstacles have a look to [Ulf´s basketball shot clock tutotial](http://shotclock.de/)! With minor changes to the app it is possible to start with 30 seconds on the clock for lacrosse instead of 24 as for basketball. 
 
 ## Authors
 

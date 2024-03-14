@@ -38,6 +38,9 @@
 #include "LEDs.h"
 #include "Horn.h"
 
+#include <RadioLib.h>
+
+
 String inputString = "";         // a String to hold incoming data
 bool stringComplete = false;  // whether the string is complete
 
@@ -45,16 +48,28 @@ bool RS485mode = false;
 
 AsyncWebServer server(80);
 
-Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
+#if defined(WIFI_LoRa_32_V2)
+  // Use the SX1276 Radio
+  SX1276 radio = new Module(SS, DIO0, RST_LoRa, DIO0);
+  Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
+#endif
+
+#if defined(WIFI_LoRa_32_V3)
+  // Use the SX1262 Radio
+  SX1262 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
+  // Create a new TwoWire Object, because OLED uses the other one, that is not usable through pins
+  TwoWire I2C = TwoWire(1);
+  // Create PWM object using the new Wire object (i2c)
+  Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, I2C);
+#endif
+
+
+
 LEDs leds(pwm);
 Horn horn(pwm);
 
-
 Preferences preferences;
 
-int channel;
-int default_channel = 1;
-long band;
 String rssi = "RSSI --";
 String packSize = "--";
 String packet ;
@@ -66,13 +81,16 @@ bool clientFlag = false;
 long int currentTime = 0;
 long int previousTime = 0;
 
-long band_select[5]={
-  433000000,   //  not needed
-  433000000,   //  Kanal 1
-  433500000,   //  Kanal 2  
-  434000000,   //  Kanal 3  
-  434500000    //  Kanal 4
+int channel;
+int default_channel = 1;
+uint8_t band_select[5]={
+  0x12,   //  not needed
+  0x12,   //  Kanal 1
+  0x23,   //  Kanal 2  
+  0x34,   //  Kanal 3  
+  0x45    //  Kanal 4
 };
+uint8_t syncword = band_select[default_channel];
 
 // Function Prototypes
 void drawLoraInfo();
@@ -81,6 +99,21 @@ bool timeIsUp();
 
 bool timeIsUp() {
   return currentTime == 0 && previousTime != 0;
+}
+
+// flag to indicate that a packet was received
+volatile bool receivedFlag = false;
+
+// this function is called when a complete packet
+// is received by the module
+// IMPORTANT: this function MUST be 'void' type
+//            and MUST NOT have any arguments!
+#if defined(ESP8266) || defined(ESP32)
+  ICACHE_RAM_ATTR
+#endif
+void setLoRaReceiveFlag(void) {
+  // we got a packet, set the flag
+  receivedFlag = true;
 }
 
 void waitingHeltecDisplay(){
@@ -108,7 +141,7 @@ void client_check(){
 }
 
 void handlePacket(){
-  
+
   String setTimeCommand = "T";
   String honkCommand = "H";
   if (packet.startsWith(setTimeCommand)){
@@ -118,7 +151,6 @@ void handlePacket(){
 
     String brigthnessString = packet.substring(3);
     leds.setBrightnessLevel(brigthnessString.toInt());
-    Serial.println(currentTime);              // Serial.println(receivedChars);      //and determining if it's what is expected
     leds.displayClock(currentTime);
       
     Heltec.display->clear();
@@ -135,17 +167,12 @@ void handlePacket(){
   }
 }
 
-void cbk(int packetSize) {
-  packet ="";
-  packSize = String(packetSize,DEC);
-  for (int i = 0; i < packetSize; i++){ 
-    packet += (char) LoRa.read(); }
-  rssi = "RSSI " + String(LoRa.packetRssi(), DEC) ;
+void readLoraMessage() {
+  int state = radio.readData(packet);
   lms = millis();
   clientFlag = true;
   drawLoraInfo();
   handlePacket();
-  LoRa.receive(); // Test, ob Aufhängen vermieden wird durch "Erinnern" der Lora Funktion
 }
 
 void set_channel(int ch){
@@ -230,26 +257,65 @@ void initChannelFromEEPROM(){
 
   channel = preferences.getInt("channel", default_channel);
 
-  band = band_select[channel];
+  syncword = band_select[channel];
    
   preferences.end();
 }
 
+void setupRadio() {
+  // initialize SX12xx with default settings
+  Serial.print(F("[SX12xx] Initializing ... "));
+  int state = radio.begin();
+  if (state == RADIOLIB_ERR_NONE) {
+    Serial.println(F("success!"));
+  } else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    while (true);
+  }
+
+  radio.setSyncWord(syncword);
+
+  // set the function that will be called
+  // when new packet is received
+  radio.setPacketReceivedAction(setLoRaReceiveFlag);
+
+  // start listening for LoRa packets
+  Serial.print(F("[SX12xx] Starting to listen ... "));
+  state = radio.startReceive();
+  if (state == RADIOLIB_ERR_NONE) {
+    Serial.println(F("success!"));
+  } else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    while (true);
+  }
+}
+
+void initI2C() {
+  #ifdef WIFI_LoRa_32_V3
+    I2C.setPins(SDA_LED, SCL_LED);
+  #endif
+
+  pwm.begin();
+  pwm.setPWMFreq(200);  // This is the maximum recommended PWM frequency for LEDs
+}
 
 void setup() {
 
   initChannelFromEEPROM();
 
-    //RS-485
+  //RS-485
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
   
   inputString.reserve(200);
   
+  long band=434000000;  // not used anymore, because radioLib handles LoRa
+  Heltec.begin(true /*Display Enable*/, false /*LoRa Enable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
 
-  Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
-     
-  pwm.begin();
-  pwm.setPWMFreq(200);  // This is the maximum recommended PWM frequency for LEDs
+  setupRadio();
+
+  initI2C();
 
   leds.allSegmentsOff();
 
@@ -264,8 +330,6 @@ void setup() {
   //Heltec.display->drawString(0, 0, "Wait for incoming data...");
   Heltec.display->display();
   
-  LoRa.setTxPower(20,RF_PACONFIG_PASELECT_RFO);
-  LoRa.setSpreadingFactor(7);
 
   //ESP32 As access point
   WiFi.mode(WIFI_AP); //Access Point mode
@@ -282,10 +346,6 @@ void setup() {
   Serial.println("HTTP server started");
 
   
-  //delay(1000);  // not necessary?
-  //LoRa.onReceive(cbk);  // aus Beispiel auskommentiert übernommen
-  LoRa.receive();
-
   leds.showWaitingAnimation();
   waitingHeltecDisplay();
 }
@@ -293,21 +353,20 @@ void setup() {
 void drawLoraInfo() {
   Heltec.display->drawString(90, 52, "LoRa");
   Heltec.display->display();
-  Serial.println("LoRa");
 }
 
 void drawRS485Info() {
   Heltec.display->drawString(90, 52, "RS485");
   Heltec.display->display();
-  Serial.println("RS485");
 }
 
 void loop() {
 
   if (RS485mode == false){
-  int packetSize = LoRa.parsePacket();
-  yield();                                    // to mitigate random occuring hang issue when recieving data
-  if (packetSize) { cbk(packetSize);  }
+    if (receivedFlag) { 
+      readLoraMessage();
+      receivedFlag = false;
+    }
   }
   //RS-485 Test
   RS485receive();
