@@ -83,14 +83,22 @@ long int previousTime = 0;
 
 int channel;
 int default_channel = 1;
-uint8_t band_select[5]={
+uint8_t syncword_select[5]={
   0x12,   //  not needed
   0x12,   //  Kanal 1
   0x23,   //  Kanal 2  
   0x34,   //  Kanal 3  
   0x45    //  Kanal 4
 };
-uint8_t syncword = band_select[default_channel];
+uint8_t syncword = syncword_select[default_channel];
+float frequency_select[5]={
+  433.0F,   //  not needed
+  433.0F,   //  Kanal 1
+  433.5F,   //  Kanal 2  
+  434.0F,   //  Kanal 3  
+  434.5F   //  Kanal 4
+};
+float frequency = frequency_select[default_channel];
 
 // Function Prototypes
 void drawLoraInfo();
@@ -257,7 +265,8 @@ void initChannelFromEEPROM(){
 
   channel = preferences.getInt("channel", default_channel);
 
-  syncword = band_select[channel];
+  syncword = syncword_select[channel];
+  frequency = frequency_select[channel];
    
   preferences.end();
 }
@@ -275,6 +284,7 @@ void setupRadio() {
   }
 
   radio.setSyncWord(syncword);
+  radio.setFrequency(frequency);
 
   // set the function that will be called
   // when new packet is received
