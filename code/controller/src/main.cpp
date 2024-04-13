@@ -53,14 +53,22 @@ Preferences preferences;
 int channel;
 int default_channel = 1;
 
-uint8_t band_select[5]={
+uint8_t syncword_select[5]={
   0x12,   //  not needed
   0x12,   //  Kanal 1
   0x23,   //  Kanal 2  
   0x34,   //  Kanal 3  
   0x45    //  Kanal 4
 };
-uint8_t syncword = band_select[default_channel];
+uint8_t syncword = syncword_select[default_channel];
+float frequency_select[5]={
+  433.0F,   //  not needed
+  433.0F,   //  Kanal 1
+  433.5F,   //  Kanal 2  
+  434.0F,   //  Kanal 3  
+  434.5F   //  Kanal 4
+};
+float frequency = frequency_select[default_channel];
 
 String rssi = "RSSI --";
 String packSize = "--";
@@ -121,7 +129,7 @@ Button myBtn_T(BUTTON_PIN_T), // define the button
     myBtn_P_P(BUTTON_PIN_P_P),
     myBtn_R_P(BUTTON_PIN_R_P),
     myBtn_H(BUTTON_PIN_H),
-    // myBtn_B(BUTTON_PIN_B),
+    myBtn_B(BUTTON_PIN_B),
     myBtn_R_S(BUTTON_PIN_R_S);
 
 // function prototypes
@@ -188,11 +196,14 @@ void lorasend(String Msg)
 
 void sendToClock(String Msg)
 {
+
+  String msgWithChannel = Msg + String(channel);
+
   // send serial for cabled clock over RS485
-  Serial2.println(Msg);
+  Serial2.println(msgWithChannel);
 
   // send lora
-  int state = radio.transmit(Msg);
+  int state = radio.transmit(msgWithChannel);
 
 }
 
@@ -554,7 +565,8 @@ void loadChannelFromEEPROM()
 {
   preferences.begin("shot-clock", false);
   channel = preferences.getInt("channel", default_channel);
-  syncword = band_select[channel];
+  syncword = syncword_select[channel];
+  frequency = frequency_select[channel];
   preferences.end();
 }
 
@@ -645,7 +657,7 @@ void initButtons() {
   myBtn_R_P.begin();
   myBtn_R_S.begin();
   myBtn_H.begin();
-  // myBtn_B.begin();
+  myBtn_B.begin();
   pinMode(LED_PIN, OUTPUT); // set the LED pin as an output
 }
 
@@ -666,6 +678,7 @@ void setupRadio() {
   }
 
   radio.setSyncWord(syncword);
+  radio.setFrequency(frequency);
 }
 
 void setup()
@@ -750,7 +763,7 @@ void loop()
   myBtn_R_P.read();      // read the button
   myBtn_R_S.read();      // read the button
   myBtn_H.read();        // read the button
-  // myBtn_B.read();        // read the button
+  myBtn_B.read();        // read the button
 
   // hier OTA_Loop
 
@@ -851,12 +864,16 @@ void loop()
     }
     else if (myBtn_H.wasReleased())
     {
-      startHonking();
+      smartControl = false;
+      Heltec.display->displayOn();
+      playPause();
     }
-    // else if (myBtn_B.wasReleased())
-    // {
-    //   sendBCommand();
-    // }
+    else if (myBtn_B.wasReleased())
+    {
+      smartControl = false;
+      Heltec.display->displayOn();
+      playPause();
+    }
 
     else
     {
