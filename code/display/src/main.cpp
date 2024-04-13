@@ -40,6 +40,7 @@
 
 #include <RadioLib.h>
 
+#include <Regexp.h>
 
 String inputString = "";         // a String to hold incoming data
 bool stringComplete = false;  // whether the string is complete
@@ -100,6 +101,9 @@ float frequency_select[5]={
 };
 float frequency = frequency_select[default_channel];
 
+MatchState matchState;
+
+
 // Function Prototypes
 void drawLoraInfo();
 void drawRS485Info();
@@ -148,8 +152,44 @@ void client_check(){
     }
 }
 
-void handlePacket(){
+bool isMessageValid(String msg) {
+  // Msg Format 1:
+  // C0461
+  // C: Command [A-Z]
+  // 04: 2 numbers - time
+  // 6: 1 number - brightness
+  // 1: channel
 
+  // Msg Format 2:
+  // H1
+  // H: Command [H,B]
+  // 1: channel
+
+  // prepare matchstate
+  int msgLength = msg.length();
+  int bufferSize = msgLength + 1;
+  char buffer[bufferSize];
+  msg.toCharArray(buffer, bufferSize);
+  matchState.Target(buffer);
+
+  // check if channel is correct
+  if (!msg.endsWith(String(channel))){
+    return false;
+  }
+
+  // check if message matches valid patterns
+  if ( msgLength == 2 ) {
+    return matchState.Match("[HB][1-4]") == REGEXP_MATCHED;
+  } else if ( msgLength == 5 ) {
+    return matchState.Match("T[0-9][0-9][1-8][1-4]") == REGEXP_MATCHED;
+  }
+  return false;
+}
+
+void handlePacket(){
+  if(!isMessageValid(packet)) {
+    return;
+  }
   String setTimeCommand = "T";
   String honkCommand = "H";
   if (packet.startsWith(setTimeCommand)){

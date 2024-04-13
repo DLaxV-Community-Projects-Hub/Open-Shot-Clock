@@ -56,8 +56,8 @@ const char* password = "12345678";
         static const uint8_t PIN_R_P = 26;
         static const uint8_t PIN_R_S = 34;
         static const uint8_t PIN_T = 39;
-        static const uint8_t PIN_H = 39;
-        static const uint8_t PIN_B = 100;
+        static const uint8_t PIN_H = 45;
+        static const uint8_t PIN_B = 46;
         static const uint8_t PIN_LED = 35;
     #endif
 #endif

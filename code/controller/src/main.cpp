@@ -129,7 +129,7 @@ Button myBtn_T(BUTTON_PIN_T), // define the button
     myBtn_P_P(BUTTON_PIN_P_P),
     myBtn_R_P(BUTTON_PIN_R_P),
     myBtn_H(BUTTON_PIN_H),
-    // myBtn_B(BUTTON_PIN_B),
+    myBtn_B(BUTTON_PIN_B),
     myBtn_R_S(BUTTON_PIN_R_S);
 
 // function prototypes
@@ -196,11 +196,14 @@ void lorasend(String Msg)
 
 void sendToClock(String Msg)
 {
+
+  String msgWithChannel = Msg + String(channel);
+
   // send serial for cabled clock over RS485
-  Serial2.println(Msg);
+  Serial2.println(msgWithChannel);
 
   // send lora
-  int state = radio.transmit(Msg);
+  int state = radio.transmit(msgWithChannel);
 
 }
 
@@ -654,7 +657,7 @@ void initButtons() {
   myBtn_R_P.begin();
   myBtn_R_S.begin();
   myBtn_H.begin();
-  // myBtn_B.begin();
+  myBtn_B.begin();
   pinMode(LED_PIN, OUTPUT); // set the LED pin as an output
 }
 
@@ -760,7 +763,7 @@ void loop()
   myBtn_R_P.read();      // read the button
   myBtn_R_S.read();      // read the button
   myBtn_H.read();        // read the button
-  // myBtn_B.read();        // read the button
+  myBtn_B.read();        // read the button
 
   // hier OTA_Loop
 
@@ -861,12 +864,16 @@ void loop()
     }
     else if (myBtn_H.wasReleased())
     {
-      startHonking();
+      smartControl = false;
+      Heltec.display->displayOn();
+      playPause();
     }
-    // else if (myBtn_B.wasReleased())
-    // {
-    //   sendBCommand();
-    // }
+    else if (myBtn_B.wasReleased())
+    {
+      smartControl = false;
+      Heltec.display->displayOn();
+      playPause();
+    }
 
     else
     {
