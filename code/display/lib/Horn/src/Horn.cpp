@@ -41,7 +41,8 @@ void Horn::startHonking() {
 
 void Horn::stopHonking() {
   Serial.println("Stopping Honk");
-  if (pwm.setPWM(7, 0, 4096) == 0) { // Horn aus
+  uint8_t state = pwm.setPWM(7, 0, 4096);
+  if (state == 0) { // Horn aus
     isHonking = false;
   }; 
 } 

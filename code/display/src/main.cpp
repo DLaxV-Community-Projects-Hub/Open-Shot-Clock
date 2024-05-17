@@ -75,6 +75,7 @@ String rssi = "RSSI --";
 String packSize = "--";
 String packet ;
 String resetString = "restarting...reset your wifi connection";
+String currentMode = "LoRa";
 unsigned long ms;
 unsigned long lms;
 unsigned long diff;
@@ -108,6 +109,7 @@ MatchState matchState;
 void drawLoraInfo();
 void drawRS485Info();
 bool timeIsUp();
+void setupRadio();
 
 bool timeIsUp() {
   return currentTime == 0 && previousTime != 0;
@@ -136,7 +138,7 @@ void waitingHeltecDisplay(){
     Heltec.display->drawString(64 , 1 , "waiting");
     Heltec.display->setFont(ArialMT_Plain_10);
     Heltec.display->drawString(30, 52, "Channel " + String(channel));
-    Heltec.display->drawString(95, 52, "RSSI");
+    Heltec.display->drawString(95, 52, "none");
     Heltec.display->display();
 }
 
@@ -148,7 +150,6 @@ void client_check(){
     clientFlag = false;
     RS485mode = false;
     leds.showWaitingAnimation();
-
     }
 }
 
@@ -208,6 +209,7 @@ void handlePacket(){
     Heltec.display->drawString(64 , 1 , currentTimeString);
     Heltec.display->setFont(ArialMT_Plain_10);
     Heltec.display->drawString(30, 52, "Channel " + String(channel));
+    Heltec.display->drawString(90, 52, currentMode);
     //Heltec.display->drawString(95, 52, rssi);
     Heltec.display->display();
   } else if (packet.startsWith(honkCommand)){
@@ -217,10 +219,15 @@ void handlePacket(){
 
 void readLoraMessage() {
   int state = radio.readData(packet);
-  lms = millis();
-  clientFlag = true;
-  drawLoraInfo();
-  handlePacket();
+  if(state == RADIOLIB_ERR_NONE) {
+    lms = millis();
+    clientFlag = true;
+    drawLoraInfo();
+    handlePacket();
+  } else {
+    radio.reset();
+    setupRadio();
+  }
 }
 
 void set_channel(int ch){
@@ -320,7 +327,7 @@ void setupRadio() {
   } else {
     Serial.print(F("failed, code "));
     Serial.println(state);
-    while (true);
+    // while (true);
   }
 
   radio.setSyncWord(syncword);
@@ -338,7 +345,7 @@ void setupRadio() {
   } else {
     Serial.print(F("failed, code "));
     Serial.println(state);
-    while (true);
+    // while (true);
   }
 }
 
@@ -401,13 +408,15 @@ void setup() {
 }
 
 void drawLoraInfo() {
-  Heltec.display->drawString(90, 52, "LoRa");
-  Heltec.display->display();
+  currentMode = "LoRa";
+  // Heltec.display->drawString(90, 52, "LoRa");
+  // Heltec.display->display();
 }
 
 void drawRS485Info() {
-  Heltec.display->drawString(90, 52, "RS485");
-  Heltec.display->display();
+  currentMode = "RS485";
+  // Heltec.display->drawString(90, 52, "RS485");
+  // Heltec.display->display();
 }
 
 void loop() {
