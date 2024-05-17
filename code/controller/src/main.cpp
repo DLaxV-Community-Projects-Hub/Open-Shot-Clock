@@ -37,35 +37,38 @@
 
 #include <SPIFFS.h>
 
-#include "pinconfig.h"
+#include "config.h"
 
-long band_select[5] = {
-    433000000, //  not needed
-    433000000, //  Kanal 1
-    433500000, //  Kanal 2
-    434000000, //  Kanal 3
-    434500000  //  Kanal 4
-};
+#include <Preferences.h>
+#include <RadioLib.h>
+
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
-// Enter your SSID and PASSWORD
-// const char* ssid = "ControllerBlue";
-// const char* ssid = "ControllerRed";
-// const char* ssid = "Controller3Button";
-const char *ssid = "Controller6Button";
- const char* password = "12345678";
-//const char *password = "EM2022LAX";
-
-#include <Preferences.h>
 
 Preferences preferences;
 
 int channel;
 int default_channel = 1;
-long band;
+
+uint8_t syncword_select[5]={
+  0x12,   //  not needed
+  0x12,   //  Kanal 1
+  0x23,   //  Kanal 2  
+  0x34,   //  Kanal 3  
+  0x45    //  Kanal 4
+};
+uint8_t syncword = syncword_select[default_channel];
+float frequency_select[5]={
+  433.0F,   //  not needed
+  433.0F,   //  Kanal 1
+  433.5F,   //  Kanal 2  
+  434.0F,   //  Kanal 3  
+  434.5F   //  Kanal 4
+};
+float frequency = frequency_select[default_channel];
 
 String rssi = "RSSI --";
 String packSize = "--";
@@ -104,14 +107,23 @@ const byte                      // connect a button switch from this pin to grou
     BUTTON_PIN_R_S(13),         // Button for Reset-started // previously 17
     LED_PIN(25);                // heltec specific pin 25
 */
+
+#if defined(WIFI_LoRa_32_V2)
+  SX1276 radio = new Module(SS, DIO0, RST_LoRa, DIO0);
+#endif
+
+#if defined(WIFI_LoRa_32_V3)
+  SX1262 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
+#endif
+
 const byte              // connect a button switch from this pin to ground
-    BUTTON_PIN_T(22),   // Button for One Button
-    BUTTON_PIN_P_P(33), // Button for Play/Pause
-    BUTTON_PIN_R_P(2),  // Button for Reset
-    BUTTON_PIN_R_S(23), // Button for Cancel
-    BUTTON_PIN_H(32),   // Button for honking
-    BUTTON_PIN_B(17),   // Button for nothing
-    LED_PIN(25);        // heltec specific pin 25
+    BUTTON_PIN_P_P(PIN_P_P), // Button for Play/Pause
+    BUTTON_PIN_R_P(PIN_R_P),  // Button for Reset
+    BUTTON_PIN_R_S(PIN_R_S), // Button for Cancel
+    BUTTON_PIN_T(PIN_T),   // Button for One Button
+    BUTTON_PIN_H(PIN_H),   // Button for honking
+    BUTTON_PIN_B(PIN_B),   // Button for nothing
+    LED_PIN(PIN_LED);        // heltec specific pin 25
 
 Button myBtn_T(BUTTON_PIN_T), // define the button
     myBtn_P_P(BUTTON_PIN_P_P),
@@ -180,30 +192,19 @@ void lorasend(String Msg)
   sendToClock(Msg);
 
   unsigned long ms3 = millis();
-  Serial.print("Dauer Senden: ");
-  Serial.print(ms3 - ms2);
-  Serial.print(" -- ");
 }
 
 void sendToClock(String Msg)
 {
-  // send packet
-  LoRa.setTxPower(20, PA_OUTPUT_RFO_PIN); // test im loop, ob veränderung? was ist das Ergebnis??? bis jetzt nichts aufgefallen
-  LoRa.beginPacket();
 
-  /*
-   * LoRa.setTxPower(txPower,RFOUT_pin);
-   * txPower -- 0 ~ 20
-   * RFOUT_pin could be RF_PACONFIG_PASELECT_PABOOST or RF_PACONFIG_PASELECT_RFO
-   *   - RF_PACONFIG_PASELECT_PABOOST -- LoRa single output via PABOOST, maximum output 20dBm
-   *   - RF_PACONFIG_PASELECT_RFO     -- LoRa single output via RFO_HF / RFO_LF, maximum output 14dBm
-   */
+  String msgWithChannel = Msg + String(channel);
 
-  LoRa.print(Msg);
-  LoRa.endPacket();
+  // send serial for cabled clock over RS485
+  Serial2.println(msgWithChannel);
 
-  // RS-485 Test
-  Serial2.println(Msg);
+  // send lora
+  int state = radio.transmit(msgWithChannel);
+
 }
 
 void Count()
@@ -217,16 +218,15 @@ void Count()
     {
       ledState = true;
       // digitalWrite(LED_PIN, ledState);
-      // Serial.println("LED aus");
     }
 
     if (t >= FLEX_INTERVAL)
     {
 
-      abweichung = (t - FLEX_INTERVAL);
-      Serial.print("Abweichung: ");
-      Serial.print(abweichung);
-      Serial.println("ms");
+      // abweichung = (t - FLEX_INTERVAL);
+      // Serial.print("Abweichung: ");
+      // Serial.print(abweichung);
+      // Serial.println("ms");
 
       // FLEX_INTERVAL = FLEX_INTERVAL + t;
       // Serial.print("Ausgleichendes Interval: ");
@@ -261,11 +261,9 @@ void Count()
 
       notifyClients(String(Clock));
       ws.cleanupClients();
-      Serial.println(ClockMsg);
 
       ledState = false;
       // digitalWrite(LED_PIN, ledState);
-      // Serial.println("LED an");
 
       setStart();
     }
@@ -273,7 +271,7 @@ void Count()
   else
   {
     playState = !playState;
-    Serial.println("DÖÖÖÖÖÖÖÖÖHHD!!!");
+    // Serial.println("DÖÖÖÖÖÖÖÖÖHHD!!!");
   }
 }
 
@@ -303,7 +301,7 @@ void stopCount()
     lorasend(ClockMsg);
     notifyClients(String(Clock));
     ws.cleanupClients();
-    Serial.println(ClockMsg);
+    // Serial.println(ClockMsg);
     msLastStopCount = ms;
   }
 }
@@ -313,6 +311,7 @@ void resetClock(bool play)
   Clock = ClockStart;
   String Command_T = "T";
   String ClockMsg;
+  
   if (Clock < 10)
   {
     ClockMsg = Command_T + 0 + Clock + B_Level;
@@ -321,14 +320,10 @@ void resetClock(bool play)
   {
     ClockMsg = Command_T + Clock + B_Level;
   }
-  /*String Command_T = "T";
-  String ClockMsg = Command_T + Clock;*/
+
   lorasend(ClockMsg);
   notifyClients(String(Clock));
   ws.cleanupClients();
-  // TelnetMsg(ClockMsg);
-  Serial.println("RESET");
-  Serial.println(ClockMsg);
   setStart();
   playState = play;
   if (play == true)
@@ -570,7 +565,8 @@ void loadChannelFromEEPROM()
 {
   preferences.begin("shot-clock", false);
   channel = preferences.getInt("channel", default_channel);
-  band = band_select[channel];
+  syncword = syncword_select[channel];
+  frequency = frequency_select[channel];
   preferences.end();
 }
 
@@ -669,6 +665,22 @@ void initButtons() {
 // Setup
 //===============================================================
 
+void setupRadio() {
+  // initialize SX12xx with default settings
+  Serial.print(F("[SX12xx] Initializing ... "));
+  int state = radio.begin();
+  if (state == RADIOLIB_ERR_NONE) {
+    Serial.println(F("success!"));
+  } else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    while (true);
+  }
+
+  radio.setSyncWord(syncword);
+  radio.setFrequency(frequency);
+}
+
 void setup()
 {
 
@@ -677,7 +689,10 @@ void setup()
   // RS-485
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
 
-  Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.Heltec.Heltec.LoRa Disable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
+  long band = 434000000;  // not used anymore, because RadioLib handles LoRa
+  Heltec.begin(true /*Display Enable*/, false /*LoRa Disable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
+
+  setupRadio();
 
   if (!SPIFFS.begin())
   {
@@ -690,7 +705,11 @@ void setup()
   Serial.println(WiFi.macAddress());
 
   Heltec.display->init();
-  // Heltec.display->flipScreenVertically();
+
+  #ifdef FLIPSCREEN
+    Heltec.display->flipScreenVertically();
+  #endif
+
   Heltec.display->setFont(ArialMT_Plain_10);
 
   // ESP32 As access point
@@ -708,8 +727,6 @@ void setup()
   AsyncElegantOTA.begin(&server); // Start ElegantOTA
   server.begin();                 // Start server
 
-  LoRa.setTxPower(20, PA_OUTPUT_RFO_PIN);
-  LoRa.setSpreadingFactor(7);
 
   Heltec.display->clear();
   Set_Pause_Display();
@@ -847,11 +864,15 @@ void loop()
     }
     else if (myBtn_H.wasReleased())
     {
-      startHonking();
+      smartControl = false;
+      Heltec.display->displayOn();
+      playPause();
     }
     else if (myBtn_B.wasReleased())
     {
-      sendBCommand();
+      smartControl = false;
+      Heltec.display->displayOn();
+      playPause();
     }
 
     else

@@ -1,19 +1,47 @@
-// WiFi config
+#include "board_definitions.h"
 
- const char* ssid = "ShotClockBlue2";
-// const char* ssid = "ShotClockBlue2";
-// const char* ssid = "OSC_Blue";
-// const char* ssid = "ShotClockRed1";
-// const char* ssid = "ShotClockRed2";
-//const char* ssid = "OSC_Hannover_Set1_No1";
-// const char* ssid = "OSC_Hannover_Set1_No2";
+/**************************************/ 
+/********* user config ****************/
+/**************************************/
+
+// WiFi config
+// Enter your SSID and PASSWORD
+const char* ssid = "ShotClockDisplay";
+// password must have at least 8 characters
 const char* password = "12345678";
 
 
+// PCB config 
+// see board_definitions.h for available configs
 
-// Pin config
+// #define DISPLAY_PCB_VERSION V0_2_HACK
+#define DISPLAY_PCB_VERSION V0_2
+
+
+/**************************************/ 
+/********* auto config ****************/
+/**************************************/
+
+//Pin config
 
 //RS-485
-#define RXD2 13
-#define TXD2 12
-#define Vext 21
+#if defined(WIFI_LoRa_32_V2)
+    #define RXD2 13
+    #define TXD2 14
+#endif
+
+#if defined(WIFI_LoRa_32_V3)
+    #define RXD2 6
+    #define TXD2 5
+#endif
+
+//I2C
+#if DISPLAY_PCB_VERSION >= V0_2_HACK
+    #ifdef WIFI_LoRa_32_V3
+        static const uint8_t SDA_LED = 38;
+        static const uint8_t SCL_LED = 39;
+    #elif defined(WIFI_LoRa_32_V2)
+        static const uint8_t SDA_LED = 33;
+        static const uint8_t SCL_LED = 32;
+    #endif
+#endif
