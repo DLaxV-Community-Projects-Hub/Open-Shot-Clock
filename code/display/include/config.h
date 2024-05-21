@@ -28,11 +28,13 @@ const char* password = "12345678";
 #if defined(WIFI_LoRa_32_V2)
     #define RXD2 13
     #define TXD2 14
+    #define HELTEC_VERSION 2
 #endif
 
 #if defined(WIFI_LoRa_32_V3)
     #define RXD2 6
     #define TXD2 5
+    #define HELTEC_VERSION 3
 #endif
 
 //I2C
