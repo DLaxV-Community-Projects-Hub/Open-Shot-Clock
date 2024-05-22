@@ -23,6 +23,7 @@
 #include <heltec.h>
 #include "images.h"
 #include "channel.h"
+#include "version.h"
 #include "font.h"
 
 
@@ -252,6 +253,23 @@ String processor(const String& var){
   return links;
 }
 
+String versionProcessor(const String& var){
+  String val = "";
+  if(var == "PCB_VERSION_PLACEHOLDER"){
+    val = String(DISPLAY_PCB_VERSION);
+  }
+  if(var == "BOARD_VERSION_PLACEHOLDER"){
+    val = String(BOARD);
+  }
+  if(var == "BRANCH_PLACEHOLDER"){
+    val = String(BRANCH);
+  }
+  if(var == "COMMIT_PLACEHOLDER"){
+    val = String(COMMIT);
+  }
+  return val;
+}
+
 void RS485receive() {
    //while (RS485Serial.available()) {
    while (Serial2.available()) {
@@ -283,6 +301,10 @@ void initWebserver() {
 
   server.on("/channel", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send_P(200, "text/html", channel_html, processor);
+  });
+
+  server.on("/version", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send_P(200, "text/html", version_html, versionProcessor);
   });
 
   server.on("/1", HTTP_GET, [](AsyncWebServerRequest *request) {
