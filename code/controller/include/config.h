@@ -6,7 +6,7 @@
 
 // WiFi config
 // Enter your SSID and PASSWORD
-const char *ssid = "Controller6Button";
+const char *ssid = "Controller";
 // password must have at least 8 characters
 const char* password = "12345678";
 

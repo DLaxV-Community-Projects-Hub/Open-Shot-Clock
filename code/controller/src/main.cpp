@@ -24,6 +24,7 @@
 #include <heltec.h>
 #include "images.h"
 #include "channel.h"
+#include "version.h"
 #include "font.h"
 
 #include <JC_Button.h>
@@ -524,6 +525,23 @@ String processor(const String &var)
   return links;
 }
 
+String versionProcessor(const String& var){
+  String val = "";
+  if(var == "PCB_VERSION_PLACEHOLDER"){
+    val = String(CONTROLLER_PCB_VERSION);
+  }
+  if(var == "BOARD_VERSION_PLACEHOLDER"){
+    val = String(BOARD);
+  }
+  if(var == "BRANCH_PLACEHOLDER"){
+    val = String(BRANCH);
+  }
+  if(var == "COMMIT_PLACEHOLDER"){
+    val = String(COMMIT);
+  }
+  return val;
+}
+
 String settingsProcessor(const String &var)
 {
   if (var == "SELECTED_BRIGHTNESS_LEVEL1" && B_Level == 1)
@@ -590,6 +608,10 @@ void initWebserver()
 
   server.on("/settings/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/settings.html", String(), false, settingsProcessor); });
+
+  server.on("/version", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send_P(200, "text/html", version_html, versionProcessor);
+  });
 
   server.on("/brightness", HTTP_GET, [](AsyncWebServerRequest *request)
             {
