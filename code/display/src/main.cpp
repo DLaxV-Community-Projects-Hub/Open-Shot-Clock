@@ -199,7 +199,7 @@ void handlePacket(){
     String currentTimeString = packet.substring(1,3);
     currentTime = currentTimeString.toInt();
 
-    String brigthnessString = packet.substring(3);
+    String brigthnessString = packet.substring(3,4);
     leds.setBrightnessLevel(brigthnessString.toInt());
     leds.displayClock(currentTime);
       
