@@ -196,7 +196,6 @@ void lorasend(String Msg)
     if (!playState)
     {
       Set_Pause_Display();
-      Serial.println("1");
     }
     Heltec.display->display();
   }
@@ -696,7 +695,7 @@ void initButtons() {
   pinMode(LED_PIN, OUTPUT); // set the LED pin as an output
 }
 
-void buttonPressed()
+void useDisplay()
 {
   smartControl = false;
   Heltec.display->displayOn();
@@ -940,7 +939,7 @@ void loop()
   handleButtonClicks();
 
   if (BUTTON_STATE != NONE) {
-    buttonPressed();
+    useDisplay();
   } else {
     if (playState == false) {
       stopCount(); // aktuell: schaltet LED an als User Feedback für Pause
