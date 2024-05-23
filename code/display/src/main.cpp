@@ -23,6 +23,7 @@
 #include <heltec.h>
 #include "images.h"
 #include "channel.h"
+#include "version.h"
 #include "font.h"
 
 
@@ -40,6 +41,7 @@
 
 #include <RadioLib.h>
 
+#include <Regexp.h>
 
 String inputString = "";         // a String to hold incoming data
 bool stringComplete = false;  // whether the string is complete
@@ -70,13 +72,11 @@ Horn horn(pwm);
 
 Preferences preferences;
 
-int channel;
-int default_channel = 1;
-long band;
 String rssi = "RSSI --";
 String packSize = "--";
 String packet ;
 String resetString = "restarting...reset your wifi connection";
+String currentMode = "LoRa";
 unsigned long ms;
 unsigned long lms;
 unsigned long diff;
@@ -84,18 +84,33 @@ bool clientFlag = false;
 long int currentTime = 0;
 long int previousTime = 0;
 
-long band_select[5]={
-  433000000,   //  not needed
-  433000000,   //  Kanal 1
-  433500000,   //  Kanal 2  
-  434000000,   //  Kanal 3  
-  434500000    //  Kanal 4
+int channel;
+int default_channel = 1;
+uint8_t syncword_select[5]={
+  0x12,   //  not needed
+  0x12,   //  Kanal 1
+  0x23,   //  Kanal 2  
+  0x34,   //  Kanal 3  
+  0x45    //  Kanal 4
 };
+uint8_t syncword = syncword_select[default_channel];
+float frequency_select[5]={
+  433.0F,   //  not needed
+  433.0F,   //  Kanal 1
+  433.5F,   //  Kanal 2  
+  434.0F,   //  Kanal 3  
+  434.5F   //  Kanal 4
+};
+float frequency = frequency_select[default_channel];
+
+MatchState matchState;
+
 
 // Function Prototypes
 void drawLoraInfo();
 void drawRS485Info();
 bool timeIsUp();
+void setupRadio();
 
 bool timeIsUp() {
   return currentTime == 0 && previousTime != 0;
@@ -124,7 +139,7 @@ void waitingHeltecDisplay(){
     Heltec.display->drawString(64 , 1 , "waiting");
     Heltec.display->setFont(ArialMT_Plain_10);
     Heltec.display->drawString(30, 52, "Channel " + String(channel));
-    Heltec.display->drawString(95, 52, "RSSI");
+    Heltec.display->drawString(95, 52, "none");
     Heltec.display->display();
 }
 
@@ -139,11 +154,44 @@ void client_check(){
     }
 }
 
-void handlePacket(){
+bool isMessageValid(String msg) {
+  // Msg Format 1:
+  // C0461
+  // C: Command [A-Z]
+  // 04: 2 numbers - time
+  // 6: 1 number - brightness
+  // 1: channel
 
-  Serial.print("Incoming msg: ");
-  Serial.println(packet);
-  
+  // Msg Format 2:
+  // H1
+  // H: Command [H,B]
+  // 1: channel
+
+  // prepare matchstate
+  int msgLength = msg.length();
+  int bufferSize = msgLength + 1;
+  char buffer[bufferSize];
+  msg.toCharArray(buffer, bufferSize);
+  matchState.Target(buffer);
+
+  // check if channel is correct
+  if (!msg.endsWith(String(channel))){
+    return false;
+  }
+
+  // check if message matches valid patterns
+  if ( msgLength == 2 ) {
+    return matchState.Match("[HB][1-4]") == REGEXP_MATCHED;
+  } else if ( msgLength == 5 ) {
+    return matchState.Match("T[0-9][0-9][1-8][1-4]") == REGEXP_MATCHED;
+  }
+  return false;
+}
+
+void handlePacket(){
+  if(!isMessageValid(packet)) {
+    return;
+  }
   String setTimeCommand = "T";
   String honkCommand = "H";
   if (packet.startsWith(setTimeCommand)){
@@ -151,9 +199,8 @@ void handlePacket(){
     String currentTimeString = packet.substring(1,3);
     currentTime = currentTimeString.toInt();
 
-    String brigthnessString = packet.substring(3);
+    String brigthnessString = packet.substring(3,4);
     leds.setBrightnessLevel(brigthnessString.toInt());
-    Serial.println(currentTime);              // Serial.println(receivedChars);      //and determining if it's what is expected
     leds.displayClock(currentTime);
       
     Heltec.display->clear();
@@ -163,6 +210,7 @@ void handlePacket(){
     Heltec.display->drawString(64 , 1 , currentTimeString);
     Heltec.display->setFont(ArialMT_Plain_10);
     Heltec.display->drawString(30, 52, "Channel " + String(channel));
+    Heltec.display->drawString(90, 52, currentMode);
     //Heltec.display->drawString(95, 52, rssi);
     Heltec.display->display();
   } else if (packet.startsWith(honkCommand)){
@@ -172,10 +220,15 @@ void handlePacket(){
 
 void readLoraMessage() {
   int state = radio.readData(packet);
-  lms = millis();
-  clientFlag = true;
-  drawLoraInfo();
-  handlePacket();
+  if(state == RADIOLIB_ERR_NONE) {
+    lms = millis();
+    clientFlag = true;
+    drawLoraInfo();
+    handlePacket();
+  } else {
+    radio.reset();
+    setupRadio();
+  }
 }
 
 void set_channel(int ch){
@@ -198,6 +251,23 @@ String processor(const String& var){
     }
   }   
   return links;
+}
+
+String versionProcessor(const String& var){
+  String val = "";
+  if(var == "PCB_VERSION_PLACEHOLDER"){
+    val = String(DISPLAY_PCB_VERSION);
+  }
+  if(var == "BOARD_VERSION_PLACEHOLDER"){
+    val = String(BOARD);
+  }
+  if(var == "BRANCH_PLACEHOLDER"){
+    val = String(BRANCH);
+  }
+  if(var == "COMMIT_PLACEHOLDER"){
+    val = String(COMMIT);
+  }
+  return val;
 }
 
 void RS485receive() {
@@ -233,6 +303,10 @@ void initWebserver() {
     request->send_P(200, "text/html", channel_html, processor);
   });
 
+  server.on("/version", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send_P(200, "text/html", version_html, versionProcessor);
+  });
+
   server.on("/1", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(200, "text/plain", resetString);
     set_channel(1);
@@ -260,7 +334,8 @@ void initChannelFromEEPROM(){
 
   channel = preferences.getInt("channel", default_channel);
 
-  band = band_select[channel];
+  syncword = syncword_select[channel];
+  frequency = frequency_select[channel];
    
   preferences.end();
 }
@@ -274,8 +349,11 @@ void setupRadio() {
   } else {
     Serial.print(F("failed, code "));
     Serial.println(state);
-    while (true);
+    // while (true);
   }
+
+  radio.setSyncWord(syncword);
+  radio.setFrequency(frequency);
 
   // set the function that will be called
   // when new packet is received
@@ -289,7 +367,7 @@ void setupRadio() {
   } else {
     Serial.print(F("failed, code "));
     Serial.println(state);
-    while (true);
+    // while (true);
   }
 }
 
@@ -311,7 +389,7 @@ void setup() {
   
   inputString.reserve(200);
   
-
+  long band=434000000;  // not used anymore, because radioLib handles LoRa
   Heltec.begin(true /*Display Enable*/, false /*LoRa Enable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
 
   setupRadio();
@@ -352,14 +430,15 @@ void setup() {
 }
 
 void drawLoraInfo() {
-  Heltec.display->drawString(90, 52, "LoRa");
-  Heltec.display->display();
+  currentMode = "LoRa";
+  // Heltec.display->drawString(90, 52, "LoRa");
+  // Heltec.display->display();
 }
 
 void drawRS485Info() {
-  Heltec.display->drawString(90, 52, "RS485");
-  Heltec.display->display();
-  Serial.println("RS485");
+  currentMode = "RS485";
+  // Heltec.display->drawString(90, 52, "RS485");
+  // Heltec.display->display();
 }
 
 void loop() {

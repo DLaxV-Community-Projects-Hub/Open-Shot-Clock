@@ -1,15 +1,26 @@
 #include "board_definitions.h"
 
-// WiFi config
+/**************************************/ 
+/********* user config ****************/
+/**************************************/
 
+// WiFi config
+// Enter your SSID and PASSWORD
 const char* ssid = "ShotClockDisplay";
 // password must have at least 8 characters
 const char* password = "12345678";
 
 
-// PCB config
+// PCB config 
+// see board_definitions.h for available configs
 
 #define DISPLAY_PCB_VERSION V0_2_HACK
+// #define DISPLAY_PCB_VERSION V0_2
+
+
+/**************************************/ 
+/********* auto config ****************/
+/**************************************/
 
 //Pin config
 
@@ -17,11 +28,13 @@ const char* password = "12345678";
 #if defined(WIFI_LoRa_32_V2)
     #define RXD2 13
     #define TXD2 14
+    #define HELTEC_VERSION 2
 #endif
 
 #if defined(WIFI_LoRa_32_V3)
     #define RXD2 6
     #define TXD2 5
+    #define HELTEC_VERSION 3
 #endif
 
 //I2C

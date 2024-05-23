@@ -95,7 +95,7 @@ What to do to use a V3 on a Display PCB v0.2:
 
 What to do to use a V3 on a PCB for V2 (controller):
 - Button BUTTON_PIN_B can not be used anymore
-- We might need some pull-ups (to be tested)
+- Add pull-ups to all buttons (to be tested)
 
 ##### 5V Hack
 

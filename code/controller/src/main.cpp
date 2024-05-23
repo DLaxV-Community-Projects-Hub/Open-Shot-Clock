@@ -24,6 +24,7 @@
 #include <heltec.h>
 #include "images.h"
 #include "channel.h"
+#include "version.h"
 #include "font.h"
 
 #include <JC_Button.h>
@@ -42,13 +43,6 @@
 #include <Preferences.h>
 #include <RadioLib.h>
 
-long band_select[5] = {
-    433000000, //  not needed
-    433000000, //  Kanal 1
-    433500000, //  Kanal 2
-    434000000, //  Kanal 3
-    434500000  //  Kanal 4
-};
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
@@ -59,7 +53,23 @@ Preferences preferences;
 
 int channel;
 int default_channel = 1;
-long band;
+
+uint8_t syncword_select[5]={
+  0x12,   //  not needed
+  0x12,   //  Kanal 1
+  0x23,   //  Kanal 2  
+  0x34,   //  Kanal 3  
+  0x45    //  Kanal 4
+};
+uint8_t syncword = syncword_select[default_channel];
+float frequency_select[5]={
+  433.0F,   //  not needed
+  433.0F,   //  Kanal 1
+  433.5F,   //  Kanal 2  
+  434.0F,   //  Kanal 3  
+  434.5F   //  Kanal 4
+};
+float frequency = frequency_select[default_channel];
 
 String rssi = "RSSI --";
 String packSize = "--";
@@ -196,21 +206,19 @@ void lorasend(String Msg)
   sendToClock(Msg);
 
   unsigned long ms3 = millis();
-  // Serial.print("Dauer Senden: ");
-  // Serial.println(ms3 - ms2);
-  // Serial.print(" -- ");
 }
 
 void sendToClock(String Msg)
 {
+
+  String msgWithChannel = Msg + String(channel);
+
   // send serial for cabled clock over RS485
-  Serial2.println(Msg);
+  Serial2.println(msgWithChannel);
 
   // send lora
-  int state = radio.transmit(Msg);
+  int state = radio.transmit(msgWithChannel);
 
-  Serial.print("Msg sent: ");
-  Serial.println(Msg);
 }
 
 void Count()
@@ -224,7 +232,6 @@ void Count()
     {
       ledState = true;
       // digitalWrite(LED_PIN, ledState);
-      // Serial.println("LED aus");
     }
 
     if (t >= FLEX_INTERVAL)
@@ -268,11 +275,9 @@ void Count()
 
       notifyClients(String(Clock));
       ws.cleanupClients();
-      // Serial.println(ClockMsg);
 
       ledState = false;
       // digitalWrite(LED_PIN, ledState);
-      // Serial.println("LED an");
 
       setStart();
     }
@@ -280,7 +285,7 @@ void Count()
   else
   {
     playState = !playState;
-    Serial.println("DÖÖÖÖÖÖÖÖÖHHD!!!");
+    // Serial.println("DÖÖÖÖÖÖÖÖÖHHD!!!");
   }
 }
 
@@ -321,6 +326,7 @@ void resetClock(bool play, int resetTime=defaultClockStart)
   Clock = ClockStart;
   String Command_T = "T";
   String ClockMsg;
+  
   if (Clock < 10)
   {
     ClockMsg = Command_T + 0 + Clock + B_Level;
@@ -329,14 +335,10 @@ void resetClock(bool play, int resetTime=defaultClockStart)
   {
     ClockMsg = Command_T + Clock + B_Level;
   }
-  /*String Command_T = "T";
-  String ClockMsg = Command_T + Clock;*/
+
   lorasend(ClockMsg);
   notifyClients(String(Clock));
   ws.cleanupClients();
-  // TelnetMsg(ClockMsg);
-  Serial.println("RESET");
-  // Serial.println(ClockMsg);
   setStart();
   playState = play;
   if (play == true)
@@ -536,6 +538,23 @@ String processor(const String &var)
   return links;
 }
 
+String versionProcessor(const String& var){
+  String val = "";
+  if(var == "PCB_VERSION_PLACEHOLDER"){
+    val = String(CONTROLLER_PCB_VERSION);
+  }
+  if(var == "BOARD_VERSION_PLACEHOLDER"){
+    val = String(BOARD);
+  }
+  if(var == "BRANCH_PLACEHOLDER"){
+    val = String(BRANCH);
+  }
+  if(var == "COMMIT_PLACEHOLDER"){
+    val = String(COMMIT);
+  }
+  return val;
+}
+
 String settingsProcessor(const String &var)
 {
   if (var == "SELECTED_BRIGHTNESS_LEVEL1" && B_Level == 1)
@@ -577,7 +596,8 @@ void loadChannelFromEEPROM()
 {
   preferences.begin("shot-clock", false);
   channel = preferences.getInt("channel", default_channel);
-  band = band_select[channel];
+  syncword = syncword_select[channel];
+  frequency = frequency_select[channel];
   preferences.end();
 }
 
@@ -601,6 +621,10 @@ void initWebserver()
 
   server.on("/settings/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/settings.html", String(), false, settingsProcessor); });
+
+  server.on("/version", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send_P(200, "text/html", version_html, versionProcessor);
+  });
 
   server.on("/brightness", HTTP_GET, [](AsyncWebServerRequest *request)
             {
@@ -841,6 +865,9 @@ void setupRadio() {
     Serial.println(state);
     while (true);
   }
+
+  radio.setSyncWord(syncword);
+  radio.setFrequency(frequency);
 }
 
 void setup()
@@ -851,6 +878,7 @@ void setup()
   // RS-485
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
 
+  long band = 434000000;  // not used anymore, because RadioLib handles LoRa
   Heltec.begin(true /*Display Enable*/, false /*LoRa Disable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
 
   setupRadio();
