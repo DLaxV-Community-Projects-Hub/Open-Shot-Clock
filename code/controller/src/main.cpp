@@ -847,6 +847,8 @@ void updateButtonState()
   {
     BUTTON_STATE = NONE;
   }
+  Serial.print("button presed: ");
+  Serial.println(BUTTON_STATE);
 }
 
 //===============================================================

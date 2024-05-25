@@ -49,7 +49,7 @@ const char* password = "12345678";
         static const uint8_t PIN_R_S = 23;
         static const uint8_t PIN_T = 22;
         static const uint8_t PIN_H = 32;
-        static const uint8_t PIN_B = 100;
+        static const uint8_t PIN_B = 17;
         static const uint8_t PIN_LED = 25;
     #elif defined(WIFI_LoRa_32_V3)
         static const uint8_t PIN_P_P = 38;
