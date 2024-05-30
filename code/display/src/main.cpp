@@ -282,9 +282,9 @@ void RS485receive() {
        stringComplete = true;
        RS485mode = true;
        break;
+     } else if (!isSpace(inChar)) {
+      packet += inChar; // Add value to inputstring
      }
-
-     packet += inChar; // Add value to inputstring
 
     if (packet.length() > 100) // If inputString is too long break while loop
     {
