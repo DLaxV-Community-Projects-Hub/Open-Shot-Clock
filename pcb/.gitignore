@@ -1,0 +1,8 @@
+fp-info-cache
+sym-lib-table
+*.kicad_prl
+*.kicad_sym
+*.kicad_dru
+*.kicad_wks
+*-backups/
+**/gerber/*
