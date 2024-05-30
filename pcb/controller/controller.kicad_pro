@@ -37,9 +37,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 0.762,
-          "height": 1.524,
-          "width": 1.524
+          "drill": 0.6,
+          "height": 2.1,
+          "width": 1.0
         },
         "silk_line_width": 0.1,
         "silk_text_italic": false,
@@ -430,7 +430,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "junction.kicad_pro",
+    "filename": "controller.kicad_pro",
     "version": 1
   },
   "net_settings": {
@@ -465,10 +465,10 @@
       "gencad": "",
       "idf": "",
       "netlist": "",
-      "plot": "",
+      "plot": "gerber/",
       "pos_files": "",
       "specctra_dsn": "",
-      "step": "",
+      "step": "controller.step",
       "svg": "",
       "vrml": ""
     },
@@ -574,7 +574,7 @@
   },
   "sheets": [
     [
-      "2cb783d3-7986-48fc-82bd-8e6b37b86491",
+      "128bc47f-cd82-462d-8613-199c49fa6ee7",
       "Root"
     ]
   ],
