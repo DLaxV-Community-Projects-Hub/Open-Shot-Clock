@@ -6,3 +6,4 @@ sym-lib-table
 *.kicad_wks
 *-backups/
 **/gerber/*
+*.lck
