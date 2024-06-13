@@ -17,7 +17,7 @@ const char* password = "12345678";
 // PCB config 
 // see board_definitions.h for available configs
 
-#define CONTROLLER_PCB_VERSION V0_1
+#define CONTROLLER_PCB_VERSION V2_1
 
 
 /**************************************/ 
@@ -49,7 +49,7 @@ const char* password = "12345678";
         static const uint8_t PIN_R_S = 23;
         static const uint8_t PIN_T = 22;
         static const uint8_t PIN_H = 32;
-        static const uint8_t PIN_B = 100;
+        static const uint8_t PIN_B = 17;
         static const uint8_t PIN_LED = 25;
     #elif defined(WIFI_LoRa_32_V3)
         static const uint8_t PIN_P_P = 38;
@@ -60,6 +60,24 @@ const char* password = "12345678";
         static const uint8_t PIN_B = 46;
         static const uint8_t PIN_LED = 35;
     #endif
+#elif CONTROLLER_PCB_VERSION == V2_0
+    #ifdef WIFI_LoRa_32_V2
+        static const uint8_t PIN_P_P = 39;
+        static const uint8_t PIN_R_P = 32;
+        static const uint8_t PIN_R_S = 33;
+        static const uint8_t PIN_T = 23;
+        static const uint8_t PIN_H = 2;
+        static const uint8_t PIN_B = 17;
+        static const uint8_t PIN_LED = 25;
+    #elif defined(WIFI_LoRa_32_V3)
+        static const uint8_t PIN_P_P = 42;  //J1
+        static const uint8_t PIN_R_P = 39;  //J2
+        static const uint8_t PIN_R_S = 38;  //J3
+        static const uint8_t PIN_T = 34;    //J4
+        static const uint8_t PIN_H = 26;    //J5
+        static const uint8_t PIN_B = 20;    //J6
+        static const uint8_t PIN_LED = 35;
+#endif
 #endif
 
 //RS-485
