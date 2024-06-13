@@ -60,7 +60,7 @@ const char* password = "12345678";
         static const uint8_t PIN_B = 46;
         static const uint8_t PIN_LED = 35;
     #endif
-#elif CONTROLLER_PCB_VERSION == V2_0
+#elif CONTROLLER_PCB_VERSION == V2_1
     #ifdef WIFI_LoRa_32_V2
         static const uint8_t PIN_P_P = 39;
         static const uint8_t PIN_R_P = 32;
