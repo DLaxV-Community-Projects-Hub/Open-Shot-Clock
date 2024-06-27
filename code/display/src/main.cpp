@@ -174,8 +174,8 @@ bool isMessageValid(String msg) {
   msg.toCharArray(buffer, bufferSize);
   matchState.Target(buffer);
 
-  // check if channel is correct
-  if (!msg.endsWith(String(channel))){
+  // check if channel is correct if not in cable mode
+  if (!RS485mode && !msg.endsWith(String(channel))){
     return false;
   }
 
