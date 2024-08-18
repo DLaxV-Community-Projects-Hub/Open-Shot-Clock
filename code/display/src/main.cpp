@@ -221,6 +221,7 @@ void handlePacket(){
   }
   String setTimeCommand = "T";
   String honkCommand = "H";
+  Serial.println(packet);
   if (packet.startsWith(setTimeCommand)){
     previousTime = currentTime;
     String currentTimeString = packet.substring(1,3);
@@ -473,6 +474,8 @@ void drawRS485Info() {
 
 void loop() {
 
+   ElegantOTA.loop(); 
+
   if (RS485mode == false){
     if (receivedFlag) { 
       readLoraMessage();
@@ -505,7 +508,7 @@ void loop() {
     client_check();
     }
 
-  ElegantOTA.loop(); 
+ 
 
   if (timeIsUp()) {
     horn.requestHonk();
