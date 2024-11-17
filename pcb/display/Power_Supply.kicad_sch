@@ -5,7 +5,8 @@
 	(uuid "e2c5a7be-930b-4dfd-ad2a-202dc89c00b5")
 	(paper "A4")
 	(title_block
-		(date "2024-11-11")
+		(title "Power Supply")
+		(date "2024-11-17")
 		(rev "00")
 		(company "Ravenspark")
 		(comment 1 "Prototype")
@@ -3556,6 +3557,16 @@
 	)
 	(wire
 		(pts
+			(xy 142.24 43.18) (xy 152.4 43.18)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "198bf648-af89-44cb-9190-f154af2be59e")
+	)
+	(wire
+		(pts
 			(xy 201.93 27.94) (xy 201.93 25.4)
 		)
 		(stroke
@@ -3636,7 +3647,7 @@
 	)
 	(wire
 		(pts
-			(xy 265.43 83.82) (xy 269.24 83.82)
+			(xy 265.43 83.82) (xy 266.7 83.82)
 		)
 		(stroke
 			(width 0)
@@ -3756,7 +3767,7 @@
 	)
 	(wire
 		(pts
-			(xy 269.24 81.28) (xy 269.24 83.82)
+			(xy 266.7 81.28) (xy 266.7 83.82)
 		)
 		(stroke
 			(width 0)
@@ -4176,7 +4187,7 @@
 	)
 	(wire
 		(pts
-			(xy 102.87 43.18) (xy 139.7 43.18)
+			(xy 102.87 43.18) (xy 134.62 43.18)
 		)
 		(stroke
 			(width 0)
@@ -4726,7 +4737,7 @@
 	)
 	(wire
 		(pts
-			(xy 134.62 46.99) (xy 139.7 46.99)
+			(xy 134.62 46.99) (xy 152.4 46.99)
 		)
 		(stroke
 			(width 0)
@@ -5244,58 +5255,6 @@
 		)
 		(uuid "ffc5c990-efcc-4fc3-add6-df7b10b217b5")
 	)
-	(text "OK!"
-		(exclude_from_sim no)
-		(at 222.25 113.03 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-				(thickness 0.254)
-				(bold yes)
-				(color 255 176 0 1)
-			)
-		)
-		(uuid "856b4ac1-c9f2-413d-994d-1667c8cd6b4c")
-	)
-	(text "OK!"
-		(exclude_from_sim no)
-		(at 205.74 76.2 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-				(thickness 0.254)
-				(bold yes)
-				(color 255 176 0 1)
-			)
-		)
-		(uuid "a1c67664-ce3b-4b26-a205-6028e187e0b8")
-	)
-	(text "OK!"
-		(exclude_from_sim no)
-		(at 90.17 66.04 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-				(thickness 0.254)
-				(bold yes)
-				(color 255 176 0 1)
-			)
-		)
-		(uuid "f05ac5e9-2c1c-4a47-8956-08acd976c1a8")
-	)
-	(text "OK!"
-		(exclude_from_sim no)
-		(at 236.22 66.04 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-				(thickness 0.254)
-				(bold yes)
-				(color 255 176 0 1)
-			)
-		)
-		(uuid "f05b0521-fdd2-4d89-97c0-5a868123a7ab")
-	)
 	(hierarchical_label "VUSB"
 		(shape input)
 		(at 25.4 81.28 180)
@@ -5310,7 +5269,7 @@
 	)
 	(hierarchical_label "I_SENSE"
 		(shape output)
-		(at 139.7 43.18 0)
+		(at 152.4 43.18 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5322,7 +5281,7 @@
 	)
 	(hierarchical_label "V_SENSE"
 		(shape output)
-		(at 139.7 46.99 0)
+		(at 152.4 46.99 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5418,7 +5377,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "D_Schottky"
+		(property "Value" "B5819W"
 			(at 170.18 76.5174 90)
 			(effects
 				(font
@@ -5745,7 +5704,7 @@
 	)
 	(symbol
 		(lib_id "power:+3.3V")
-		(at 269.24 81.28 0)
+		(at 266.7 81.28 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5754,7 +5713,7 @@
 		(fields_autoplaced yes)
 		(uuid "1a185158-c4c3-4e7c-b4bc-753c2b0e960f")
 		(property "Reference" "#PWR067"
-			(at 269.24 85.09 0)
+			(at 266.7 85.09 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5763,7 +5722,7 @@
 			)
 		)
 		(property "Value" "+3.3V"
-			(at 269.24 76.2 0)
+			(at 266.7 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5771,7 +5730,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 269.24 81.28 0)
+			(at 266.7 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5780,7 +5739,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 269.24 81.28 0)
+			(at 266.7 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5789,7 +5748,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 269.24 81.28 0)
+			(at 266.7 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6097,7 +6056,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "20k"
+		(property "Value" "10k"
 			(at 205.74 27.94 90)
 			(effects
 				(font
@@ -6301,7 +6260,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "D_Schottky"
+		(property "Value" "B5819W"
 			(at 154.94 83.82 0)
 			(effects
 				(font
@@ -7685,7 +7644,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "20k"
+		(property "Value" "1k"
 			(at 102.87 128.27 90)
 			(effects
 				(font
@@ -9515,6 +9474,74 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:R")
+		(at 138.43 43.18 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "c2f641c0-0827-4f6f-be0d-7c747ba28cd3")
+		(property "Reference" "R2"
+			(at 139.7 40.64 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1k"
+			(at 138.43 43.18 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 138.43 44.958 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 138.43 43.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 138.43 43.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "3a3ea2e3-b358-4183-9119-888af68ee6cb")
+		)
+		(pin "2"
+			(uuid "67cb500d-ba3a-4088-b5e2-367abfb2dbe9")
+		)
+		(instances
+			(project "Display"
+				(path "/909ae33d-387b-4690-b0aa-ba1ded8f44db/89a87f9d-0057-4f99-b34f-09ac7f75c0d0"
+					(reference "R2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:GND")
 		(at 93.98 139.7 0)
 		(unit 1)
@@ -9735,7 +9762,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "20k"
+		(property "Value" "10k"
 			(at 85.09 128.27 90)
 			(effects
 				(font
@@ -9803,7 +9830,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "20k"
+		(property "Value" "4k3"
 			(at 93.98 128.27 90)
 			(effects
 				(font
@@ -10008,7 +10035,7 @@
 				)
 			)
 		)
-		(property "Value" "10u"
+		(property "Value" "10uH"
 			(at 251.46 33.02 90)
 			(effects
 				(font
@@ -10484,7 +10511,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "20k"
+		(property "Value" "22k"
 			(at 76.2 128.27 90)
 			(effects
 				(font

@@ -5,7 +5,8 @@
 	(uuid "4a213a9b-9aa9-4c12-b516-43cdd5788dd8")
 	(paper "A4")
 	(title_block
-		(date "2024-11-11")
+		(title "Communication")
+		(date "2024-11-17")
 		(rev "00")
 		(company "Ravenspark")
 		(comment 1 "Prototype")
@@ -2687,19 +2688,6 @@
 		)
 		(uuid "fee1c0ec-5e26-4580-9883-63dd6c7f24c2")
 	)
-	(text "OK!"
-		(exclude_from_sim no)
-		(at 146.05 41.91 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-				(thickness 0.254)
-				(bold yes)
-				(color 255 176 0 1)
-			)
-		)
-		(uuid "2107eafb-2547-4622-b84c-39cd76c7077c")
-	)
 	(hierarchical_label "TXEN"
 		(shape input)
 		(at 31.75 38.1 180)
@@ -3738,7 +3726,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "89e88514-bda8-416c-8d0f-881c66d87312")
 		(property "Reference" "U7"
@@ -3939,7 +3927,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(uuid "bd999bdf-4d51-4b68-9864-25e1e0b984c5")
 		(property "Reference" "R11"
 			(at 95.25 146.05 90)

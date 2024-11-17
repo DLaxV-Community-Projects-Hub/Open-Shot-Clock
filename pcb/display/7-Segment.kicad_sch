@@ -5,7 +5,8 @@
 	(uuid "f8b4b309-a0f1-43d6-bf46-e14dca40e00c")
 	(paper "A4")
 	(title_block
-		(date "2024-11-11")
+		(title "7-Segment Driver")
+		(date "2024-11-17")
 		(rev "00")
 		(company "Ravenspark")
 		(comment 1 "Prototype")
@@ -2638,7 +2639,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "60N03D"
+		(property "Value" "20N06"
 			(at 143.51 54.61 90)
 			(effects
 				(font
@@ -2720,7 +2721,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "60N03D"
+		(property "Value" "20N06"
 			(at 168.91 54.61 90)
 			(effects
 				(font
@@ -2802,7 +2803,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "60N03D"
+		(property "Value" "20N06"
 			(at 245.11 54.61 90)
 			(effects
 				(font
@@ -3241,7 +3242,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "60N03D"
+		(property "Value" "20N06"
 			(at 219.71 54.61 90)
 			(effects
 				(font
@@ -3397,7 +3398,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "60N03D"
+		(property "Value" "20N06"
 			(at 270.51 54.61 90)
 			(effects
 				(font
@@ -3621,7 +3622,7 @@
 				)
 			)
 		)
-		(property "Value" "10R"
+		(property "Value" "3k3"
 			(at 74.93 107.95 90)
 			(effects
 				(font
@@ -3711,7 +3712,7 @@
 				)
 			)
 		)
-		(property "Value" "10R"
+		(property "Value" "3k3"
 			(at 41.91 107.95 90)
 			(effects
 				(font
@@ -3801,7 +3802,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "60N03D"
+		(property "Value" "20N06"
 			(at 194.31 54.61 90)
 			(effects
 				(font
@@ -4458,7 +4459,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "60N03D"
+		(property "Value" "20N06"
 			(at 118.11 54.61 90)
 			(effects
 				(font
