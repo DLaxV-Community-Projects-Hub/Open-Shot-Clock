@@ -26,7 +26,6 @@
 #include "version.h"
 #include "font.h"
 
-
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -138,6 +137,15 @@ void onOTAEnd(bool success) {
   // <Add your own code here>
 }
 
+void initOTA()
+{
+  ElegantOTA.begin(&server);  // Start ElegantOTA
+  ElegantOTA.onStart(onOTAStart);
+  ElegantOTA.onProgress(onOTAProgress);
+  ElegantOTA.onEnd(onOTAEnd);
+  server.begin();
+  Serial.println("HTTP server started");
+}
 
 bool timeIsUp() {
   return currentTime == 0 && previousTime != 0;
@@ -221,7 +229,6 @@ void handlePacket(){
   }
   String setTimeCommand = "T";
   String honkCommand = "H";
-  Serial.println(packet);
   if (packet.startsWith(setTimeCommand)){
     previousTime = currentTime;
     String currentTimeString = packet.substring(1,3);
@@ -448,13 +455,7 @@ void setup() {
   
   initWebserver();
 
-  ElegantOTA.begin(&server);    // Start ElegantOTA
-  ElegantOTA.onStart(onOTAStart);
-  ElegantOTA.onProgress(onOTAProgress);
-  ElegantOTA.onEnd(onOTAEnd);
-  server.begin();
-  Serial.println("HTTP server started");
-
+  initOTA();
   
   leds.showWaitingAnimation();
   waitingHeltecDisplay();
@@ -474,7 +475,7 @@ void drawRS485Info() {
 
 void loop() {
 
-   ElegantOTA.loop(); 
+  ElegantOTA.loop(); 
 
   if (RS485mode == false){
     if (receivedFlag) { 
@@ -487,8 +488,6 @@ void loop() {
 
   // print the string when a newline arrives:
   if (stringComplete) {
-    
-
     lms = millis();
     clientFlag = true;
     handlePacket();
@@ -507,8 +506,6 @@ void loop() {
   else{
     client_check();
     }
-
- 
 
   if (timeIsUp()) {
     horn.requestHonk();

@@ -162,6 +162,16 @@ void onOTAEnd(bool success) {
   // <Add your own code here>
 }
 
+void initOTA()
+{
+  ElegantOTA.begin(&server);  // Start ElegantOTA
+  ElegantOTA.onStart(onOTAStart);
+  ElegantOTA.onProgress(onOTAProgress);
+  ElegantOTA.onEnd(onOTAEnd);
+  server.begin();
+  Serial.println("HTTP server started");
+}
+
 void setStart()
 {
   msLastCount = ms;
@@ -772,14 +782,7 @@ void setup()
 
   initWebserver();
 
-  ElegantOTA.begin(&server); // Start ElegantOTA
-  ElegantOTA.onStart(onOTAStart);
-  ElegantOTA.onProgress(onOTAProgress);
-  ElegantOTA.onEnd(onOTAEnd);
-
-  
-  server.begin();                 // Start server
-
+  initOTA();
 
   Heltec.display->clear();
   Set_Pause_Display();
