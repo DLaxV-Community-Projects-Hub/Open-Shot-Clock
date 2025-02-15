@@ -5255,6 +5255,19 @@
 		)
 		(uuid "ffc5c990-efcc-4fc3-add6-df7b10b217b5")
 	)
+	(text "use PG for short detection"
+		(exclude_from_sim no)
+		(at 251.46 64.77 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.254)
+				(bold yes)
+				(color 255 153 0 1)
+			)
+		)
+		(uuid "b2263b74-1b1a-4c29-90a6-5a8d84e43a30")
+	)
 	(hierarchical_label "VUSB"
 		(shape input)
 		(at 25.4 81.28 180)

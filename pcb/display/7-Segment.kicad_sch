@@ -2308,6 +2308,19 @@
 		)
 		(uuid "fd5871f8-5ed5-4f85-b95b-feceda293008")
 	)
+	(text "LEDs in Anleitung Ansicht von hinten.\nLinks Rechts vertauscht."
+		(exclude_from_sim no)
+		(at 72.39 147.32 0)
+		(effects
+			(font
+				(size 2 2)
+				(thickness 0.4)
+				(bold yes)
+				(color 255 153 0 1)
+			)
+		)
+		(uuid "b6416c81-70dc-406c-b4a8-d2a05353969f")
+	)
 	(hierarchical_label "Segment6"
 		(shape input)
 		(at 31.75 97.155 180)

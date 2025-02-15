@@ -3363,6 +3363,19 @@
 		)
 		(uuid "287131a2-21d0-4c77-affa-612618695a04")
 	)
+	(text "Add LED to these Outputs"
+		(exclude_from_sim no)
+		(at 238.76 152.4 0)
+		(effects
+			(font
+				(size 2 2)
+				(thickness 0.4)
+				(bold yes)
+				(color 255 153 0 1)
+			)
+		)
+		(uuid "032c05f4-e88d-4a4a-b782-43700d857fd4")
+	)
 	(hierarchical_label "SCL"
 		(shape bidirectional)
 		(at 25.4 57.15 180)
