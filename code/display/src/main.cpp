@@ -1,27 +1,8 @@
-
-/*
-  This is a simple example show the Heltec.LoRa recived data in OLED.
-
-  The onboard OLED display is SSD1306 driver and I2C interface. In order to make the
-  OLED correctly operation, you should output a high-low-high(1-0-1) signal by soft-
-  ware to OLED's reset pin, the low-level signal at least 5ms.
-
-  OLED pins to ESP32 GPIOs via this connecthin:
-  OLED_SDA -- GPIO4
-  OLED_SCL -- GPIO15
-  OLED_RST -- GPIO16
-  
-  by Aaron.Lee from HelTec AutoMation, ChengDu, China
-  成都惠利特自动化科技有限公司
-  www.heltec.cn
-  
-  this project also realess in GitHub:
-  https://github.com/Heltec-Aaron-Lee/WiFi_Kit_series
-*/
 #include <Arduino.h>
 
-#include <heltec.h>
-#include "images.h"
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
 #include "channel.h"
 #include "version.h"
 #include "font.h"
@@ -64,7 +45,13 @@ AsyncWebServer server(80);
   Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, I2C);
 #endif
 
+#if defined(OSC_DISPLAY_R0)
+  // Use the LLCC68 Radio
+  LLCC68 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
+  Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, Wire);
+#endif
 
+Adafruit_SSD1306 display(128, 64, &Wire, -1);
 
 LEDs leds(pwm);
 Horn horn(pwm);
@@ -167,15 +154,16 @@ void setLoRaReceiveFlag(void) {
 }
 
 void waitingHeltecDisplay(){
-    Heltec.display->clear();
-    Heltec.display->drawHorizontalLine(2, 50, 124);  
-    Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
-    Heltec.display->setFont(ArialMT_Plain_24);
-    Heltec.display->drawString(64 , 1 , "waiting");
-    Heltec.display->setFont(ArialMT_Plain_10);
-    Heltec.display->drawString(30, 52, "Channel " + String(channel));
-    Heltec.display->drawString(95, 52, "none");
-    Heltec.display->display();
+    display.clearDisplay();
+    display.drawFastHLine(0, 50, 128, SSD1306_WHITE);  
+    display.setFont(NULL);
+    display.setTextSize(3);
+    display.setCursor(2, 15);
+    display.printf("waiting"),
+    display.setTextSize(1);
+    display.setCursor(30, 57);
+    display.printf("Channel %s (none)", String(channel));
+    display.display();
 }
 
 void client_check(){
@@ -238,16 +226,19 @@ void handlePacket(){
     leds.setBrightnessLevel(brigthnessString.toInt());
     leds.displayClock(currentTime);
       
-    Heltec.display->clear();
-    Heltec.display->drawHorizontalLine(2, 50, 124);  
-    Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
-    Heltec.display->setFont(DSEG14_Classic_Mini_Regular_40);
-    Heltec.display->drawString(64 , 1 , currentTimeString);
-    Heltec.display->setFont(ArialMT_Plain_10);
-    Heltec.display->drawString(30, 52, "Channel " + String(channel));
-    Heltec.display->drawString(90, 52, currentMode);
-    //Heltec.display->drawString(95, 52, rssi);
-    Heltec.display->display();
+    display.clearDisplay();
+    display.drawFastHLine(0, 50, 128, SSD1306_WHITE);
+    display.setFont(&DSEG7_Classic_Mini_Regular_40);
+    display.setCursor(32, 40);
+    display.printf("%s", currentTimeString);
+    display.setFont(NULL);
+    display.setTextSize(1);
+    display.setCursor(30, 57);
+    display.printf( "Channel %s", String(channel));
+    display.setCursor(90, 57);
+    display.printf("(%s)", currentMode);
+    //display.drawString(95, 57, rssi);
+    display.display();
   } else if (packet.startsWith(honkCommand)){
     horn.requestHonk();
   }
@@ -415,36 +406,41 @@ void initI2C() {
   pwm.setPWMFreq(200);  // This is the maximum recommended PWM frequency for LEDs
 }
 
-void setup() {
+void initDisplay()
+{
+  #if defined(WIFI_LoRa_32_V2) | defined(WIFI_LoRa_32_V3)
+    pinMode(Vext,OUTPUT);
+    digitalWrite(Vext, LOW);
+  #endif
 
+  display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
+  display.setRotation(0);
+  display.setTextColor(SSD1306_WHITE);
+  display.clearDisplay();
+  display.display();
+}
+
+void setup() {
   initChannelFromEEPROM();
 
   //RS-485
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
+  Serial.begin(115200);
   
   inputString.reserve(200);
   
-  long band=434000000;  // not used anymore, because radioLib handles LoRa
-  Heltec.begin(true /*Display Enable*/, false /*LoRa Enable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
-
   setupRadio();
 
   initI2C();
 
   leds.allSegmentsOff();
 
-  Heltec.display->init();
-  // Heltec.display->flipScreenVertically();  
-  Heltec.display->setFont(ArialMT_Plain_10);
+  initDisplay();
   
-  Heltec.display->clear();
+  //display.drawString(0, 0, "Heltec.LoRa Initial success!");
+  //display.drawString(0, 10, "LED Test abgeschlossen");
+  //display.drawString(0, 0, "Wait for incoming data...");
   
-  //Heltec.display->drawString(0, 0, "Heltec.LoRa Initial success!");
-  //Heltec.display->drawString(0, 10, "LED Test abgeschlossen");
-  //Heltec.display->drawString(0, 0, "Wait for incoming data...");
-  Heltec.display->display();
-  
-
   //ESP32 As access point
   WiFi.mode(WIFI_AP); //Access Point mode
   WiFi.softAP(ssid, password);
@@ -463,14 +459,14 @@ void setup() {
 
 void drawLoraInfo() {
   currentMode = "LoRa";
-  // Heltec.display->drawString(90, 52, "LoRa");
-  // Heltec.display->display();
+  // display.drawString(90, 52, "LoRa");
+  // display.display();
 }
 
 void drawRS485Info() {
   currentMode = "RS485";
-  // Heltec.display->drawString(90, 52, "RS485");
-  // Heltec.display->display();
+  // display.drawString(90, 52, "RS485");
+  // display.display();
 }
 
 void loop() {

@@ -47,3 +47,28 @@ const char* password = "12345678";
         static const uint8_t SCL_LED = 32;
     #endif
 #endif
+
+#define SCREEN_ADDRESS 0x3C
+
+//Open Shot Clock Display R0
+#if defined(OSC_DISPLAY_R0)
+    #define RXD2        RX
+    #define TXD2        TX
+    #define UART_TXEN   46
+
+    #define DIO0        18
+    #define RST_LoRa    7 
+    #define BUSY_LoRa   17
+    #define LED         38
+    #define LED_ERR     48
+    #define FAN_PWM     3
+    #define PWM_OE      47
+    #define GPIO_X      4
+    #define GPIO_Y      5
+    #define GPIO_Z      6
+    #define BTN1        15
+    #define BTN2        16
+
+    #define I_SENSE     1
+    #define V_SENSE     2
+#endif
