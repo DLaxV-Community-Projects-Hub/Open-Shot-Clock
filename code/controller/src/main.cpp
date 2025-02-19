@@ -1,24 +1,3 @@
-
-
-/*
-  This is a simple example show the Heltec.LoRa sended data in OLED.
-
-  The onboard OLED display is SSD1306 driver and I2C interface. In order to make the
-  OLED correctly operation, you should output a high-low-high(1-0-1) signal by soft-
-  ware to OLED's reset pin, the low-level signal at least 5ms.
-
-  OLED pins to ESP32 GPIOs via this connecthin:
-  OLED_SDA -- GPIO4
-  OLED_SCL -- GPIO15
-  OLED_RST -- GPIO16
-
-  by Aaron.Lee from HelTec AutoMation, ChengDu, China
-  成都惠利特自动化科技有限公司
-  https://heltec.org
-
-  this project also realess in GitHub:
-  https://github.com/Heltec-Aaron-Lee/WiFi_Kit_series
-*/
 #include <Arduino.h>
 
 #include <heltec.h>
@@ -77,30 +56,24 @@ String packet;
 
 String resetString = "restarting...reset your wifi connection";
 
-const unsigned long
-    LONG_PRESS(400),          // we define a "long press" to be 400 milliseconds.
-    BLINK_INTERVAL_LONG(950), // the LED just Blinks for 50ms when a Second counted full down
-    BLINK_INTERVAL_SHORT(50);
+const unsigned long LONG_PRESS(400);  // we define a "long press" to be 400 milliseconds.
 
-unsigned long FLEX_INTERVAL(1000);
-
-bool ledState = false;  // current LED status
-bool playState = false; // count on/off, starts off
-bool startState = true;
+// TODO: check what these two guys do
+unsigned long flex_interval(1000);
 bool intervalState = true;
-bool smartControl = false;
+
+bool isClockRunning = false; // count on/off, starts off
 int defaultClockStart = 30;
 int clockStartTime = defaultClockStart;
 int timeToDisplay = clockStartTime; // Start Zahl
 String ClockStr = "30";
-int B_Level = 8;
+int brightnessLevel = 8;
 
 unsigned long ms;              // current time from millis()
 unsigned long msLastStop;      // last time Button Pause
 unsigned long msLastPlay;      // last time Button Play
 unsigned long msLastCount;     // last time count down
 unsigned long msLastStopCount; // last time count/send in stop mode
-unsigned long abweichung = 0;  // zählt die gesamte Abweichung
 
 enum button_states_t
 {
@@ -153,7 +126,6 @@ unsigned long ota_progress_millis = 0;
 void onOTAStart() {
   // Log when OTA has started
   Serial.println("OTA update started!");
-  // <Add your own code here>
 }
 
 void onOTAProgress(size_t current, size_t final) {
@@ -171,7 +143,6 @@ void onOTAEnd(bool success) {
   } else {
     Serial.println("There was an error during OTA update!");
   }
-  // <Add your own code here>
 }
 
 void initOTA()
@@ -224,17 +195,14 @@ void lorasend(String Msg)
     ClockStr = String(timeToDisplay);
   }
 
-  if (smartControl == false)
-  {
-    Heltec.display->clear();
-    Set_Data_Display();
+  Heltec.display->clear();
+  Set_Data_Display();
 
-    if (!playState)
-    {
-      Set_Pause_Display();
-    }
-    Heltec.display->display();
+  if (!isClockRunning)
+  {
+    Set_Pause_Display();
   }
+  Heltec.display->display();
 
   unsigned long ms2 = millis();
 
@@ -262,29 +230,11 @@ void Count()
 
   if (timeToDisplay > 0)
   {
-
-    if (t >= BLINK_INTERVAL_SHORT && ledState == false)
+    if (t >= flex_interval)
     {
-      ledState = true;
-      // digitalWrite(LED_PIN, ledState);
-    }
-
-    if (t >= FLEX_INTERVAL)
-    {
-
-      // abweichung = (t - FLEX_INTERVAL);
-      // Serial.print("Abweichung: ");
-      // Serial.print(abweichung);
-      // Serial.println("ms");
-
-      // FLEX_INTERVAL = FLEX_INTERVAL + t;
-      // Serial.print("Ausgleichendes Interval: ");
-      // Serial.print(FLEX_INTERVAL);
-      // Serial.println("ms");
-
       if (intervalState == false)
       {
-        FLEX_INTERVAL += LONG_PRESS;
+        flex_interval += LONG_PRESS;
         intervalState = true;
       }
 
@@ -292,70 +242,55 @@ void Count()
 
       if (timeToDisplay < clockStartTime)
       {
-        FLEX_INTERVAL = 1000;
+        flex_interval = 1000;
       }
 
       String Command_T = "T";
       String ClockMsg;
       if (timeToDisplay < 10)
       {
-        ClockMsg = Command_T + 0 + timeToDisplay + B_Level;
+        ClockMsg = Command_T + 0 + timeToDisplay + brightnessLevel;
       }
       else
       {
-        ClockMsg = Command_T + timeToDisplay + B_Level;
+        ClockMsg = Command_T + timeToDisplay + brightnessLevel;
       }
-      // ledStateMsg += ledState;
       lorasend(ClockMsg); // für RS-485 Test abgeschaltet
 
       notifyClients(String(timeToDisplay));
       ws.cleanupClients();
-
-      ledState = false;
-      // digitalWrite(LED_PIN, ledState);
 
       setStart();
     }
   }
   else
   {
-    playState = !playState;
-    // Serial.println("DÖÖÖÖÖÖÖÖÖHHD!!!");
+    isClockRunning = !isClockRunning;
   }
 }
 
 void stopCount()
 {
-  if (ledState == true)
-  {
-    ledState = false;
-    // digitalWrite(LED_PIN, ledState);
-    msLastStopCount = ms;
-  }
   if (ms - msLastStopCount >= 1000)
   {
     String Command_T = "T";
     String ClockMsg;
     if (timeToDisplay < 10)
     {
-      ClockMsg = Command_T + 0 + timeToDisplay + B_Level;
+      ClockMsg = Command_T + 0 + timeToDisplay + brightnessLevel;
     }
     else
     {
-      ClockMsg = Command_T + timeToDisplay + B_Level;
+      ClockMsg = Command_T + timeToDisplay + brightnessLevel;
     }
-    /*String Command_T = "T";
-    String ClockMsg = Command_T + timeToDisplay;*/
-    // ledStateMsg += ledState;
     lorasend(ClockMsg);
     notifyClients(String(timeToDisplay));
     ws.cleanupClients();
-    // Serial.println(ClockMsg);
     msLastStopCount = ms;
   }
 }
 
-void resetClock(bool play, int resetTime=defaultClockStart)
+void resetClock(bool runClock, int resetTime=defaultClockStart)
 {
   if (resetTime < 0)
   {
@@ -365,26 +300,25 @@ void resetClock(bool play, int resetTime=defaultClockStart)
     resetTime = 99;
   }
   
-  clockStartTime=resetTime;
-  timeToDisplay = clockStartTime;
+  timeToDisplay = resetTime;
   String Command_T = "T";
   String ClockMsg;
   
   if (timeToDisplay < 10)
   {
-    ClockMsg = Command_T + 0 + timeToDisplay + B_Level;
+    ClockMsg = Command_T + 0 + timeToDisplay + brightnessLevel;
   }
   else
   {
-    ClockMsg = Command_T + timeToDisplay + B_Level;
+    ClockMsg = Command_T + timeToDisplay + brightnessLevel;
   }
 
   lorasend(ClockMsg);
   notifyClients(String(timeToDisplay));
   ws.cleanupClients();
   setStart();
-  playState = play;
-  if (play == true)
+  isClockRunning = runClock;
+  if (runClock == true)
   {
     notifyClients("true");
   }
@@ -394,43 +328,30 @@ void resetClock(bool play, int resetTime=defaultClockStart)
   }
 }
 
-void resetClockByHWButton(bool play, int resetTime=defaultClockStart)
+void resetClockByHWButton(bool runClock, int resetTime=defaultClockStart)
 {
-  resetClock(play, resetTime);
+  resetClock(runClock, resetTime);
   intervalState = false;
 }
 
 void playPause()
 {
-  if (startState == true)
-  {
-    setStart();
-    startState = false;
-  }
-
-  playState = !playState; // ON > OFF oder OFF > ON // fängt OFF an
-  if (playState == false)
+  isClockRunning = !isClockRunning; // ON > OFF oder OFF > ON // fängt OFF an
+  if (isClockRunning == false)
   {
     notifyClients("false");
     msLastStop = ms; // wenn auf Pause gewechselt, dann Zeit Letzter PAuse Speichern
-
-    if (smartControl == false)
-    {
-      Set_Pause_Display();
-      Heltec.display->display();
-    }
+    Set_Pause_Display();
+    Heltec.display->display();
   }
   else
   {
     notifyClients("true");
     msLastPlay = ms; // wenn auf Play gewechselt, dann Zeit Letztes Play Speichern
 
-    if (smartControl == false)
-    {
-      Heltec.display->clear();
-      Set_Data_Display();
-      Heltec.display->display();
-    }
+    Heltec.display->clear();
+    Set_Data_Display();
+    Heltec.display->display();
   }
 }
 
@@ -441,13 +362,10 @@ void sendStartTime(int T)
   notifyClients(SWM);
 }
 
-void setTime(int T)
+void setNewStartTime(int startTime)
 {
 
-  smartControl = true;
-  Heltec.display->displayOff();
-
-  clockStartTime = T;
+  clockStartTime = startTime;
   if (clockStartTime < 0)
   {
     clockStartTime = 0;
@@ -457,15 +375,7 @@ void setTime(int T)
     clockStartTime = 99;
   }
   resetClock(false);
-  startState = true;
   sendStartTime(clockStartTime);
-
-  /*if (smartControl == false){
-    Heltec.display->clear();
-    Set_Pause_Display();
-    Set_Data_Display();
-    Heltec.display->display();
-  }*/
 }
 
 void set_channel(int ch)
@@ -487,48 +397,42 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     data[len] = 0;
     if (strcmp((char *)data, "reset") == 0)
     {
-      smartControl = true;
-      Heltec.display->displayOff();
       resetClock(true);
     }
     if (strcmp((char *)data, "playpause") == 0)
     {
-      smartControl = true;
-      Heltec.display->displayOff();
       playPause();
     }
     if (strcmp((char *)data, "setTime30") == 0)
     {
-      setTime(30);
+      resetClock(false, 30);
     }
     if (strcmp((char *)data, "setTimePlus10") == 0)
     {
-      setTime(clockStartTime + 10);
+      resetClock(false, timeToDisplay + 10);
     }
     if (strcmp((char *)data, "setTimeMinus10") == 0)
     {
-      setTime(clockStartTime - 10);
+      resetClock(false, timeToDisplay - 10);
     }
     if (strcmp((char *)data, "setTimePlus5") == 0)
     {
-      setTime(clockStartTime + 5);
+      resetClock(false, timeToDisplay + 5);
     }
     if (strcmp((char *)data, "setTimeMinus5") == 0)
     {
-      setTime(clockStartTime - 5);
+      resetClock(false, timeToDisplay - 5);
     }
     if (strcmp((char *)data, "setTimePlus1") == 0)
     {
-      setTime(clockStartTime + 1);
+      resetClock(false, timeToDisplay + 1);
     }
     if (strcmp((char *)data, "setTimeMinus1") == 0)
     {
-      setTime(clockStartTime - 1);
+      resetClock(false, timeToDisplay - 1);
     }
     if (strcmp((char *)data, "SW") == 0)
     {
-      smartControl = true;
-      Heltec.display->displayOff();
       sendStartTime(clockStartTime);
     }
   }
@@ -600,35 +504,35 @@ String versionProcessor(const String& var){
 
 String settingsProcessor(const String &var)
 {
-  if (var == "SELECTED_BRIGHTNESS_LEVEL1" && B_Level == 1)
+  if (var == "SELECTED_BRIGHTNESS_LEVEL1" && brightnessLevel == 1)
   {
     return "selected";
   }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL2" && B_Level == 2)
+  else if (var == "SELECTED_BRIGHTNESS_LEVEL2" && brightnessLevel == 2)
   {
     return "selected";
   }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL3" && B_Level == 3)
+  else if (var == "SELECTED_BRIGHTNESS_LEVEL3" && brightnessLevel == 3)
   {
     return "selected";
   }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL4" && B_Level == 4)
+  else if (var == "SELECTED_BRIGHTNESS_LEVEL4" && brightnessLevel == 4)
   {
     return "selected";
   }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL5" && B_Level == 5)
+  else if (var == "SELECTED_BRIGHTNESS_LEVEL5" && brightnessLevel == 5)
   {
     return "selected";
   }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL6" && B_Level == 6)
+  else if (var == "SELECTED_BRIGHTNESS_LEVEL6" && brightnessLevel == 6)
   {
     return "selected";
   }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL7" && B_Level == 7)
+  else if (var == "SELECTED_BRIGHTNESS_LEVEL7" && brightnessLevel == 7)
   {
     return "selected";
   }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL8" && B_Level == 8)
+  else if (var == "SELECTED_BRIGHTNESS_LEVEL8" && brightnessLevel == 8)
   {
     return "selected";
   }
@@ -659,8 +563,7 @@ void initWebserver()
   server.on("/controller/", HTTP_GET, [](AsyncWebServerRequest *request)
             {
   request->send(SPIFFS, "/controller.html", String(), false);
-  smartControl = true;
-  Heltec.display->displayOff(); });
+  });
 
   server.on("/settings/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/settings.html", String(), false, settingsProcessor); });
@@ -672,7 +575,7 @@ void initWebserver()
   server.on("/brightness", HTTP_GET, [](AsyncWebServerRequest *request)
             {
     if (request->hasParam("b")){
-      B_Level = request->getParam("b")->value().toInt();
+      brightnessLevel = request->getParam("b")->value().toInt();
       request->send(200, "text/html", "brightness changed");
     }
     else{
@@ -738,19 +641,6 @@ void initButtons() {
   btn_5.begin();
   btn_6.begin();
   pinMode(LED_PIN, OUTPUT); // set the LED pin as an output
-}
-
-void useDisplay()
-{
-  smartControl = false;
-  Heltec.display->displayOn();
-
-  Heltec.display->clear();
-  Set_Data_Display();
-  if (!playState) {
-    Set_Pause_Display();
-  }
-  Heltec.display->display();
 }
 
 void handleButtonClicks()
@@ -963,7 +853,6 @@ void setup()
 
   initButtons();
 
-  // digitalWrite(LED_PIN, ledState);  // LED an, da zu Beginn Pause
   ms = millis();
   msLastStop = ms;
   msLastStopCount = ms;
@@ -978,11 +867,9 @@ void loop()
 
   handleButtonClicks();
 
-  if (BUTTON_STATE != NONE) {
-    useDisplay();
-  } else {
-    if (playState == false) {
-      stopCount(); // aktuell: schaltet LED an als User Feedback für Pause
+  if (BUTTON_STATE == NONE) {
+    if (isClockRunning == false) {
+      stopCount();
     } else {
       Count();
     }
