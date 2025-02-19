@@ -22,51 +22,38 @@
 #include <Preferences.h>
 #include <RadioLib.h>
 
-
-// Create AsyncWebServer object on port 80
-AsyncWebServer server(80);
-AsyncWebSocket ws("/ws");
-
-
-Preferences preferences;
-
 int channel;
-int default_channel = 1;
+int defaultChannel = 1;
 
-uint8_t syncword_select[5]={
+uint8_t syncwordSelect[5]={
   0x12,   //  not needed
   0x12,   //  Kanal 1
   0x23,   //  Kanal 2  
   0x34,   //  Kanal 3  
   0x45    //  Kanal 4
 };
-uint8_t syncword = syncword_select[default_channel];
-float frequency_select[5]={
+uint8_t syncword = syncwordSelect[defaultChannel];
+
+float frequencySelect[5]={
   433.0F,   //  not needed
   433.0F,   //  Kanal 1
   433.5F,   //  Kanal 2  
   434.0F,   //  Kanal 3  
   434.5F   //  Kanal 4
 };
-float frequency = frequency_select[default_channel];
-
-String rssi = "RSSI --";
-String packSize = "--";
-String packet;
+float frequency = frequencySelect[defaultChannel];
 
 String resetString = "restarting...reset your wifi connection";
 
-const unsigned long LONG_PRESS(400);  // we define a "long press" to be 400 milliseconds.
-
 // TODO: check what these two guys do
-unsigned long flex_interval(1000);
+unsigned long flex_interval = 1000;
 bool intervalState = true;
 
 bool isClockRunning = false; // count on/off, starts off
 int defaultClockStart = 30;
 int clockStartTime = defaultClockStart;
 int timeToDisplay = clockStartTime; // Start Zahl
-String ClockStr = "30";
+String clockStr = "30";
 int brightnessLevel = 8;
 
 unsigned long ms;              // current time from millis()
@@ -75,7 +62,12 @@ unsigned long msLastPlay;      // last time Button Play
 unsigned long msLastCount;     // last time count down
 unsigned long msLastStopCount; // last time count/send in stop mode
 
-enum button_states_t
+unsigned long otaProgressMillis = 0;
+
+const unsigned long LONG_PRESS(400);  // we define a "long press" to be 400 milliseconds.
+bool handledLongPress = false;
+
+enum buttonStates_t
 {
   B5_PRESSED,
   B5_PRESSED_LONG,
@@ -92,7 +84,14 @@ enum button_states_t
   NONE
 };
 
-button_states_t BUTTON_STATE = NONE;
+buttonStates_t BUTTON_STATE = NONE;
+
+Button btn_1(PIN_B1), // define the button
+    btn_2(PIN_B2),
+    btn_3(PIN_B3),
+    btn_4(PIN_B4),
+    btn_5(PIN_B5),
+    btn_6(PIN_B6);
 
 #if defined(WIFI_LoRa_32_V2)
   SX1276 radio = new Module(SS, DIO0, RST_LoRa, DIO0);
@@ -102,59 +101,23 @@ button_states_t BUTTON_STATE = NONE;
   SX1262 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
 #endif
 
-const byte              // connect a button switch from this pin to ground
-    BUTTON_PIN_1(PIN_B1), // Button for Play/Pause
-    BUTTON_PIN_2(PIN_B2),  // Button for Reset
-    BUTTON_PIN_3(PIN_B3), // Button for Cancel
-    BUTTON_PIN_4(PIN_B4),   // Button for One Button
-    BUTTON_PIN_5(PIN_B5),   // Button for honking
-    BUTTON_PIN_6(PIN_B6),   // Button for nothing
-    LED_PIN(PIN_LED);        // heltec specific pin 25
+AsyncWebServer server(80);
+AsyncWebSocket ws("/ws");
 
-Button btn_1(BUTTON_PIN_1), // define the button
-    btn_2(BUTTON_PIN_2),
-    btn_3(BUTTON_PIN_3),
-    btn_4(BUTTON_PIN_4),
-    btn_5(BUTTON_PIN_5),
-    btn_6(BUTTON_PIN_6);
+Preferences preferences;
 
+
+
+//===============================================================
 // function prototypes
+//===============================================================
 void sendToClock(String);
 
-unsigned long ota_progress_millis = 0;
 
-void onOTAStart() {
-  // Log when OTA has started
-  Serial.println("OTA update started!");
-}
 
-void onOTAProgress(size_t current, size_t final) {
-  // Log every 1 second
-  if (millis() - ota_progress_millis > 1000) {
-    ota_progress_millis = millis();
-    Serial.printf("OTA Progress Current: %u bytes, Final: %u bytes\n", current, final);
-  }
-}
-
-void onOTAEnd(bool success) {
-  // Log when OTA has finished
-  if (success) {
-    Serial.println("OTA update finished successfully!");
-  } else {
-    Serial.println("There was an error during OTA update!");
-  }
-}
-
-void initOTA()
-{
-  ElegantOTA.begin(&server);  // Start ElegantOTA
-  ElegantOTA.onStart(onOTAStart);
-  ElegantOTA.onProgress(onOTAProgress);
-  ElegantOTA.onEnd(onOTAEnd);
-  server.begin();
-  Serial.println("HTTP server started");
-}
-
+//===============================================================
+// functions
+//===============================================================
 void setStart()
 {
   msLastCount = ms;
@@ -162,18 +125,20 @@ void setStart()
   msLastPlay = ms;
 }
 
-void Set_Pause_Display()
+void setPauseDisplay()
 {
   Heltec.display->fillRect(12, 16, 3, 16);
   Heltec.display->fillRect(18, 16, 3, 16);
 }
 
-void Set_Data_Display()
+void setDataDisplay()
 {
+  clockStr = timeToDisplay < 10 ? "0" + String(timeToDisplay) : String(timeToDisplay);
+
   Heltec.display->drawHorizontalLine(2, 50, 124);
   Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
   Heltec.display->setFont(DSEG14_Classic_Mini_Regular_40);
-  Heltec.display->drawString(64, 1, ClockStr);
+  Heltec.display->drawString(64, 1, clockStr);
   Heltec.display->setFont(ArialMT_Plain_10);
   Heltec.display->drawString(64, 52, "Channel " + String(channel));
 }
@@ -183,36 +148,12 @@ void notifyClients(String message)
   ws.textAll(message);
 }
 
-void lorasend(String Msg)
-{
-
-  if (timeToDisplay < 10)
-  { // wird das noch gebraucht?? redundant??
-    ClockStr = "0" + String(timeToDisplay);
-  }
-  else
-  {
-    ClockStr = String(timeToDisplay);
-  }
-
-  Heltec.display->clear();
-  Set_Data_Display();
-
-  if (!isClockRunning)
-  {
-    Set_Pause_Display();
-  }
-  Heltec.display->display();
-
-  unsigned long ms2 = millis();
-
-  sendToClock(Msg);
-
-  unsigned long ms3 = millis();
-}
-
 void sendToClock(String Msg)
 {
+  Heltec.display->clear();
+  setDataDisplay();
+  if (!isClockRunning) setPauseDisplay();
+  Heltec.display->display();
 
   String msgWithChannel = Msg + String(channel);
 
@@ -220,8 +161,7 @@ void sendToClock(String Msg)
   Serial2.println(msgWithChannel);
 
   // send lora
-  int state = radio.transmit(msgWithChannel);
-
+  radio.transmit(msgWithChannel);
 }
 
 void Count()
@@ -255,7 +195,7 @@ void Count()
       {
         ClockMsg = Command_T + timeToDisplay + brightnessLevel;
       }
-      lorasend(ClockMsg); // für RS-485 Test abgeschaltet
+      sendToClock(ClockMsg);
 
       notifyClients(String(timeToDisplay));
       ws.cleanupClients();
@@ -283,7 +223,7 @@ void stopCount()
     {
       ClockMsg = Command_T + timeToDisplay + brightnessLevel;
     }
-    lorasend(ClockMsg);
+    sendToClock(ClockMsg);
     notifyClients(String(timeToDisplay));
     ws.cleanupClients();
     msLastStopCount = ms;
@@ -313,7 +253,7 @@ void resetClock(bool runClock, int resetTime=defaultClockStart)
     ClockMsg = Command_T + timeToDisplay + brightnessLevel;
   }
 
-  lorasend(ClockMsg);
+  sendToClock(ClockMsg);
   notifyClients(String(timeToDisplay));
   ws.cleanupClients();
   setStart();
@@ -341,7 +281,7 @@ void playPause()
   {
     notifyClients("false");
     msLastStop = ms; // wenn auf Pause gewechselt, dann Zeit Letzter PAuse Speichern
-    Set_Pause_Display();
+    setPauseDisplay();
     Heltec.display->display();
   }
   else
@@ -350,7 +290,7 @@ void playPause()
     msLastPlay = ms; // wenn auf Play gewechselt, dann Zeit Letztes Play Speichern
 
     Heltec.display->clear();
-    Set_Data_Display();
+    setDataDisplay();
     Heltec.display->display();
   }
 }
@@ -378,7 +318,7 @@ void setNewStartTime(int startTime)
   sendStartTime(clockStartTime);
 }
 
-void set_channel(int ch)
+void setChannel(int ch)
 {
   channel = ch;
   preferences.begin("shot-clock", false);
@@ -542,105 +482,10 @@ String settingsProcessor(const String &var)
 void loadChannelFromEEPROM()
 {
   preferences.begin("shot-clock", false);
-  channel = preferences.getInt("channel", default_channel);
-  syncword = syncword_select[channel];
-  frequency = frequency_select[channel];
+  channel = preferences.getInt("channel", defaultChannel);
+  syncword = syncwordSelect[channel];
+  frequency = frequencySelect[channel];
   preferences.end();
-}
-
-void initWebSocket()
-{
-  ws.onEvent(onEvent);
-  server.addHandler(&ws);
-}
-
-void initWebserver()
-{
-  // Route for root / web page
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(SPIFFS, "/index.html", String(), false); });
-
-  server.on("/controller/", HTTP_GET, [](AsyncWebServerRequest *request)
-            {
-  request->send(SPIFFS, "/controller.html", String(), false);
-  });
-
-  server.on("/settings/", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(SPIFFS, "/settings.html", String(), false, settingsProcessor); });
-
-  server.on("/version", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/html", version_html, versionProcessor);
-  });
-
-  server.on("/brightness", HTTP_GET, [](AsyncWebServerRequest *request)
-            {
-    if (request->hasParam("b")){
-      brightnessLevel = request->getParam("b")->value().toInt();
-      request->send(200, "text/html", "brightness changed");
-    }
-    else{
-      request->send(400, "text/plain", "missing parameters");
-    } });
-
-  // Route to load style.css file
-  server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(SPIFFS, "/style.css", "text/css"); });
-
-  server.on("/javascript.js", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(SPIFFS, "/javascript.js", "application/javascript"); });
-
-  server.on("/piep.mp3", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(SPIFFS, "/piep.mp3"); });
-
-  server.on("/longpiep.mp3", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(SPIFFS, "/longpiep.mp3"); });
-
-  server.on("/digital-7-mono.ttf", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(SPIFFS, "/digital-7-mono.ttf"); });
-
-  server.on("/digital-7-mono.woff", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(SPIFFS, "/digital-7-mono.woff"); });
-
-  server.on("/digital-7-mono.woff2", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(SPIFFS, "/digital-7-mono.woff2"); });
-
-  server.on("/channel", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(200, "text/html", channel_html, processor); });
-
-  /*    server.on("/channel/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/channel.html", String(), false);
-  });*/
-
-  server.on("/1", HTTP_GET, [](AsyncWebServerRequest *request)
-            {
-    request->send(200, "text/plain", resetString);
-    set_channel(1); });
-
-  server.on("/2", HTTP_GET, [](AsyncWebServerRequest *request)
-            {
-    request->send(200, "text/plain", resetString);
-    set_channel(2); });
-
-  server.on("/3", HTTP_GET, [](AsyncWebServerRequest *request)
-            {
-    request->send(200, "text/plain", resetString);
-    set_channel(3); });
-
-  server.on("/4", HTTP_GET, [](AsyncWebServerRequest *request)
-            {
-    request->send(200, "text/plain", resetString);
-    set_channel(4); });
-}
-
-void initButtons() {
-  // initialize the button objects
-  btn_1.begin();
-  btn_2.begin();
-  btn_3.begin();
-  btn_4.begin();
-  btn_5.begin();
-  btn_6.begin();
-  pinMode(LED_PIN, OUTPUT); // set the LED pin as an output
 }
 
 void handleButtonClicks()
@@ -678,15 +523,15 @@ void handleButtonClicks()
     resetClockByHWButton(false, timeToDisplay + 10);
     break;
   case B6_PRESSED:
+  playPause();
     break;
   case B6_PRESSED_LONG:
+  playPause();
     break;
   default:
     break;
   }
 }
-
-bool handledLongPress = false;
 
 void updateButtonState()
 {
@@ -785,6 +630,107 @@ void updateButtonState()
 // Setup
 //===============================================================
 
+void initOTA()
+{
+  ElegantOTA.begin(&server);  // Start ElegantOTA
+  server.begin();
+  Serial.println("HTTP server started");
+}
+
+void initWebSocket()
+{
+  ws.onEvent(onEvent);
+  server.addHandler(&ws);
+}
+
+void initWebserver()
+{
+  // Route for root / web page
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, "/index.html", String(), false); });
+
+  server.on("/controller/", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
+  request->send(SPIFFS, "/controller.html", String(), false);
+  });
+
+  server.on("/settings/", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, "/settings.html", String(), false, settingsProcessor); });
+
+  server.on("/version", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/html", version_html, versionProcessor);
+  });
+
+  server.on("/brightness", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
+    if (request->hasParam("b")){
+      brightnessLevel = request->getParam("b")->value().toInt();
+      request->send(200, "text/html", "brightness changed");
+    }
+    else{
+      request->send(400, "text/plain", "missing parameters");
+    } });
+
+  // Route to load style.css file
+  server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, "/style.css", "text/css"); });
+
+  server.on("/javascript.js", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, "/javascript.js", "application/javascript"); });
+
+  server.on("/piep.mp3", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, "/piep.mp3"); });
+
+  server.on("/longpiep.mp3", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, "/longpiep.mp3"); });
+
+  server.on("/digital-7-mono.ttf", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, "/digital-7-mono.ttf"); });
+
+  server.on("/digital-7-mono.woff", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, "/digital-7-mono.woff"); });
+
+  server.on("/digital-7-mono.woff2", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, "/digital-7-mono.woff2"); });
+
+  server.on("/channel", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(200, "text/html", channel_html, processor); });
+
+  /*    server.on("/channel/", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, "/channel.html", String(), false);
+  });*/
+
+  server.on("/1", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
+    request->send(200, "text/plain", resetString);
+    setChannel(1); });
+
+  server.on("/2", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
+    request->send(200, "text/plain", resetString);
+    setChannel(2); });
+
+  server.on("/3", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
+    request->send(200, "text/plain", resetString);
+    setChannel(3); });
+
+  server.on("/4", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
+    request->send(200, "text/plain", resetString);
+    setChannel(4); });
+}
+
+void initButtons() {
+  // initialize the button objects
+  btn_1.begin();
+  btn_2.begin();
+  btn_3.begin();
+  btn_4.begin();
+  btn_5.begin();
+  btn_6.begin();
+}
+
 void setupRadio() {
   // initialize SX12xx with default settings
   Serial.print(F("[SX12xx] Initializing ... "));
@@ -847,8 +793,8 @@ void setup()
   initOTA();
 
   Heltec.display->clear();
-  Set_Pause_Display();
-  Set_Data_Display();
+  setPauseDisplay();
+  setDataDisplay();
   Heltec.display->display();
 
   initButtons();
@@ -857,6 +803,10 @@ void setup()
   msLastStop = ms;
   msLastStopCount = ms;
 }
+
+//===============================================================
+// loop
+//===============================================================
 
 void loop()
 {
