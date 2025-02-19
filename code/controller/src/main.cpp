@@ -44,6 +44,7 @@ float frequencySelect[5]={
 float frequency = frequencySelect[defaultChannel];
 
 String resetString = "restarting...reset your wifi connection";
+String timeCommand = "T";
 
 // TODO: check what these two guys do
 unsigned long flex_interval = 1000;
@@ -148,6 +149,20 @@ void notifyClients(String message)
   ws.textAll(message);
 }
 
+String getTimeSendMsg(String command, int time)
+{
+  String clockMsg;
+  if (time < 10)
+  {
+    clockMsg = command + 0 + time + brightnessLevel;
+  }
+  else
+  {
+    clockMsg = command + time + brightnessLevel;
+  }
+  return clockMsg;
+}
+
 void sendToClock(String Msg)
 {
   Heltec.display->clear();
@@ -185,17 +200,8 @@ void Count()
         flex_interval = 1000;
       }
 
-      String Command_T = "T";
-      String ClockMsg;
-      if (timeToDisplay < 10)
-      {
-        ClockMsg = Command_T + 0 + timeToDisplay + brightnessLevel;
-      }
-      else
-      {
-        ClockMsg = Command_T + timeToDisplay + brightnessLevel;
-      }
-      sendToClock(ClockMsg);
+      String clockMsg = getTimeSendMsg(timeCommand, timeToDisplay);
+      sendToClock(clockMsg);
 
       notifyClients(String(timeToDisplay));
       ws.cleanupClients();
@@ -211,19 +217,11 @@ void Count()
 
 void stopCount()
 {
+  // the displays need to be updated every second
   if (ms - msLastStopCount >= 1000)
   {
-    String Command_T = "T";
-    String ClockMsg;
-    if (timeToDisplay < 10)
-    {
-      ClockMsg = Command_T + 0 + timeToDisplay + brightnessLevel;
-    }
-    else
-    {
-      ClockMsg = Command_T + timeToDisplay + brightnessLevel;
-    }
-    sendToClock(ClockMsg);
+    String clockMsg = getTimeSendMsg(timeCommand, timeToDisplay);
+    sendToClock(clockMsg);
     notifyClients(String(timeToDisplay));
     ws.cleanupClients();
     msLastStopCount = ms;
@@ -241,19 +239,9 @@ void resetClock(bool runClock, int resetTime=defaultClockStart)
   }
   
   timeToDisplay = resetTime;
-  String Command_T = "T";
-  String ClockMsg;
+  String clockMsg = getTimeSendMsg(timeCommand, timeToDisplay);
+  sendToClock(clockMsg);
   
-  if (timeToDisplay < 10)
-  {
-    ClockMsg = Command_T + 0 + timeToDisplay + brightnessLevel;
-  }
-  else
-  {
-    ClockMsg = Command_T + timeToDisplay + brightnessLevel;
-  }
-
-  sendToClock(ClockMsg);
   notifyClients(String(timeToDisplay));
   ws.cleanupClients();
   setStart();
@@ -731,7 +719,7 @@ void initButtons() {
   btn_6.begin();
 }
 
-void setupRadio() {
+void initRadio() {
   // initialize SX12xx with default settings
   Serial.print(F("[SX12xx] Initializing ... "));
   int state = radio.begin();
@@ -758,7 +746,7 @@ void setup()
   long band = 434000000;  // not used anymore, because RadioLib handles LoRa
   Heltec.begin(true /*Display Enable*/, false /*LoRa Disable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
 
-  setupRadio();
+  initRadio();
 
   if (!SPIFFS.begin())
   {
@@ -818,12 +806,7 @@ void loop()
   handleButtonClicks();
 
   if (BUTTON_STATE == NONE) {
-    if (isClockRunning == false) {
-      stopCount();
-    } else {
-      Count();
-    }
+    isClockRunning ? Count() : stopCount();
     ElegantOTA.loop();
   }
 }
-
