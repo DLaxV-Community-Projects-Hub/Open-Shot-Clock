@@ -26,11 +26,10 @@
 #include "version.h"
 #include "font.h"
 
-
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <AsyncElegantOTA.h>
+#include <ElegantOTA.h>
 
 #include <Preferences.h>
 #include <Adafruit_PWMServoDriver.h>
@@ -112,6 +111,42 @@ void drawRS485Info();
 bool timeIsUp();
 void setupRadio();
 
+unsigned long ota_progress_millis = 0;
+
+void onOTAStart() {
+  // Log when OTA has started
+  Serial.println("OTA update started!");
+  // <Add your own code here>
+}
+
+void onOTAProgress(size_t current, size_t final) {
+  // Log every 1 second
+  if (millis() - ota_progress_millis > 1000) {
+    ota_progress_millis = millis();
+    Serial.printf("OTA Progress Current: %u bytes, Final: %u bytes\n", current, final);
+  }
+}
+
+void onOTAEnd(bool success) {
+  // Log when OTA has finished
+  if (success) {
+    Serial.println("OTA update finished successfully!");
+  } else {
+    Serial.println("There was an error during OTA update!");
+  }
+  // <Add your own code here>
+}
+
+void initOTA()
+{
+  ElegantOTA.begin(&server);  // Start ElegantOTA
+  ElegantOTA.onStart(onOTAStart);
+  ElegantOTA.onProgress(onOTAProgress);
+  ElegantOTA.onEnd(onOTAEnd);
+  server.begin();
+  Serial.println("HTTP server started");
+}
+
 bool timeIsUp() {
   return currentTime == 0 && previousTime != 0;
 }
@@ -174,8 +209,8 @@ bool isMessageValid(String msg) {
   msg.toCharArray(buffer, bufferSize);
   matchState.Target(buffer);
 
-  // check if channel is correct
-  if (!msg.endsWith(String(channel))){
+  // check if channel is correct if not in cable mode
+  if (!RS485mode && !msg.endsWith(String(channel))){
     return false;
   }
 
@@ -282,9 +317,9 @@ void RS485receive() {
        stringComplete = true;
        RS485mode = true;
        break;
+     } else if (!isSpace(inChar)) {
+      packet += inChar; // Add value to inputstring
      }
-
-     packet += inChar; // Add value to inputstring
 
     if (packet.length() > 100) // If inputString is too long break while loop
     {
@@ -420,10 +455,7 @@ void setup() {
   
   initWebserver();
 
-  AsyncElegantOTA.begin(&server);    // Start ElegantOTA
-  server.begin();
-  Serial.println("HTTP server started");
-
+  initOTA();
   
   leds.showWaitingAnimation();
   waitingHeltecDisplay();
@@ -443,6 +475,8 @@ void drawRS485Info() {
 
 void loop() {
 
+  ElegantOTA.loop(); 
+
   if (RS485mode == false){
     if (receivedFlag) { 
       readLoraMessage();
@@ -454,8 +488,6 @@ void loop() {
 
   // print the string when a newline arrives:
   if (stringComplete) {
-    
-
     lms = millis();
     clientFlag = true;
     handlePacket();
@@ -474,8 +506,6 @@ void loop() {
   else{
     client_check();
     }
-
-  AsyncElegantOTA.loop(); 
 
   if (timeIsUp()) {
     horn.requestHonk();
