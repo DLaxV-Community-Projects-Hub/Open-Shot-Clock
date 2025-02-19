@@ -90,8 +90,8 @@ bool startState = true;
 bool intervalState = true;
 bool smartControl = false;
 int defaultClockStart = 30;
-int ClockStart = defaultClockStart;
-int Clock = ClockStart; // Start Zahl
+int clockStartTime = defaultClockStart;
+int timeToDisplay = clockStartTime; // Start Zahl
 String ClockStr = "30";
 int B_Level = 8;
 
@@ -104,18 +104,18 @@ unsigned long abweichung = 0;  // zählt die gesamte Abweichung
 
 enum button_states_t
 {
-  H_PRESSED,
-  H_PRESSED_LONG,
-  B_PRESSED,
-  B_PRESSED_LONG,
-  T_PRESSED,
-  T_PRESSED_LONG,
-  P_PRESSED,
-  P_PRESSED_LONG,
-  R_PRESSED,
-  R_PRESSED_LONG,
-  C_PRESSED,
-  C_PRESSED_LONG,
+  B5_PRESSED,
+  B5_PRESSED_LONG,
+  B6_PRESSED,
+  B6_PRESSED_LONG,
+  B4_PRESSED,
+  B4_PRESSED_LONG,
+  B1_PRESSED,
+  B1_PRESSED_LONG,
+  B2_PRESSED,
+  B2_PRESSED_LONG,
+  B3_PRESSED,
+  B3_PRESSED_LONG,
   NONE
 };
 
@@ -130,20 +130,20 @@ button_states_t BUTTON_STATE = NONE;
 #endif
 
 const byte              // connect a button switch from this pin to ground
-    BUTTON_PIN_P_P(PIN_P_P), // Button for Play/Pause
-    BUTTON_PIN_R_P(PIN_R_P),  // Button for Reset
-    BUTTON_PIN_R_S(PIN_R_S), // Button for Cancel
-    BUTTON_PIN_T(PIN_T),   // Button for One Button
-    BUTTON_PIN_H(PIN_H),   // Button for honking
-    BUTTON_PIN_B(PIN_B),   // Button for nothing
+    BUTTON_PIN_1(PIN_B1), // Button for Play/Pause
+    BUTTON_PIN_2(PIN_B2),  // Button for Reset
+    BUTTON_PIN_3(PIN_B3), // Button for Cancel
+    BUTTON_PIN_4(PIN_B4),   // Button for One Button
+    BUTTON_PIN_5(PIN_B5),   // Button for honking
+    BUTTON_PIN_6(PIN_B6),   // Button for nothing
     LED_PIN(PIN_LED);        // heltec specific pin 25
 
-Button myBtn_T(BUTTON_PIN_T), // define the button
-    myBtn_P_P(BUTTON_PIN_P_P),
-    myBtn_R_P(BUTTON_PIN_R_P),
-    myBtn_H(BUTTON_PIN_H),
-    myBtn_B(BUTTON_PIN_B),
-    myBtn_R_S(BUTTON_PIN_R_S);
+Button btn_1(BUTTON_PIN_1), // define the button
+    btn_2(BUTTON_PIN_2),
+    btn_3(BUTTON_PIN_3),
+    btn_4(BUTTON_PIN_4),
+    btn_5(BUTTON_PIN_5),
+    btn_6(BUTTON_PIN_6);
 
 // function prototypes
 void sendToClock(String);
@@ -215,13 +215,13 @@ void notifyClients(String message)
 void lorasend(String Msg)
 {
 
-  if (Clock < 10)
+  if (timeToDisplay < 10)
   { // wird das noch gebraucht?? redundant??
-    ClockStr = "0" + String(Clock);
+    ClockStr = "0" + String(timeToDisplay);
   }
   else
   {
-    ClockStr = String(Clock);
+    ClockStr = String(timeToDisplay);
   }
 
   if (smartControl == false)
@@ -260,7 +260,7 @@ void Count()
 {
   unsigned long t = (msLastStop - msLastCount) + (ms - msLastPlay);
 
-  if (Clock > 0)
+  if (timeToDisplay > 0)
   {
 
     if (t >= BLINK_INTERVAL_SHORT && ledState == false)
@@ -288,27 +288,27 @@ void Count()
         intervalState = true;
       }
 
-      Clock--;
+      timeToDisplay--;
 
-      if (Clock < ClockStart)
+      if (timeToDisplay < clockStartTime)
       {
         FLEX_INTERVAL = 1000;
       }
 
       String Command_T = "T";
       String ClockMsg;
-      if (Clock < 10)
+      if (timeToDisplay < 10)
       {
-        ClockMsg = Command_T + 0 + Clock + B_Level;
+        ClockMsg = Command_T + 0 + timeToDisplay + B_Level;
       }
       else
       {
-        ClockMsg = Command_T + Clock + B_Level;
+        ClockMsg = Command_T + timeToDisplay + B_Level;
       }
       // ledStateMsg += ledState;
       lorasend(ClockMsg); // für RS-485 Test abgeschaltet
 
-      notifyClients(String(Clock));
+      notifyClients(String(timeToDisplay));
       ws.cleanupClients();
 
       ledState = false;
@@ -336,19 +336,19 @@ void stopCount()
   {
     String Command_T = "T";
     String ClockMsg;
-    if (Clock < 10)
+    if (timeToDisplay < 10)
     {
-      ClockMsg = Command_T + 0 + Clock + B_Level;
+      ClockMsg = Command_T + 0 + timeToDisplay + B_Level;
     }
     else
     {
-      ClockMsg = Command_T + Clock + B_Level;
+      ClockMsg = Command_T + timeToDisplay + B_Level;
     }
     /*String Command_T = "T";
-    String ClockMsg = Command_T + Clock;*/
+    String ClockMsg = Command_T + timeToDisplay;*/
     // ledStateMsg += ledState;
     lorasend(ClockMsg);
-    notifyClients(String(Clock));
+    notifyClients(String(timeToDisplay));
     ws.cleanupClients();
     // Serial.println(ClockMsg);
     msLastStopCount = ms;
@@ -365,22 +365,22 @@ void resetClock(bool play, int resetTime=defaultClockStart)
     resetTime = 99;
   }
   
-  ClockStart=resetTime;
-  Clock = ClockStart;
+  clockStartTime=resetTime;
+  timeToDisplay = clockStartTime;
   String Command_T = "T";
   String ClockMsg;
   
-  if (Clock < 10)
+  if (timeToDisplay < 10)
   {
-    ClockMsg = Command_T + 0 + Clock + B_Level;
+    ClockMsg = Command_T + 0 + timeToDisplay + B_Level;
   }
   else
   {
-    ClockMsg = Command_T + Clock + B_Level;
+    ClockMsg = Command_T + timeToDisplay + B_Level;
   }
 
   lorasend(ClockMsg);
-  notifyClients(String(Clock));
+  notifyClients(String(timeToDisplay));
   ws.cleanupClients();
   setStart();
   playState = play;
@@ -447,18 +447,18 @@ void setTime(int T)
   smartControl = true;
   Heltec.display->displayOff();
 
-  ClockStart = T;
-  if (ClockStart < 1)
+  clockStartTime = T;
+  if (clockStartTime < 0)
   {
-    ClockStart = 1;
+    clockStartTime = 0;
   }
-  if (ClockStart > 99)
+  if (clockStartTime > 99)
   {
-    ClockStart = 99;
+    clockStartTime = 99;
   }
   resetClock(false);
   startState = true;
-  sendStartTime(ClockStart);
+  sendStartTime(clockStartTime);
 
   /*if (smartControl == false){
     Heltec.display->clear();
@@ -503,33 +503,33 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     }
     if (strcmp((char *)data, "setTimePlus10") == 0)
     {
-      setTime(ClockStart + 10);
+      setTime(clockStartTime + 10);
     }
     if (strcmp((char *)data, "setTimeMinus10") == 0)
     {
-      setTime(ClockStart - 10);
+      setTime(clockStartTime - 10);
     }
     if (strcmp((char *)data, "setTimePlus5") == 0)
     {
-      setTime(ClockStart + 5);
+      setTime(clockStartTime + 5);
     }
     if (strcmp((char *)data, "setTimeMinus5") == 0)
     {
-      setTime(ClockStart - 5);
+      setTime(clockStartTime - 5);
     }
     if (strcmp((char *)data, "setTimePlus1") == 0)
     {
-      setTime(ClockStart + 1);
+      setTime(clockStartTime + 1);
     }
     if (strcmp((char *)data, "setTimeMinus1") == 0)
     {
-      setTime(ClockStart - 1);
+      setTime(clockStartTime - 1);
     }
     if (strcmp((char *)data, "SW") == 0)
     {
       smartControl = true;
       Heltec.display->displayOff();
-      sendStartTime(ClockStart);
+      sendStartTime(clockStartTime);
     }
   }
 }
@@ -666,14 +666,14 @@ void initWebserver()
             { request->send(SPIFFS, "/settings.html", String(), false, settingsProcessor); });
 
   server.on("/version", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send_P(200, "text/html", version_html, versionProcessor);
+    request->send(200, "text/html", version_html, versionProcessor);
   });
 
   server.on("/brightness", HTTP_GET, [](AsyncWebServerRequest *request)
             {
     if (request->hasParam("b")){
       B_Level = request->getParam("b")->value().toInt();
-      request->send_P(200, "text/html", "brightness changed");
+      request->send(200, "text/html", "brightness changed");
     }
     else{
       request->send(400, "text/plain", "missing parameters");
@@ -702,7 +702,7 @@ void initWebserver()
             { request->send(SPIFFS, "/digital-7-mono.woff2"); });
 
   server.on("/channel", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send_P(200, "text/html", channel_html, processor); });
+            { request->send(200, "text/html", channel_html, processor); });
 
   /*    server.on("/channel/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(SPIFFS, "/channel.html", String(), false);
@@ -730,12 +730,13 @@ void initWebserver()
 }
 
 void initButtons() {
-  myBtn_T.begin(); // initialize the button object
-  myBtn_P_P.begin();
-  myBtn_R_P.begin();
-  myBtn_R_S.begin();
-  myBtn_H.begin();
-  myBtn_B.begin();
+  // initialize the button objects
+  btn_1.begin();
+  btn_2.begin();
+  btn_3.begin();
+  btn_4.begin();
+  btn_5.begin();
+  btn_6.begin();
   pinMode(LED_PIN, OUTPUT); // set the LED pin as an output
 }
 
@@ -756,43 +757,40 @@ void handleButtonClicks()
 {
   switch (BUTTON_STATE)
   {
-  case H_PRESSED:
-    resetClockByHWButton(true, 30);
-    break;
-  case H_PRESSED_LONG:
-    resetClockByHWButton(false, 30);
-    break;
-  case B_PRESSED:
-    resetClockByHWButton(true, 60);
-    break;
-  case B_PRESSED_LONG:
-    resetClockByHWButton(false, 60);
-    break;
-  case T_PRESSED:
-    resetClockByHWButton(true, 90);
-    break;
-  case T_PRESSED_LONG:
-    resetClockByHWButton(false, 90);
-    break;
-  case P_PRESSED:
+  case B1_PRESSED:
     playPause();
     break;
-  case P_PRESSED_LONG:
+  case B1_PRESSED_LONG:
     playPause();
     break;
-  case R_PRESSED:
-    // nothing
+  case B2_PRESSED:
+    resetClockByHWButton(true, clockStartTime);
     break;
-  case R_PRESSED_LONG:
-    // nothing
+  case B2_PRESSED_LONG:
+    resetClockByHWButton(true, clockStartTime);
     break;
-  case C_PRESSED:
-    startHonking();
+  case B3_PRESSED:
+    resetClockByHWButton(false, clockStartTime);
     break;
-  case C_PRESSED_LONG:
-    startHonking();
+  case B3_PRESSED_LONG:
+    resetClockByHWButton(false, clockStartTime);
     break;
-
+  case B4_PRESSED:
+    resetClockByHWButton(false, timeToDisplay - 1);
+    break;
+  case B4_PRESSED_LONG:
+    resetClockByHWButton(false, timeToDisplay - 10);
+    break;
+  case B5_PRESSED:
+    resetClockByHWButton(false, timeToDisplay + 1);
+    break;
+  case B5_PRESSED_LONG:
+    resetClockByHWButton(false, timeToDisplay + 10);
+    break;
+  case B6_PRESSED:
+    break;
+  case B6_PRESSED_LONG:
+    break;
   default:
     break;
   }
@@ -802,97 +800,95 @@ bool handledLongPress = false;
 
 void updateButtonState()
 {
-  myBtn_T.read();   // read the button
-  myBtn_P_P.read(); // read the button
-  myBtn_R_P.read(); // read the button
-  myBtn_R_S.read(); // read the button
-  myBtn_H.read();   // read the button
-  myBtn_B.read();   // read the button
+  btn_1.read(); // read the button
+  btn_2.read(); // read the button
+  btn_3.read(); // read the button
+  btn_4.read();   // read the button
+  btn_5.read();   // read the button
+  btn_6.read();   // read the button
 
-  if (myBtn_H.wasReleased() && !handledLongPress)
+  if (btn_1.wasReleased() && !handledLongPress)
   {
-    BUTTON_STATE = H_PRESSED;
+    BUTTON_STATE = B1_PRESSED;
   }
-  else if (myBtn_H.wasReleased() && handledLongPress)
+  else if (btn_1.wasReleased() && handledLongPress)
   {
     handledLongPress = false;
   }
-  else if (myBtn_H.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn_1.pressedFor(LONG_PRESS) && !handledLongPress)
   {
-    BUTTON_STATE = H_PRESSED_LONG;
+    BUTTON_STATE = B1_PRESSED_LONG;
     handledLongPress = true;
   }
-  else if (myBtn_B.wasReleased() && !handledLongPress)
+  else if (btn_2.wasReleased() && !handledLongPress)
   {
-    BUTTON_STATE = B_PRESSED;
+    BUTTON_STATE = B2_PRESSED;
   }
-  else if (myBtn_B.wasReleased() && handledLongPress)
+  else if (btn_2.wasReleased() && handledLongPress)
   {
     handledLongPress = false;
   }
-  else if (myBtn_B.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn_2.pressedFor(LONG_PRESS) && !handledLongPress)
   {
-    BUTTON_STATE = B_PRESSED_LONG;
+    BUTTON_STATE = B2_PRESSED_LONG;
     handledLongPress = true;
   }
-  else if (myBtn_T.wasReleased() && !handledLongPress)
+  else if (btn_3.wasReleased() && !handledLongPress)
   {
-    BUTTON_STATE = T_PRESSED;
+    BUTTON_STATE = B3_PRESSED;
   }
-  else if (myBtn_T.wasReleased() && handledLongPress)
+  else if (btn_3.wasReleased() && handledLongPress)
   {
     handledLongPress = false;
   }
-  else if (myBtn_T.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn_3.pressedFor(LONG_PRESS) && !handledLongPress)
   {
-    BUTTON_STATE = T_PRESSED_LONG;
+    BUTTON_STATE = B3_PRESSED_LONG;
     handledLongPress = true;
   }
-  else if (myBtn_P_P.wasReleased() && !handledLongPress)
+  else if (btn_4.wasReleased() && !handledLongPress)
   {
-    BUTTON_STATE = P_PRESSED;
+    BUTTON_STATE = B4_PRESSED;
   }
-  else if (myBtn_P_P.wasReleased() && handledLongPress)
+  else if (btn_4.wasReleased() && handledLongPress)
   {
     handledLongPress = false;
   }
-  else if (myBtn_P_P.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn_4.pressedFor(LONG_PRESS) && !handledLongPress)
   {
-    BUTTON_STATE = P_PRESSED_LONG;
+    BUTTON_STATE = B4_PRESSED_LONG;
     handledLongPress = true;
   }
-  else if (myBtn_R_P.wasReleased() && !handledLongPress)
+  else if (btn_5.wasReleased() && !handledLongPress)
   {
-    BUTTON_STATE = R_PRESSED;
+    BUTTON_STATE = B5_PRESSED;
   }
-  else if (myBtn_R_P.wasReleased() && handledLongPress)
+  else if (btn_5.wasReleased() && handledLongPress)
   {
     handledLongPress = false;
   }
-  else if (myBtn_R_P.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn_5.pressedFor(LONG_PRESS) && !handledLongPress)
   {
-    BUTTON_STATE = R_PRESSED_LONG;
+    BUTTON_STATE = B5_PRESSED_LONG;
     handledLongPress = true;
   }
-  else if (myBtn_R_S.wasReleased() && !handledLongPress)
+  else if (btn_6.wasReleased() && !handledLongPress)
   {
-    BUTTON_STATE = C_PRESSED;
+    BUTTON_STATE = B6_PRESSED;
   }
-  else if (myBtn_R_S.wasReleased() && handledLongPress)
+  else if (btn_6.wasReleased() && handledLongPress)
   {
     handledLongPress = false;
   }
-  else if (myBtn_R_S.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn_6.pressedFor(LONG_PRESS) && !handledLongPress)
   {
-    BUTTON_STATE = C_PRESSED_LONG;
+    BUTTON_STATE = B6_PRESSED_LONG;
     handledLongPress = true;
   }
   else
   {
     BUTTON_STATE = NONE;
   }
-  Serial.print("button presed: ");
-  Serial.println(BUTTON_STATE);
 }
 
 //===============================================================
