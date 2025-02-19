@@ -357,6 +357,14 @@ void stopCount()
 
 void resetClock(bool play, int resetTime=defaultClockStart)
 {
+  if (resetTime < 0)
+  {
+    resetTime = 0;
+  } else if (resetTime > 99)
+  {
+    resetTime = 99;
+  }
+  
   ClockStart=resetTime;
   Clock = ClockStart;
   String Command_T = "T";
