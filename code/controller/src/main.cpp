@@ -46,10 +46,6 @@ float frequency = frequencySelect[defaultChannel];
 String resetString = "restarting...reset your wifi connection";
 String timeCommand = "T";
 
-// TODO: check what these two guys do
-unsigned long flex_interval = 1000;
-bool intervalState = true;
-
 bool isClockRunning = false; // count on/off, starts off
 int defaultClockStart = 30;
 int clockStartTime = defaultClockStart;
@@ -57,13 +53,11 @@ int timeToDisplay = clockStartTime; // Start Zahl
 String clockStr = "30";
 int brightnessLevel = 8;
 
-unsigned long ms;              // current time from millis()
-unsigned long msLastStop;      // last time Button Pause
-unsigned long msLastPlay;      // last time Button Play
-unsigned long msLastCount;     // last time count down
+unsigned long timeNow;              // current time from millis()
+unsigned long timeOfLastPauseEvent;      // last time Button Pause
+unsigned long timeOfLastPlayEvent;      // last time Button Play
+unsigned long timeOfLastCountEvent;     // last time count down
 unsigned long msLastStopCount; // last time count/send in stop mode
-
-unsigned long otaProgressMillis = 0;
 
 const unsigned long LONG_PRESS(400);  // we define a "long press" to be 400 milliseconds.
 bool handledLongPress = false;
@@ -121,9 +115,9 @@ void sendToClock(String);
 //===============================================================
 void setStart()
 {
-  msLastCount = ms;
-  msLastStop = ms;
-  msLastPlay = ms;
+  timeOfLastCountEvent = timeNow;
+  timeOfLastPauseEvent = timeNow;
+  timeOfLastPlayEvent = timeNow;
 }
 
 void setPauseDisplay()
@@ -179,26 +173,15 @@ void sendToClock(String Msg)
   radio.transmit(msgWithChannel);
 }
 
-void Count()
+void count()
 {
-  unsigned long t = (msLastStop - msLastCount) + (ms - msLastPlay);
+  unsigned long msAlreadyPassedInCurrentSecond = (timeOfLastPauseEvent - timeOfLastCountEvent) + (timeNow - timeOfLastPlayEvent);
 
   if (timeToDisplay > 0)
   {
-    if (t >= flex_interval)
+    if (msAlreadyPassedInCurrentSecond >= 1000)
     {
-      if (intervalState == false)
-      {
-        flex_interval += LONG_PRESS;
-        intervalState = true;
-      }
-
       timeToDisplay--;
-
-      if (timeToDisplay < clockStartTime)
-      {
-        flex_interval = 1000;
-      }
 
       String clockMsg = getTimeSendMsg(timeCommand, timeToDisplay);
       sendToClock(clockMsg);
@@ -218,13 +201,13 @@ void Count()
 void stopCount()
 {
   // the displays need to be updated every second
-  if (ms - msLastStopCount >= 1000)
+  if (timeNow - msLastStopCount >= 1000)
   {
     String clockMsg = getTimeSendMsg(timeCommand, timeToDisplay);
     sendToClock(clockMsg);
     notifyClients(String(timeToDisplay));
     ws.cleanupClients();
-    msLastStopCount = ms;
+    msLastStopCount = timeNow;
   }
 }
 
@@ -241,7 +224,7 @@ void resetClock(bool runClock, int resetTime=defaultClockStart)
   timeToDisplay = resetTime;
   String clockMsg = getTimeSendMsg(timeCommand, timeToDisplay);
   sendToClock(clockMsg);
-  
+
   notifyClients(String(timeToDisplay));
   ws.cleanupClients();
   setStart();
@@ -256,26 +239,20 @@ void resetClock(bool runClock, int resetTime=defaultClockStart)
   }
 }
 
-void resetClockByHWButton(bool runClock, int resetTime=defaultClockStart)
-{
-  resetClock(runClock, resetTime);
-  intervalState = false;
-}
-
 void playPause()
 {
   isClockRunning = !isClockRunning; // ON > OFF oder OFF > ON // fängt OFF an
   if (isClockRunning == false)
   {
     notifyClients("false");
-    msLastStop = ms; // wenn auf Pause gewechselt, dann Zeit Letzter PAuse Speichern
+    timeOfLastPauseEvent = timeNow; // wenn auf Pause gewechselt, dann Zeit Letzter PAuse Speichern
     setPauseDisplay();
     Heltec.display->display();
   }
   else
   {
     notifyClients("true");
-    msLastPlay = ms; // wenn auf Play gewechselt, dann Zeit Letztes Play Speichern
+    timeOfLastPlayEvent = timeNow; // wenn auf Play gewechselt, dann Zeit Letztes Play Speichern
 
     Heltec.display->clear();
     setDataDisplay();
@@ -487,28 +464,28 @@ void handleButtonClicks()
     playPause();
     break;
   case B2_PRESSED:
-    resetClockByHWButton(true, clockStartTime);
+    resetClock(true, clockStartTime);
     break;
   case B2_PRESSED_LONG:
-    resetClockByHWButton(true, clockStartTime);
+    resetClock(true, clockStartTime);
     break;
   case B3_PRESSED:
-    resetClockByHWButton(false, clockStartTime);
+    resetClock(false, clockStartTime);
     break;
   case B3_PRESSED_LONG:
-    resetClockByHWButton(false, clockStartTime);
+    resetClock(false, clockStartTime);
     break;
   case B4_PRESSED:
-    resetClockByHWButton(false, timeToDisplay - 1);
+    resetClock(false, timeToDisplay - 1);
     break;
   case B4_PRESSED_LONG:
-    resetClockByHWButton(false, timeToDisplay - 10);
+    resetClock(false, timeToDisplay - 10);
     break;
   case B5_PRESSED:
-    resetClockByHWButton(false, timeToDisplay + 1);
+    resetClock(false, timeToDisplay + 1);
     break;
   case B5_PRESSED_LONG:
-    resetClockByHWButton(false, timeToDisplay + 10);
+    resetClock(false, timeToDisplay + 10);
     break;
   case B6_PRESSED:
   playPause();
@@ -787,9 +764,9 @@ void setup()
 
   initButtons();
 
-  ms = millis();
-  msLastStop = ms;
-  msLastStopCount = ms;
+  timeNow = millis();
+  timeOfLastPauseEvent = timeNow;
+  msLastStopCount = timeNow;
 }
 
 //===============================================================
@@ -798,15 +775,12 @@ void setup()
 
 void loop()
 {
-
-  ms = millis();         // record the current time
+  timeNow = millis();
 
   updateButtonState();
-
   handleButtonClicks();
 
-  if (BUTTON_STATE == NONE) {
-    isClockRunning ? Count() : stopCount();
-    ElegantOTA.loop();
-  }
+  isClockRunning ? count() : stopCount();
+
+  ElegantOTA.loop();
 }
