@@ -83,14 +83,14 @@ enum buttonStates_t
   NONE
 };
 
-buttonStates_t BUTTON_STATE = NONE;
+buttonStates_t buttonState = NONE;
 
-Button btn_1(PIN_B1), // define the button
-    btn_2(PIN_B2),
-    btn_3(PIN_B3),
-    btn_4(PIN_B4),
-    btn_5(PIN_B5),
-    btn_6(PIN_B6);
+Button btn1(PIN_B1), // define the button
+    btn2(PIN_B2),
+    btn3(PIN_B3),
+    btn4(PIN_B4),
+    btn5(PIN_B5),
+    btn6(PIN_B6);
 
 #if defined(WIFI_LoRa_32_V2)
   SX1276 radio = new Module(SS, DIO0, RST_LoRa, DIO0);
@@ -111,6 +111,7 @@ Preferences preferences;
 // function prototypes
 //===============================================================
 void sendToClock(String);
+void playPause(void);
 
 
 
@@ -238,22 +239,19 @@ void resetClock(bool runClock, int resetTime=defaultClockStart)
 
 void sendStartTime(int T)
 {
-  String SW = "SW";
-  String SWM = SW + T;
-  notifyClients(SWM);
+  notifyClients("SW" + T);
 }
-
 
 void startHonking()
 {
-  String command_H = "H";
-  sendToClock(command_H);
+  String commandH = "H";
+  sendToClock(commandH);
 }
 
 void sendBCommand()
 {
-  String command_B = "B";
-  sendToClock(command_B);
+  String commandB = "B";
+  sendToClock(commandB);
 }
 
 void setNewStartTime(int startTime)
@@ -453,100 +451,100 @@ void playPause()
 
 void updateButtonState()
 {
-  btn_1.read(); // read the button
-  btn_2.read(); // read the button
-  btn_3.read(); // read the button
-  btn_4.read();   // read the button
-  btn_5.read();   // read the button
-  btn_6.read();   // read the button
+  btn1.read(); // read the button
+  btn2.read(); // read the button
+  btn3.read(); // read the button
+  btn4.read();   // read the button
+  btn5.read();   // read the button
+  btn6.read();   // read the button
 
-  if (btn_1.wasReleased() && !handledLongPress)
+  if (btn1.wasReleased() && !handledLongPress)
   {
-    BUTTON_STATE = B1_PRESSED;
+    buttonState = B1_PRESSED;
   }
-  else if (btn_1.wasReleased() && handledLongPress)
+  else if (btn1.wasReleased() && handledLongPress)
   {
     handledLongPress = false;
   }
-  else if (btn_1.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn1.pressedFor(LONG_PRESS) && !handledLongPress)
   {
-    BUTTON_STATE = B1_PRESSED_LONG;
+    buttonState = B1_PRESSED_LONG;
     handledLongPress = true;
   }
-  else if (btn_2.wasReleased() && !handledLongPress)
+  else if (btn2.wasReleased() && !handledLongPress)
   {
-    BUTTON_STATE = B2_PRESSED;
+    buttonState = B2_PRESSED;
   }
-  else if (btn_2.wasReleased() && handledLongPress)
+  else if (btn2.wasReleased() && handledLongPress)
   {
     handledLongPress = false;
   }
-  else if (btn_2.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn2.pressedFor(LONG_PRESS) && !handledLongPress)
   {
-    BUTTON_STATE = B2_PRESSED_LONG;
+    buttonState = B2_PRESSED_LONG;
     handledLongPress = true;
   }
-  else if (btn_3.wasReleased() && !handledLongPress)
+  else if (btn3.wasReleased() && !handledLongPress)
   {
-    BUTTON_STATE = B3_PRESSED;
+    buttonState = B3_PRESSED;
   }
-  else if (btn_3.wasReleased() && handledLongPress)
+  else if (btn3.wasReleased() && handledLongPress)
   {
     handledLongPress = false;
   }
-  else if (btn_3.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn3.pressedFor(LONG_PRESS) && !handledLongPress)
   {
-    BUTTON_STATE = B3_PRESSED_LONG;
+    buttonState = B3_PRESSED_LONG;
     handledLongPress = true;
   }
-  else if (btn_4.wasReleased() && !handledLongPress)
+  else if (btn4.wasReleased() && !handledLongPress)
   {
-    BUTTON_STATE = B4_PRESSED;
+    buttonState = B4_PRESSED;
   }
-  else if (btn_4.wasReleased() && handledLongPress)
+  else if (btn4.wasReleased() && handledLongPress)
   {
     handledLongPress = false;
   }
-  else if (btn_4.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn4.pressedFor(LONG_PRESS) && !handledLongPress)
   {
-    BUTTON_STATE = B4_PRESSED_LONG;
+    buttonState = B4_PRESSED_LONG;
     handledLongPress = true;
   }
-  else if (btn_5.wasReleased() && !handledLongPress)
+  else if (btn5.wasReleased() && !handledLongPress)
   {
-    BUTTON_STATE = B5_PRESSED;
+    buttonState = B5_PRESSED;
   }
-  else if (btn_5.wasReleased() && handledLongPress)
+  else if (btn5.wasReleased() && handledLongPress)
   {
     handledLongPress = false;
   }
-  else if (btn_5.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn5.pressedFor(LONG_PRESS) && !handledLongPress)
   {
-    BUTTON_STATE = B5_PRESSED_LONG;
+    buttonState = B5_PRESSED_LONG;
     handledLongPress = true;
   }
-  else if (btn_6.wasReleased() && !handledLongPress)
+  else if (btn6.wasReleased() && !handledLongPress)
   {
-    BUTTON_STATE = B6_PRESSED;
+    buttonState = B6_PRESSED;
   }
-  else if (btn_6.wasReleased() && handledLongPress)
+  else if (btn6.wasReleased() && handledLongPress)
   {
     handledLongPress = false;
   }
-  else if (btn_6.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn6.pressedFor(LONG_PRESS) && !handledLongPress)
   {
-    BUTTON_STATE = B6_PRESSED_LONG;
+    buttonState = B6_PRESSED_LONG;
     handledLongPress = true;
   }
   else
   {
-    BUTTON_STATE = NONE;
+    buttonState = NONE;
   }
 }
 
 void handleButtonClicks()
 {
-  switch (BUTTON_STATE)
+  switch (buttonState)
   {
   case B1_PRESSED:
     playPause();
@@ -686,12 +684,12 @@ void initWebserver()
 
 void initButtons() {
   // initialize the button objects
-  btn_1.begin();
-  btn_2.begin();
-  btn_3.begin();
-  btn_4.begin();
-  btn_5.begin();
-  btn_6.begin();
+  btn1.begin();
+  btn2.begin();
+  btn3.begin();
+  btn4.begin();
+  btn5.begin();
+  btn6.begin();
 }
 
 void initRadio() {
