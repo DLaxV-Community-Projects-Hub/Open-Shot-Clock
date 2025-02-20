@@ -341,7 +341,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
   }
 }
 
-String processor(const String &var)
+String channelProcessor(const String &var)
 {
   String links = "";
   if (var == "LINKPLACEHOLDER")
@@ -612,12 +612,12 @@ void initWebserver()
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/index.html", String(), false); });
 
-  server.on("/controller/", HTTP_GET, [](AsyncWebServerRequest *request)
+  server.on("/controller", HTTP_GET, [](AsyncWebServerRequest *request)
             {
   request->send(SPIFFS, "/controller.html", String(), false);
   });
 
-  server.on("/settings/", HTTP_GET, [](AsyncWebServerRequest *request)
+  server.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/settings.html", String(), false, settingsProcessor); });
 
   server.on("/version", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -657,7 +657,7 @@ void initWebserver()
             { request->send(SPIFFS, "/digital-7-mono.woff2"); });
 
   server.on("/channel", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(200, "text/html", channel_html, processor); });
+            { request->send(200, "text/html", channel_html, channelProcessor); });
 
   /*    server.on("/channel/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(SPIFFS, "/channel.html", String(), false);
