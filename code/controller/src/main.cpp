@@ -22,6 +22,10 @@
 #include <Preferences.h>
 #include <RadioLib.h>
 
+//===============================================================
+// variables, constants, objects
+//===============================================================
+
 int channel;
 int defaultChannel = 1;
 
@@ -113,7 +117,7 @@ void sendToClock(String);
 //===============================================================
 // functions
 //===============================================================
-void setStart()
+void resetTimers()
 {
   timeOfLastCountEvent = timeNow;
   timeOfLastPauseEvent = timeNow;
@@ -189,7 +193,7 @@ void count()
       notifyClients(String(timeToDisplay));
       ws.cleanupClients();
 
-      setStart();
+      resetTimers();
     }
   }
   else
@@ -227,37 +231,9 @@ void resetClock(bool runClock, int resetTime=defaultClockStart)
 
   notifyClients(String(timeToDisplay));
   ws.cleanupClients();
-  setStart();
+  resetTimers();
   isClockRunning = runClock;
-  if (runClock == true)
-  {
-    notifyClients("true");
-  }
-  else
-  {
-    notifyClients("false");
-  }
-}
-
-void playPause()
-{
-  isClockRunning = !isClockRunning; // ON > OFF oder OFF > ON // fängt OFF an
-  if (isClockRunning == false)
-  {
-    notifyClients("false");
-    timeOfLastPauseEvent = timeNow; // wenn auf Pause gewechselt, dann Zeit Letzter PAuse Speichern
-    setPauseDisplay();
-    Heltec.display->display();
-  }
-  else
-  {
-    notifyClients("true");
-    timeOfLastPlayEvent = timeNow; // wenn auf Play gewechselt, dann Zeit Letztes Play Speichern
-
-    Heltec.display->clear();
-    setDataDisplay();
-    Heltec.display->display();
-  }
+  runClock ? notifyClients("true") : notifyClients("false");
 }
 
 void sendStartTime(int T)
@@ -265,6 +241,19 @@ void sendStartTime(int T)
   String SW = "SW";
   String SWM = SW + T;
   notifyClients(SWM);
+}
+
+
+void startHonking()
+{
+  String command_H = "H";
+  sendToClock(command_H);
+}
+
+void sendBCommand()
+{
+  String command_B = "B";
+  sendToClock(command_B);
 }
 
 void setNewStartTime(int startTime)
@@ -281,17 +270,6 @@ void setNewStartTime(int startTime)
   }
   resetClock(false);
   sendStartTime(clockStartTime);
-}
-
-void setChannel(int ch)
-{
-  channel = ch;
-  preferences.begin("shot-clock", false);
-  preferences.putInt("channel", channel);
-  Serial.println("Channel " + channel);
-  preferences.end();
-  delay(1000);
-  ESP.restart();
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
@@ -363,18 +341,6 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
   }
 }
 
-void startHonking()
-{
-  String command_H = "H";
-  sendToClock(command_H);
-}
-
-void sendBCommand()
-{
-  String command_B = "B";
-  sendToClock(command_B);
-}
-
 String processor(const String &var)
 {
   String links = "";
@@ -444,6 +410,17 @@ String settingsProcessor(const String &var)
   return String();
 }
 
+void setChannel(int ch)
+{
+  channel = ch;
+  preferences.begin("shot-clock", false);
+  preferences.putInt("channel", channel);
+  Serial.println("Channel " + channel);
+  preferences.end();
+  delay(1000);
+  ESP.restart();
+}
+
 void loadChannelFromEEPROM()
 {
   preferences.begin("shot-clock", false);
@@ -453,48 +430,24 @@ void loadChannelFromEEPROM()
   preferences.end();
 }
 
-void handleButtonClicks()
+void playPause()
 {
-  switch (BUTTON_STATE)
+  isClockRunning = !isClockRunning; // ON > OFF oder OFF > ON // fängt OFF an
+  if (isClockRunning == false)
   {
-  case B1_PRESSED:
-    playPause();
-    break;
-  case B1_PRESSED_LONG:
-    playPause();
-    break;
-  case B2_PRESSED:
-    resetClock(true, clockStartTime);
-    break;
-  case B2_PRESSED_LONG:
-    resetClock(true, clockStartTime);
-    break;
-  case B3_PRESSED:
-    resetClock(false, clockStartTime);
-    break;
-  case B3_PRESSED_LONG:
-    resetClock(false, clockStartTime);
-    break;
-  case B4_PRESSED:
-    resetClock(false, timeToDisplay - 1);
-    break;
-  case B4_PRESSED_LONG:
-    resetClock(false, timeToDisplay - 10);
-    break;
-  case B5_PRESSED:
-    resetClock(false, timeToDisplay + 1);
-    break;
-  case B5_PRESSED_LONG:
-    resetClock(false, timeToDisplay + 10);
-    break;
-  case B6_PRESSED:
-  playPause();
-    break;
-  case B6_PRESSED_LONG:
-  playPause();
-    break;
-  default:
-    break;
+    notifyClients("false");
+    timeOfLastPauseEvent = timeNow; // wenn auf Pause gewechselt, dann Zeit Letzter PAuse Speichern
+    setPauseDisplay();
+    Heltec.display->display();
+  }
+  else
+  {
+    notifyClients("true");
+    timeOfLastPlayEvent = timeNow; // wenn auf Play gewechselt, dann Zeit Letztes Play Speichern
+
+    Heltec.display->clear();
+    setDataDisplay();
+    Heltec.display->display();
   }
 }
 
@@ -588,6 +541,51 @@ void updateButtonState()
   else
   {
     BUTTON_STATE = NONE;
+  }
+}
+
+void handleButtonClicks()
+{
+  switch (BUTTON_STATE)
+  {
+  case B1_PRESSED:
+    playPause();
+    break;
+  case B1_PRESSED_LONG:
+    playPause();
+    break;
+  case B2_PRESSED:
+    resetClock(true, clockStartTime);
+    break;
+  case B2_PRESSED_LONG:
+    resetClock(true, clockStartTime);
+    break;
+  case B3_PRESSED:
+    resetClock(false, clockStartTime);
+    break;
+  case B3_PRESSED_LONG:
+    resetClock(false, clockStartTime);
+    break;
+  case B4_PRESSED:
+    resetClock(false, timeToDisplay - 1);
+    break;
+  case B4_PRESSED_LONG:
+    resetClock(false, timeToDisplay - 10);
+    break;
+  case B5_PRESSED:
+    resetClock(false, timeToDisplay + 1);
+    break;
+  case B5_PRESSED_LONG:
+    resetClock(false, timeToDisplay + 10);
+    break;
+  case B6_PRESSED:
+  playPause();
+    break;
+  case B6_PRESSED_LONG:
+  playPause();
+    break;
+  default:
+    break;
   }
 }
 
