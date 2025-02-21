@@ -299,6 +299,9 @@ String versionProcessor(const String& var){
   if(var == "BRANCH_PLACEHOLDER"){
     val = String(BRANCH);
   }
+  if(var == "TAG_PLACEHOLDER"){
+    val = String(TAG);
+  }
   if(var == "COMMIT_PLACEHOLDER"){
     val = String(COMMIT);
   }
