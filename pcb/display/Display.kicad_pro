@@ -136,7 +136,7 @@
         "min_track_width": 0.125,
         "min_via_annular_width": 0.1,
         "min_via_diameter": 0.5,
-        "solder_mask_to_copper_clearance": 0.0,
+        "solder_mask_to_copper_clearance": 0.005,
         "use_height_for_length_calcs": true
       },
       "teardrop_options": [
@@ -569,13 +569,19 @@
           "label": "DNP",
           "name": "${DNP}",
           "show": true
+        },
+        {
+          "group_by": false,
+          "label": "LCSC Part #",
+          "name": "JLC PN",
+          "show": true
         }
       ],
       "filter_string": "",
       "group_symbols": true,
       "name": "",
-      "sort_asc": true,
-      "sort_field": "${ITEM_NUMBER}"
+      "sort_asc": false,
+      "sort_field": "Reference"
     },
     "connection_grid_size": 50.0,
     "drawing": {
@@ -632,24 +638,24 @@
       "Root"
     ],
     [
+      "89a87f9d-0057-4f99-b34f-09ac7f75c0d0",
+      "Power Supply"
+    ],
+    [
       "3558ebfc-0d2b-4045-8134-74237a6e1083",
       "LED Driver"
     ],
     [
-      "ee721d6c-d25d-4a91-b5ee-73389ef685fa",
-      "Communication"
-    ],
-    [
       "fcfe6f4a-c6b1-446b-ae29-445d179ae797",
-      "7-Segment1"
+      "7-Segment1 units"
     ],
     [
       "c48ba1e1-f3c0-4b1e-8ad2-a57f36685ea5",
-      "7-Segment2"
+      "7-Segment2 tens"
     ],
     [
-      "89a87f9d-0057-4f99-b34f-09ac7f75c0d0",
-      "Power Supply"
+      "ee721d6c-d25d-4a91-b5ee-73389ef685fa",
+      "Communication"
     ]
   ],
   "text_variables": {}
