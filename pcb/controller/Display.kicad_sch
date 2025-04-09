@@ -6,7 +6,7 @@
 	(paper "A4")
 	(title_block
 		(title "Display, Buttons & Output")
-		(date "2025-03-30")
+		(date "2025-04-09")
 		(rev "01")
 		(company "Ravenspark")
 		(comment 1 "Prototype")
@@ -3009,12 +3009,6 @@
 		(uuid "89c04239-129e-451c-bc94-d3e6f6aa72bd")
 	)
 	(junction
-		(at 83.82 121.92)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "8c7d3aae-1c18-4988-b712-e7756d5390b6")
-	)
-	(junction
 		(at 218.44 50.8)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3093,6 +3087,12 @@
 		(uuid "e7f407e6-df95-4cc5-8318-276858469ab8")
 	)
 	(junction
+		(at 69.85 129.54)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "f1b43211-1187-4944-803b-ab4b26954c6a")
+	)
+	(junction
 		(at 209.55 50.8)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3103,12 +3103,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "f644396e-3b90-48d1-bc96-a27b73fb1a9f")
-	)
-	(junction
-		(at 88.9 101.6)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "f74569cf-e4c1-4514-8f0f-66a9f8974d55")
 	)
 	(junction
 		(at 209.55 91.44)
@@ -3151,16 +3145,6 @@
 			(type default)
 		)
 		(uuid "0195bf3b-0e05-4d9a-a3be-92a966f196a7")
-	)
-	(wire
-		(pts
-			(xy 77.47 121.92) (xy 83.82 121.92)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "01b20f2d-98a4-4b84-9ed2-f1ff229da622")
 	)
 	(wire
 		(pts
@@ -3344,7 +3328,7 @@
 	)
 	(wire
 		(pts
-			(xy 88.9 100.33) (xy 88.9 101.6)
+			(xy 88.9 100.33) (xy 88.9 111.76)
 		)
 		(stroke
 			(width 0)
@@ -3564,7 +3548,7 @@
 	)
 	(wire
 		(pts
-			(xy 77.47 120.65) (xy 77.47 121.92)
+			(xy 69.85 148.59) (xy 69.85 152.4)
 		)
 		(stroke
 			(width 0)
@@ -3814,7 +3798,7 @@
 	)
 	(wire
 		(pts
-			(xy 77.47 101.6) (xy 77.47 102.87)
+			(xy 69.85 129.54) (xy 69.85 130.81)
 		)
 		(stroke
 			(width 0)
@@ -3891,16 +3875,6 @@
 			(type default)
 		)
 		(uuid "7676a343-0de4-4f0d-b839-8a3f23be00f7")
-	)
-	(wire
-		(pts
-			(xy 88.9 101.6) (xy 88.9 111.76)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "76eae577-3838-45ed-be19-028d8541aedf")
 	)
 	(wire
 		(pts
@@ -4024,7 +3998,7 @@
 	)
 	(wire
 		(pts
-			(xy 77.47 110.49) (xy 77.47 113.03)
+			(xy 69.85 138.43) (xy 69.85 140.97)
 		)
 		(stroke
 			(width 0)
@@ -4374,7 +4348,7 @@
 	)
 	(wire
 		(pts
-			(xy 66.04 129.54) (xy 77.47 129.54)
+			(xy 66.04 129.54) (xy 69.85 129.54)
 		)
 		(stroke
 			(width 0)
@@ -4384,7 +4358,7 @@
 	)
 	(wire
 		(pts
-			(xy 77.47 101.6) (xy 88.9 101.6)
+			(xy 69.85 129.54) (xy 77.47 129.54)
 		)
 		(stroke
 			(width 0)
@@ -4990,7 +4964,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 77.47 106.68 0)
+		(at 69.85 134.62 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4998,7 +4972,7 @@
 		(dnp no)
 		(uuid "0cede444-d943-4e9d-b3d0-4c3c2a133942")
 		(property "Reference" "R202"
-			(at 80.01 109.22 90)
+			(at 72.39 137.16 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5006,8 +4980,8 @@
 				(justify left)
 			)
 		)
-		(property "Value" "10k"
-			(at 77.47 106.68 90)
+		(property "Value" "1k"
+			(at 69.85 134.62 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5015,7 +4989,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 75.692 106.68 90)
+			(at 68.072 134.62 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5024,7 +4998,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 77.47 106.68 0)
+			(at 69.85 134.62 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5033,7 +5007,7 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 77.47 106.68 0)
+			(at 69.85 134.62 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5051,6 +5025,71 @@
 			(project "controller"
 				(path "/909ae33d-387b-4690-b0aa-ba1ded8f44db/3558ebfc-0d2b-4045-8134-74237a6e1083"
 					(reference "R202")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 69.85 152.4 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "11cb51c4-5d41-46c2-9635-03bbcaf5ee70")
+		(property "Reference" "#PWR0309"
+			(at 69.85 158.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 69.85 156.21 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 69.85 152.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 69.85 152.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 69.85 152.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "a6d15b0b-a4a7-4339-b295-8b20170c9cd1")
+		)
+		(instances
+			(project "Controller"
+				(path "/909ae33d-387b-4690-b0aa-ba1ded8f44db/3558ebfc-0d2b-4045-8134-74237a6e1083"
+					(reference "#PWR0309")
 					(unit 1)
 				)
 			)
@@ -5786,7 +5825,7 @@
 	)
 	(symbol
 		(lib_id "Device:LED")
-		(at 77.47 116.84 90)
+		(at 69.85 144.78 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5794,7 +5833,7 @@
 		(dnp no)
 		(uuid "34158675-60d0-4c05-906a-96acc251b395")
 		(property "Reference" "D202"
-			(at 71.12 116.84 90)
+			(at 63.5 144.78 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5803,7 +5842,7 @@
 			)
 		)
 		(property "Value" "LED"
-			(at 71.12 119.38 90)
+			(at 63.5 147.32 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5812,7 +5851,7 @@
 			)
 		)
 		(property "Footprint" "LED_SMD:LED_0603_1608Metric"
-			(at 77.47 116.84 0)
+			(at 69.85 144.78 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5821,7 +5860,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 77.47 116.84 0)
+			(at 69.85 144.78 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5830,7 +5869,7 @@
 			)
 		)
 		(property "Description" "Light emitting diode"
-			(at 77.47 116.84 0)
+			(at 69.85 144.78 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5839,7 +5878,7 @@
 			)
 		)
 		(property "LCSC Part #" "C2286"
-			(at 77.47 116.84 0)
+			(at 69.85 144.78 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7822,7 +7861,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "82k"
+		(property "Value" "20k"
 			(at 38.1 121.92 90)
 			(effects
 				(font
@@ -8112,7 +8151,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "82k"
+		(property "Value" "20k"
 			(at 38.1 139.7 90)
 			(effects
 				(font
