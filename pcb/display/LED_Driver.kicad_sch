@@ -6,7 +6,7 @@
 	(paper "A4")
 	(title_block
 		(title "PWM LED Driver")
-		(date "2025-04-08")
+		(date "2025-04-11")
 		(rev "01")
 		(company "Ravenspark")
 		(comment 1 "0-Series")

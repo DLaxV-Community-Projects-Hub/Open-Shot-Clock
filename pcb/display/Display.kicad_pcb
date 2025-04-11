@@ -8,8 +8,8 @@
 	)
 	(paper "A4")
 	(title_block
-		(title "Open Shot Clock - Display")
-		(date "2025-04-08")
+		(title "Open Shot Clock Display")
+		(date "2025-04-11")
 		(rev "01")
 		(company "Ravenspark")
 		(comment 1 "0-Series")
@@ -5091,7 +5091,7 @@
 				)
 			)
 		)
-		(property "Value" "100u"
+		(property "Value" "150u"
 			(at 0 5.2 0)
 			(layer "F.Fab")
 			(uuid "3cdf368c-9d33-4364-be54-1cc36c36e613")
@@ -13780,7 +13780,7 @@
 				)
 			)
 		)
-		(property "Value" "100u"
+		(property "Value" "150u"
 			(at 0 5.2 0)
 			(layer "F.Fab")
 			(uuid "968bd4ed-95d4-4b97-9858-837c7e5d8c0b")
@@ -19663,7 +19663,7 @@
 		(descr "Resistor SMD 0402 (1005 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
 		(tags "resistor")
 		(property "Reference" "R204"
-			(at 0 -1.17 360)
+			(at 0 -1.17 0)
 			(layer "F.SilkS")
 			(hide yes)
 			(uuid "acb444eb-7f30-4289-92ce-7c6a90bd3a16")
@@ -19675,7 +19675,7 @@
 			)
 		)
 		(property "Value" "4k3"
-			(at 0 1.17 360)
+			(at 0 1.17 0)
 			(layer "F.Fab")
 			(uuid "4242f31d-ca63-4c25-9716-50889545da1f")
 			(effects
@@ -19830,7 +19830,7 @@
 			(uuid "6ba18f9f-c837-431d-8b1a-d4c16c431675")
 		)
 		(fp_text user "${REFERENCE}"
-			(at 0 0 360)
+			(at 0 0 0)
 			(layer "F.Fab")
 			(uuid "fef058a9-8c86-46eb-be6d-e1f63ce3143f")
 			(effects
@@ -24463,7 +24463,7 @@
 		(descr "Capacitor SMD 0402 (1005 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
 		(tags "capacitor")
 		(property "Reference" "C620"
-			(at 0 -1.16 360)
+			(at 0 -1.16 0)
 			(layer "F.SilkS")
 			(hide yes)
 			(uuid "8fc3d0bd-011e-4760-8adc-c38521167450")
@@ -24475,7 +24475,7 @@
 			)
 		)
 		(property "Value" "100n"
-			(at 0 1.16 360)
+			(at 0 1.16 0)
 			(layer "F.Fab")
 			(uuid "e9208e0e-9515-4176-a3cf-46cdae56e3b8")
 			(effects
@@ -24643,7 +24643,7 @@
 			(uuid "354c76b9-063f-44eb-95f9-d5b9c9cc675e")
 		)
 		(fp_text user "${REFERENCE}"
-			(at 0 0 360)
+			(at 0 0 0)
 			(layer "F.Fab")
 			(uuid "7b10b063-3408-4cc1-8ae7-1f77cf2b0825")
 			(effects
@@ -36588,7 +36588,7 @@
 				)
 			)
 		)
-		(property "JLC PN" "C5291825"
+		(property "JLC PN" "C15269"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -46182,6 +46182,19 @@
 				)
 			)
 		)
+		(property "JLC PN" "C15195"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "d94c2f29-10e8-4e8a-9283-713f21d05d3e")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
 		(property ki_fp_filters "C_*")
 		(path "/89a87f9d-0057-4f99-b34f-09ac7f75c0d0/ebe5500b-7f56-4634-a743-675dc515bcd4")
 		(sheetname "Power Supply")
@@ -46335,7 +46348,7 @@
 		(descr "Capacitor SMD 0402 (1005 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
 		(tags "capacitor")
 		(property "Reference" "C621"
-			(at 0 -1.16 360)
+			(at 0 -1.16 0)
 			(layer "F.SilkS")
 			(hide yes)
 			(uuid "06dfe3b3-83b2-43dd-94cf-c791b125d662")
@@ -46347,7 +46360,7 @@
 			)
 		)
 		(property "Value" "100n"
-			(at 0 1.16 360)
+			(at 0 1.16 0)
 			(layer "F.Fab")
 			(uuid "0fc72941-c00a-4a34-bc8f-040c86d493ab")
 			(effects
@@ -46515,7 +46528,7 @@
 			(uuid "40a2d2f3-fb4b-42bb-9ed5-c707172a100c")
 		)
 		(fp_text user "${REFERENCE}"
-			(at 0 0 360)
+			(at 0 0 0)
 			(layer "F.Fab")
 			(uuid "01423e8a-c862-4b71-8178-e53c803f3446")
 			(effects
@@ -46847,7 +46860,7 @@
 				)
 			)
 		)
-		(property "JLC PN" "C5291825"
+		(property "JLC PN" "C15269"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -51463,7 +51476,7 @@
 				)
 			)
 		)
-		(property "Value" "100u"
+		(property "Value" "150u"
 			(at 0 5.2 0)
 			(layer "F.Fab")
 			(uuid "1a2f1cd0-0fa6-4bba-9d40-41e6dab6e4a5")
@@ -52360,6 +52373,19 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "JLC PN" "C1523"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "17ea4d38-a4aa-4724-b440-83daec3ff643")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 			)
@@ -54797,7 +54823,7 @@
 		(descr "Resistor SMD 0402 (1005 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
 		(tags "resistor")
 		(property "Reference" "R203"
-			(at 0 -1.17 360)
+			(at 0 -1.17 0)
 			(layer "F.SilkS")
 			(hide yes)
 			(uuid "f1489179-4437-4556-9359-6f9014379982")
@@ -54809,7 +54835,7 @@
 			)
 		)
 		(property "Value" "4k3"
-			(at 0 1.17 360)
+			(at 0 1.17 0)
 			(layer "F.Fab")
 			(uuid "e72396c7-ffe4-48bf-a854-a833a3b07f53")
 			(effects
@@ -54964,7 +54990,7 @@
 			(uuid "f5e4e364-43d5-4be7-8c17-b895748779ff")
 		)
 		(fp_text user "${REFERENCE}"
-			(at 0 0 360)
+			(at 0 0 0)
 			(layer "F.Fab")
 			(uuid "2325b437-beb3-4662-bb2d-e01422ed541d")
 			(effects
@@ -78686,7 +78712,7 @@
 				(xy 80.362377 75.944421) (xy 80.320484 76.013149) (xy 80.300799 76.080186) (xy 80.2945 76.123994)
 				(xy 80.2945 82.275999) (xy 80.298054 82.309062) (xy 80.298054 82.309063) (xy 80.309258 82.360563)
 				(xy 80.309258 82.360564) (xy 80.317995 82.378016) (xy 80.324501 82.405546) (xy 80.324501 82.414821)
-				(xy 80.333234 82.458723) (xy 80.344962 82.476275) (xy 80.366497 82.508504) (xy 80.416278 82.541766)
+				(xy 80.333234 82.458723) (xy 80.349865 82.483613) (xy 80.366497 82.508504) (xy 80.416278 82.541766)
 				(xy 80.416279 82.541767) (xy 80.438375 82.546162) (xy 80.460179 82.5505) (xy 80.460181 82.5505)
 				(xy 80.534826 82.5505) (xy 80.543576 82.551125) (xy 80.574 82.5555) (xy 81.315411 82.5555) (xy 81.358898 82.573513)
 				(xy 81.443942 82.658557) (xy 81.453648 82.662577) (xy 81.4736 82.670841) (xy 81.473601 82.670842)
