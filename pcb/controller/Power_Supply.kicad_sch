@@ -6,7 +6,7 @@
 	(paper "A4")
 	(title_block
 		(title "Power Supply")
-		(date "2025-04-09")
+		(date "2025-04-11")
 		(rev "01")
 		(company "Ravenspark")
 		(comment 1 "Prototype")
@@ -12300,7 +12300,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "100u"
+		(property "Value" "150u"
 			(at 279.4 60.96 0)
 			(effects
 				(font
@@ -12336,7 +12336,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC Part #" "C5373402"
+		(property "LCSC Part #" "C2898894"
 			(at 279.4 58.42 0)
 			(effects
 				(font
@@ -14971,7 +14971,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "100u"
+		(property "Value" "150u"
 			(at 271.78 60.96 0)
 			(effects
 				(font
@@ -15007,7 +15007,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC Part #" "C5373402"
+		(property "LCSC Part #" "C2898894"
 			(at 271.78 58.42 0)
 			(effects
 				(font
@@ -17139,7 +17139,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "100u"
+		(property "Value" "150u"
 			(at 137.16 60.96 0)
 			(effects
 				(font
@@ -17175,7 +17175,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC Part #" "C5373402"
+		(property "LCSC Part #" "C2898894"
 			(at 135.89 58.42 0)
 			(effects
 				(font

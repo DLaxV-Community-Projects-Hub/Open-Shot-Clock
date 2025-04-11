@@ -9,7 +9,7 @@
 	(paper "A4")
 	(title_block
 		(title "Open Shot Clock Controller")
-		(date "2025-04-09")
+		(date "2025-04-11")
 		(rev "01")
 		(company "Ravenspark")
 		(comment 1 "Prototype")
@@ -827,7 +827,7 @@
 				)
 			)
 		)
-		(property "Value" "100u"
+		(property "Value" "150u"
 			(at 0 5.2 90)
 			(layer "F.Fab")
 			(uuid "d4b0be78-f5e2-440b-a06a-a2e54e7f04c2")
@@ -877,7 +877,7 @@
 				)
 			)
 		)
-		(property "LCSC Part #" "C5373402"
+		(property "LCSC Part #" "C2898894"
 			(at 0 0 -90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -10288,7 +10288,7 @@
 				)
 			)
 		)
-		(property "Value" "100u"
+		(property "Value" "150u"
 			(at 0 5.2 90)
 			(layer "F.Fab")
 			(uuid "d9a43fef-163d-40e5-ba4a-8bcf52e27d97")
@@ -10338,7 +10338,7 @@
 				)
 			)
 		)
-		(property "LCSC Part #" "C5373402"
+		(property "LCSC Part #" "C2898894"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -21607,7 +21607,7 @@
 			)
 		)
 		(property ki_fp_filters "SOIC*3.9x4.9mm*P1.27mm* DIP*W7.62mm* TO*99* OnSemi*Micro8* TSSOP*3x3mm*P0.65mm* TSSOP*4.4x3mm*P0.65mm* MSOP*3x3mm*P0.65mm* SSOP*3.9x4.9mm*P0.635mm* LFCSP*2x2mm*P0.5mm* *SIP* SOIC*5.3x6.2mm*P1.27mm*")
-		(path "/3558ebfc-0d2b-4045-8134-74237a6e1083/72ec94e5-f700-4022-9942-0d771dd9a593")
+		(path "/3558ebfc-0d2b-4045-8134-74237a6e1083/460e820f-1f46-4368-90c3-1805fddda0b2")
 		(sheetname "Display & Buttons")
 		(sheetfile "Display.kicad_sch")
 		(attr smd)
@@ -36313,7 +36313,7 @@
 				)
 			)
 		)
-		(property "Value" "100u"
+		(property "Value" "150u"
 			(at 0 5.2 90)
 			(layer "F.Fab")
 			(uuid "f79a7c21-131a-4901-a3bd-7b7b7cc9cbe7")
@@ -36363,7 +36363,7 @@
 				)
 			)
 		)
-		(property "LCSC Part #" "C5373402"
+		(property "LCSC Part #" "C2898894"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
