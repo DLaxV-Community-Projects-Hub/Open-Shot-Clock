@@ -34,6 +34,8 @@ const char version_html[] PROGMEM = R"=====(<!DOCTYPE html>
     <h2>Software</h2>
     Branch: %BRANCH_PLACEHOLDER%
     <br>
+    Tag: %TAG_PLACEHOLDER%
+    <br>
     Commit: %COMMIT_PLACEHOLDER%
   </div>
 <script>
