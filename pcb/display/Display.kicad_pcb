@@ -6793,7 +6793,7 @@
 				)
 			)
 		)
-		(property "JLC PN" "C18078117"
+		(property "JLC PN" "C18077679"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -9205,7 +9205,7 @@
 				)
 			)
 		)
-		(property "JLC PN" "C18078117"
+		(property "JLC PN" "C18077679"
 			(at 0 0 -90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -30170,7 +30170,7 @@
 				)
 			)
 		)
-		(property "JLC PN" "C18078117"
+		(property "JLC PN" "C18077679"
 			(at 0 0 -90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -49567,7 +49567,7 @@
 				)
 			)
 		)
-		(property "JLC PN" "C18078117"
+		(property "JLC PN" "C18077679"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
