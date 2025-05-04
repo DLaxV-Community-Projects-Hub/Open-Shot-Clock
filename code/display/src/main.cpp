@@ -45,8 +45,7 @@ AsyncWebServer server(80);
   Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, I2C);
 #endif
 
-#if defined(OSC_DISPLAY_R0)
-  // Use the LLCC68 Radio
+#if defined(OSC_DISPLAY_R0) | defined(OSC_DISPLAY_R1)
   LLCC68 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
   Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, Wire);
 #endif
@@ -62,7 +61,7 @@ String rssi = "RSSI --";
 String packSize = "--";
 String packet ;
 String resetString = "restarting...reset your wifi connection";
-String currentMode = "LoRa";
+String currentMode = "none";
 unsigned long ms;
 unsigned long lms;
 unsigned long diff;
@@ -162,7 +161,9 @@ void waitingHeltecDisplay(){
     display.printf("waiting"),
     display.setTextSize(1);
     display.setCursor(30, 57);
-    display.printf("Channel %s (none)", String(channel));
+    display.printf( "Channel %s (%s)", String(channel), currentMode);
+    display.setCursor(0, 57);
+    display.printf("NA");
     display.display();
 }
 
@@ -234,10 +235,9 @@ void handlePacket(){
     display.setFont(NULL);
     display.setTextSize(1);
     display.setCursor(30, 57);
-    display.printf( "Channel %s", String(channel));
-    display.setCursor(90, 57);
-    display.printf("(%s)", currentMode);
-    //display.drawString(95, 57, rssi);
+    display.printf( "Channel %s (%s)", String(channel), currentMode);
+    display.setCursor(0, 57);
+    display.printf("%2.0f", radio.getRSSI(true));
     display.display();
   } else if (packet.startsWith(honkCommand)){
     horn.requestHonk();
@@ -300,10 +300,7 @@ String versionProcessor(const String& var){
 }
 
 void RS485receive() {
-   //while (RS485Serial.available()) {
    while (Serial2.available()) {
-
-     //char inChar = (char)RS485Serial.read(); // Get the next byte
      char inChar = (char)Serial2.read(); // Get the next byte
 
      if (inChar == '\n') // If the incoming character is a newline break while loop
@@ -378,7 +375,6 @@ void setupRadio() {
   } else {
     Serial.print(F("failed, code "));
     Serial.println(state);
-    // while (true);
   }
 
   radio.setSyncWord(syncword);
@@ -396,7 +392,6 @@ void setupRadio() {
   } else {
     Serial.print(F("failed, code "));
     Serial.println(state);
-    // while (true);
   }
 }
 
@@ -404,13 +399,13 @@ void initI2C() {
   #ifdef WIFI_LoRa_32_V3
     I2C.setPins(SDA_LED, SCL_LED);
   #endif
+  Wire.setPins(SDA, SCL);
 
   pwm.begin();
   pwm.setPWMFreq(200);  // This is the maximum recommended PWM frequency for LEDs
 }
 
-void initDisplay()
-{
+void initDisplay() {
   #if defined(WIFI_LoRa_32_V2) | defined(WIFI_LoRa_32_V3)
     pinMode(Vext,OUTPUT);
     digitalWrite(Vext, LOW);
@@ -440,10 +435,6 @@ void setup() {
 
   initDisplay();
   
-  //display.drawString(0, 0, "Heltec.LoRa Initial success!");
-  //display.drawString(0, 10, "LED Test abgeschlossen");
-  //display.drawString(0, 0, "Wait for incoming data...");
-  
   //ESP32 As access point
   WiFi.mode(WIFI_AP); //Access Point mode
   WiFi.softAP(ssid, password);
@@ -462,18 +453,13 @@ void setup() {
 
 void drawLoraInfo() {
   currentMode = "LoRa";
-  // display.drawString(90, 52, "LoRa");
-  // display.display();
 }
 
 void drawRS485Info() {
   currentMode = "RS485";
-  // display.drawString(90, 52, "RS485");
-  // display.display();
 }
 
 void loop() {
-
   ElegantOTA.loop(); 
 
   if (RS485mode == false){
