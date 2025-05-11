@@ -19,10 +19,12 @@ Additionally to the corrections of known issues, the following functions have be
 * Adjusted eFuse configuration
 
 ### Know Issues
-* None
+* Power on mechanism is not working properly, due to missing pull-down resistor on Q403.
+* Voltage divider for battery voltage measurement leads to ~0.5mA leakage current into ESP32 pin.
 
 ### Patches
-* None
+* Solder 10k 0603 resistor directly between pins 1-2 of Q403.
+* Remove R448 or use J401 with additional power switch with R435 removed.
 ---
 ## Revision 00 (Prototype | 2024)
 ### Known Issues
