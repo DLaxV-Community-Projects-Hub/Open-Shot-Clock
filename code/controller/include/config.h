@@ -80,6 +80,72 @@ const char* password = "12345678";
 #endif
 #endif
 
+#if defined(OSC_CONTROLLER_R0)
+    #define RXD2 13
+    #define TXD2 12
+    #define DIO0 36
+    #define RST_LoRa 48
+    #define BUSY_LoRa 35
+    #define LED 38
+    #define LED_ERR 16
+    #define LoRa_CLK 47
+    #define LoRa_MISO 34
+    #define LoRa_MOSI 33
+    #define LoRa_NSS 21
+    #define OLED_nEN 11
+    
+    #define V_SENSE 1
+    #define I_SENSE 2
+
+    #define PIN_P_P 3
+    #define PIN_R_P 4
+    #define PIN_R_S 5
+    #define PIN_T 6
+    #define PIN_H 7
+    #define PIN_B 10
+    #define PIN_LED 38
+
+    #define PIN_PWR 17
+
+    #define PIN_HORN 15
+
+    #define V_GAIN (3.3f * 11.0f / 4096.0f)
+    #define I_GAIN (3.3f / 4096.0f * 1/(0.102f))
+#endif
+
+
+#if defined(OSC_CONTROLLER_R1)
+    #define RXD2 13
+    #define TXD2 12
+    #define DIO0 36
+    #define RST_LoRa 48
+    #define BUSY_LoRa 35
+    #define LED 38
+    #define LED_ERR 16
+    #define LoRa_CLK 47
+    #define LoRa_MISO 34
+    #define LoRa_MOSI 33
+    #define LoRa_NSS 21
+    #define OLED_nEN 11
+    
+    #define V_SENSE 1
+    #define I_SENSE 2
+
+    #define PIN_P_P 3
+    #define PIN_R_P 4
+    #define PIN_R_S 5
+    #define PIN_T 6
+    #define PIN_H 7
+    #define PIN_B 45
+    
+    #define PIN_LED 38
+
+    #define PIN_HORN 15
+
+    #define V_GAIN (3.3f * 11.0f / 4096.0f)
+    #define I_GAIN (3.3f / 4096.0f * 1/(0.102f))
+#endif
+
 //RS-485
 #if defined(WIFI_LoRa_32_V2)
     #define RXD2 13
