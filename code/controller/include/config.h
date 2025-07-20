@@ -42,6 +42,7 @@ const char* password = "12345678";
         static const uint8_t PIN_B6 = 3;
         static const uint8_t PIN_LED = 35;
     #endif
+    #define OLED_nEN Vext
 #elif CONTROLLER_PCB_VERSION == V0_1
     #ifdef WIFI_LoRa_32_V2
         static const uint8_t PIN_B1 = 33;
@@ -60,6 +61,7 @@ const char* password = "12345678";
         static const uint8_t PIN_B6 = 46;
         static const uint8_t PIN_LED = 35;
     #endif
+    #define OLED_nEN Vext
 #elif CONTROLLER_PCB_VERSION == V2_1
     #ifdef WIFI_LoRa_32_V2
         static const uint8_t PIN_B1 = 39;
@@ -77,7 +79,8 @@ const char* password = "12345678";
         static const uint8_t PIN_B5 = 26;    //J5
         static const uint8_t PIN_B6 = 20;    //J6
         static const uint8_t PIN_LED = 35;
-#endif
+    #endif
+    #define OLED_nEN Vext
 #endif
 
 #if defined(OSC_CONTROLLER_R0)
@@ -92,17 +95,19 @@ const char* password = "12345678";
     #define LoRa_MISO 34
     #define LoRa_MOSI 33
     #define LoRa_NSS 21
+
+    #undef OLED_nEN
     #define OLED_nEN 11
     
     #define V_SENSE 1
     #define I_SENSE 2
 
-    #define PIN_P_P 3
-    #define PIN_R_P 4
-    #define PIN_R_S 5
-    #define PIN_T 6
-    #define PIN_H 7
-    #define PIN_B 10
+    #define PIN_B1 3
+    #define PIN_B2 4
+    #define PIN_B3 5
+    #define PIN_B4 6
+    #define PIN_B5 7
+    #define PIN_B6 10
     #define PIN_LED 38
 
     #define PIN_PWR 17
@@ -126,17 +131,19 @@ const char* password = "12345678";
     #define LoRa_MISO 34
     #define LoRa_MOSI 33
     #define LoRa_NSS 21
+    
+    #undef OLED_nEN
     #define OLED_nEN 11
     
     #define V_SENSE 1
     #define I_SENSE 2
 
-    #define PIN_P_P 3
-    #define PIN_R_P 4
-    #define PIN_R_S 5
-    #define PIN_T 6
-    #define PIN_H 7
-    #define PIN_B 45
+    #define PIN_B1 3
+    #define PIN_B2 4
+    #define PIN_B3 5
+    #define PIN_B4 6
+    #define PIN_B5 7
+    #define PIN_B6 45
     
     #define PIN_LED 38
 

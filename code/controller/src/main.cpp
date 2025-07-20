@@ -1,6 +1,8 @@
 #include <Arduino.h>
 
-#include <heltec.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include "osc_logo.h"
 #include "images.h"
 #include "channel.h"
 #include "version.h"
@@ -21,6 +23,13 @@
 
 #include <Preferences.h>
 #include <RadioLib.h>
+
+
+#define BUFF_LEN 32
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define SCREEN_ADDRESS 0x3D
 
 //===============================================================
 // variables, constants, objects
@@ -99,20 +108,24 @@ Button btn1(PIN_B1), // define the button
 #if defined(WIFI_LoRa_32_V3)
   SX1262 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
 #endif
+#if defined(OSC_CONTROLLER_R0) | defined(OSC_CONTROLLER_R1)
+  SPIClass spi(HSPI);
+  SPISettings spiSettings(2000000, MSBFIRST, SPI_MODE0);
+  LLCC68 radio = new Module(LoRa_NSS, DIO0, RST_LoRa, BUSY_LoRa, spi, spiSettings);
+#endif
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
 Preferences preferences;
 
-
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 //===============================================================
 // function prototypes
 //===============================================================
 void sendToClock(String);
 void playPause(void);
-
 
 
 //===============================================================
@@ -127,20 +140,22 @@ void resetTimers()
 
 void setPauseDisplay()
 {
-  Heltec.display->fillRect(12, 16, 3, 16);
-  Heltec.display->fillRect(18, 16, 3, 16);
+  display.fillRect(12, 16, 3, 16, SSD1306_WHITE);
+  display.fillRect(18, 16, 3, 16, SSD1306_WHITE);
 }
 
 void setDataDisplay()
 {
   clockStr = timeToDisplay < 10 ? "0" + String(timeToDisplay) : String(timeToDisplay);
 
-  Heltec.display->drawHorizontalLine(2, 50, 124);
-  Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
-  Heltec.display->setFont(DSEG14_Classic_Mini_Regular_40);
-  Heltec.display->drawString(64, 1, clockStr);
-  Heltec.display->setFont(ArialMT_Plain_10);
-  Heltec.display->drawString(64, 52, "Channel " + String(channel));
+  display.drawFastHLine(2, 50, 124, SSD1306_WHITE);
+  display.setFont(&DSEG7_Classic_Mini_Regular_40);
+  display.setCursor(32, 40);
+  display.printf("%s", clockStr);
+  
+  display.setFont(NULL);
+  display.setCursor(32, 57);
+  display.printf("Channel %d",channel);
 }
 
 void notifyClients(String message)
@@ -164,10 +179,10 @@ String getTimeSendMsg(String command, int time)
 
 void sendToClock(String Msg)
 {
-  Heltec.display->clear();
+  display.clearDisplay();
   setDataDisplay();
   if (!isClockRunning) setPauseDisplay();
-  Heltec.display->display();
+  display.display();
 
   String msgWithChannel = Msg + String(channel);
 
@@ -256,7 +271,6 @@ void sendBCommand()
 
 void setNewStartTime(int startTime)
 {
-
   clockStartTime = startTime;
   if (clockStartTime < 0)
   {
@@ -325,10 +339,10 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
   switch (type)
   {
   case WS_EVT_CONNECT:
-    Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+    ESP_LOGI("WebSocket","client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
     break;
   case WS_EVT_DISCONNECT:
-    Serial.printf("WebSocket client #%u disconnected\n", client->id());
+    ESP_LOGI("WebSocket","client #%u disconnected\n", client->id());
     break;
   case WS_EVT_DATA:
     handleWebSocketMessage(arg, data, len);
@@ -439,16 +453,16 @@ void playPause()
     notifyClients("false");
     timeOfLastPauseEvent = timeNow; // wenn auf Pause gewechselt, dann Zeit Letzter PAuse Speichern
     setPauseDisplay();
-    Heltec.display->display();
+    display.display();
   }
   else
   {
     notifyClients("true");
     timeOfLastPlayEvent = timeNow; // wenn auf Play gewechselt, dann Zeit Letztes Play Speichern
 
-    Heltec.display->clear();
+    display.clearDisplay();
     setDataDisplay();
-    Heltec.display->display();
+    display.display();
   }
 }
 
@@ -495,7 +509,7 @@ void updateButtonState()
   {
     handledLongPress = false;
   }
-  else if (btn3.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn3.pressedFor(LONG_PRESS * 10) && !handledLongPress)
   {
     buttonState = B3_PRESSED_LONG;
     handledLongPress = true;
@@ -565,7 +579,17 @@ void handleButtonClicks()
     resetClock(false, clockStartTime);
     break;
   case B3_PRESSED_LONG:
-    resetClock(false, clockStartTime);
+    #ifdef OSC_CONTROLLER_R0
+    display.clearDisplay();
+    display.setFont(0);
+    display.setTextSize(3);
+    display.setCursor(0, 40);
+    display.printf("PWR OFF!");
+    display.setTextSize(1);
+    display.display();
+    digitalWrite(PIN_PWR,0);  
+    delay(5000);  //wait here until HW switches off
+    #endif
     break;
   case B4_PRESSED:
     resetClock(false, timeToDisplay - 1);
@@ -598,7 +622,7 @@ void initOTA()
 {
   ElegantOTA.begin(&server);  // Start ElegantOTA
   server.begin();
-  Serial.println("HTTP server started");
+  ESP_LOGI("OTA","HTTP server started");
 }
 
 void initWebSocket()
@@ -697,69 +721,98 @@ void initButtons() {
 
 void initRadio() {
   // initialize SX12xx with default settings
-  Serial.print(F("[SX12xx] Initializing ... "));
-  int state = radio.begin();
+  ESP_LOGI("Radio","[SX12xx] Initializing ... ");
+
+  #if defined(OSC_CONTROLLER_R0)
+  spi.begin(LoRa_CLK, LoRa_MISO, LoRa_MOSI, LoRa_NSS); 
+  int state = radio.begin();//434.0, 125.0, 9, 7, RADIOLIB_SX126X_SYNC_WORD_PRIVATE, 10, 8, 0, false);
+  #else
+    int state = radio.begin();
+  #endif
+
   if (state == RADIOLIB_ERR_NONE) {
-    Serial.println(F("success!"));
+    ESP_LOGI("Radio","success!");
   } else {
-    Serial.print(F("failed, code "));
+    ESP_LOGE("Radio","failed, code ");
     Serial.println(state);
     while (true);
   }
 
   radio.setSyncWord(syncword);
   radio.setFrequency(frequency);
+  
+  ESP_LOGI("RADIO","Freq: %f, Sync: %i",frequency, syncword);
 }
 
 void setup()
 {
+  #ifdef OSC_CONTROLLER_R0
+  pinMode(PIN_PWR, OUTPUT);
+  digitalWrite(PIN_PWR, 1);
+  pinMode(V_SENSE, ANALOG);
+  pinMode(I_SENSE, ANALOG);
+  pinMode(LED_ERR, OUTPUT);
+  pinMode(PIN_HORN, OUTPUT);
+  #endif
+  
+  pinMode(LED, OUTPUT);
+  pinMode(PIN_B1, INPUT_PULLUP);
+  pinMode(PIN_B2, INPUT_PULLUP);
+  pinMode(PIN_B3, INPUT_PULLUP);
+  pinMode(PIN_B4, INPUT_PULLUP);
+  pinMode(PIN_B5, INPUT_PULLUP);
+
+  pinMode(OLED_nEN, OUTPUT);
+  
+  delay(100);
+  
+  Wire.begin();
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    ESP_LOGE("SSD1306", "init failed"); 
+    for(;;); // Don't proceed, loop forever
+  }
+
+  display.clearDisplay();
+  #ifdef FLIPSCREEN
+  display.setRotation(2);  
+  #endif
+  display.setTextColor(SSD1306_WHITE);
+  display.drawBitmap(29, 0, osc_logo.data, osc_logo.width, osc_logo.height, SSD1306_WHITE);
+  display.display();
+  delay(1000); // Pause for 1 seconds
+  display.setFont(NULL);
+  display.setTextSize(1);
 
   loadChannelFromEEPROM();
 
   // RS-485
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
 
-  long band = 434000000;  // not used anymore, because RadioLib handles LoRa
-  Heltec.begin(true /*Display Enable*/, false /*LoRa Disable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
-
   initRadio();
 
   if (!SPIFFS.begin())
   {
-    Serial.println("An Error has occurred while mounting SPIFFS");
+    ESP_LOGE("SPIFFS","An Error has occurred while mounting SPIFFS");
     return;
   }
-
-  Serial.println();
-  Serial.print("MAC: ");
-  Serial.println(WiFi.macAddress());
-
-  Heltec.display->init();
-
-  #ifdef FLIPSCREEN
-    Heltec.display->flipScreenVertically();
-  #endif
-
-  Heltec.display->setFont(ArialMT_Plain_10);
+  ESP_LOGI("MAC","Address: %s", WiFi.macAddress().c_str());
 
   // ESP32 As access point
   WiFi.mode(WIFI_AP); // Access Point mode
   WiFi.softAP(ssid, password);
 
   IPAddress myIP = WiFi.softAPIP(); // Get IP address
-  Serial.print("HotSpt IP:");
-  Serial.println(myIP);
+  ESP_LOGI("AP", "%s", myIP.toString());
 
   initWebSocket();
-
   initWebserver();
 
   initOTA();
 
-  Heltec.display->clear();
+  display.clearDisplay();
   setPauseDisplay();
   setDataDisplay();
-  Heltec.display->display();
+  display.display();
 
   initButtons();
 
