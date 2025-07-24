@@ -768,6 +768,69 @@ void setup()
   msLastStopCount = timeNow;
 }
 
+bool stringComplete = false; // whether the string is complete
+String packet = ""; // the string to hold incoming data
+
+void readSerial() {
+
+  // Read serial data as a stream and extract ShotClock=XX; patterns
+  static String buffer = "";
+  while (Serial.available()) {
+    char inChar = (char)Serial.read();
+    if (!isSpace(inChar)) {
+      buffer += inChar;
+    }
+    // Look for complete ShotClock=XX; pattern in the buffer
+    int idx = buffer.indexOf("ShotClock=");
+    while (idx != -1) {
+      int start = idx + 10;
+      int end = buffer.indexOf(';', start);
+      if (end != -1) {
+        String numStr = buffer.substring(start, end);
+        int shotClockValue;
+        bool validInt = true;
+        if (numStr.length() == 0) {
+          validInt = false;
+        } else {
+          for (unsigned int i = 0; i < numStr.length(); ++i) {
+            if (!isDigit(numStr[i])) {
+              validInt = false;
+              break;
+            }
+          }
+        }
+        if (validInt) {
+          shotClockValue = numStr.toInt();
+          Serial.print("Extracted ShotClock value: ");
+          Serial.println(shotClockValue);
+          timeToDisplay = shotClockValue;
+          String clockMsg = getTimeSendMsg(timeCommand, timeToDisplay);
+          sendToClock(clockMsg);
+
+          notifyClients(String(timeToDisplay));
+          ws.cleanupClients();
+
+        } else {
+          Serial.println("ShotClock: invalid value '" + numStr + "'");
+        }
+        Serial.println("ShotClock: " + numStr);
+        // Use shotClockValue as needed here
+
+        // Remove processed part from buffer
+        buffer = buffer.substring(end + 1);
+        idx = buffer.indexOf("ShotClock=");
+      } else {
+        // Wait for more data if ';' not found
+        break;
+      }
+    }
+    // Prevent buffer from growing indefinitely
+    if (buffer.length() > 200) {
+      buffer = buffer.substring(buffer.length() - 100);
+    }
+  }
+}
+
 //===============================================================
 // loop
 //===============================================================
@@ -778,6 +841,8 @@ void loop()
 
   updateButtonState();
   handleButtonClicks();
+
+  readSerial();
 
   isClockRunning ? count() : stopCount();
 
