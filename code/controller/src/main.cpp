@@ -247,6 +247,14 @@ void startHonking()
 {
   String commandH = "H";
   sendToClock(commandH);
+  Heltec.display->clear();
+  Heltec.display->drawHorizontalLine(2, 50, 124);
+  Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
+  Heltec.display->setFont(DSEG14_Classic_Mini_Regular_40);
+  Heltec.display->drawString(64, 1, "HONK");
+  Heltec.display->setFont(ArialMT_Plain_10);
+  Heltec.display->drawString(64, 52, "Channel " + String(channel));
+  Heltec.display->display();
 }
 
 void sendBCommand()
@@ -555,60 +563,53 @@ void handleButtonClicks()
 {
   switch (buttonState)
   {
-  case B4_AND_B5_PRESSED:
-    startHonking();
-    Heltec.display->clear();
-    Heltec.display->drawHorizontalLine(2, 50, 124);
-    Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
-    Heltec.display->setFont(DSEG14_Classic_Mini_Regular_40);
-    Heltec.display->drawString(64, 1, "HONK");
-    Heltec.display->setFont(ArialMT_Plain_10);
-    Heltec.display->drawString(64, 52, "Channel " + String(channel));
-    Heltec.display->display();
-    break;
-  case B1_PRESSED:
-    playPause();
-    break;
-  case B1_PRESSED_LONG:
-    playPause();
-    break;
-  case B2_PRESSED:
-    resetClock(true, clockStartTime);
-    break;
-  case B2_PRESSED_LONG:
-    resetClock(true, clockStartTime);
-    break;
-  case B3_PRESSED:
-    resetClock(false, clockStartTime);
-    break;
-  case B3_PRESSED_LONG:
-    resetClock(false, clockStartTime);
-    break;
-  case B4_PRESSED:
-    if (!isClockRunning) {
-      resetClock(false, timeToDisplay - 1);
-    }
-    break;
-  case B4_PRESSED_LONG:
-    if (!isClockRunning) {
-      resetClock(false, timeToDisplay - 10);
-    }
-    break;
+  // case B4_AND_B5_PRESSED:
+  //   startHonking();
+  //   break;
+  // case B1_PRESSED:
+  //   playPause();
+  //   break;
+  // case B1_PRESSED_LONG:
+  //   playPause();
+  //   break;
+  // case B2_PRESSED:
+  //   resetClock(true, clockStartTime);
+  //   break;
+  // case B2_PRESSED_LONG:
+  //   resetClock(true, clockStartTime);
+  //   break;
+  // case B3_PRESSED:
+  //   resetClock(false, clockStartTime);
+  //   break;
+  // case B3_PRESSED_LONG:
+  //   resetClock(false, clockStartTime);
+  //   break;
+  // case B6_PRESSED:
+  //   if (!isClockRunning) {
+  //     resetClock(false, timeToDisplay - 1);
+  //   }
+  //   break;
+  // case B6_PRESSED_LONG:
+  //   if (!isClockRunning) {
+  //     resetClock(false, timeToDisplay - 10);
+  //   }
+  //   break;
+  // case B4_PRESSED:
+  //   startHonking();
+  //   if (!isClockRunning) {
+  //     resetClock(false, timeToDisplay + 1);
+  //   }
+  //   break;
+  // case B4_PRESSED_LONG:
+  //   if (!isClockRunning) {
+  //     resetClock(false, timeToDisplay + 10);
+  //   }
+  //   break;
   case B5_PRESSED:
-    if (!isClockRunning) {
-      resetClock(false, timeToDisplay + 1);
-    }
+  startHonking();
     break;
-  case B5_PRESSED_LONG:
-    if (!isClockRunning) {
-      resetClock(false, timeToDisplay + 10);
-    }
-    break;
-  case B6_PRESSED:
-  playPause();
-    break;
-  case B6_PRESSED_LONG:
-  playPause();
+  // case B5_PRESSED_LONG:
+  // playPause();
     break;
   default:
     break;

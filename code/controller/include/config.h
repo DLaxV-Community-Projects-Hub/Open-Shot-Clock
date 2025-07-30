@@ -17,8 +17,8 @@ const char* password = "12345678";
 // PCB config 
 // see board_definitions.h for available configs
 
-#define CONTROLLER_PCB_VERSION V2_1
-// #define CONTROLLER_PCB_VERSION V0_1
+// #define CONTROLLER_PCB_VERSION V2_1
+#define CONTROLLER_PCB_VERSION V0_1
 
 
 /**************************************/ 
