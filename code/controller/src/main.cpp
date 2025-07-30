@@ -64,10 +64,11 @@ unsigned long timeOfLastCountEvent;     // last time count down
 unsigned long msLastStopCount; // last time count/send in stop mode
 
 const unsigned long LONG_PRESS(400);  // we define a "long press" to be 400 milliseconds.
-bool handledLongPress = false;
+bool wasLongPress = false;
 
 enum buttonStates_t
 {
+  B4_AND_B5_PRESSED,
   B5_PRESSED,
   B5_PRESSED_LONG,
   B6_PRESSED,
@@ -461,83 +462,88 @@ void updateButtonState()
   btn5.read();   // read the button
   btn6.read();   // read the button
 
-  if (btn1.wasReleased() && !handledLongPress)
+  if (btn4.isPressed() && btn5.wasReleased())
+  {
+    buttonState = B4_AND_B5_PRESSED;
+    wasLongPress = true;
+  }
+  else if (btn1.wasReleased() && !wasLongPress)
   {
     buttonState = B1_PRESSED;
   }
-  else if (btn1.wasReleased() && handledLongPress)
+  else if (btn1.wasReleased() && wasLongPress)
   {
-    handledLongPress = false;
+    wasLongPress = false;
   }
-  else if (btn1.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn1.pressedFor(LONG_PRESS) && !wasLongPress)
   {
     buttonState = B1_PRESSED_LONG;
-    handledLongPress = true;
+    wasLongPress = true;
   }
-  else if (btn2.wasReleased() && !handledLongPress)
+  else if (btn2.wasReleased() && !wasLongPress)
   {
     buttonState = B2_PRESSED;
   }
-  else if (btn2.wasReleased() && handledLongPress)
+  else if (btn2.wasReleased() && wasLongPress)
   {
-    handledLongPress = false;
+    wasLongPress = false;
   }
-  else if (btn2.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn2.pressedFor(LONG_PRESS) && !wasLongPress)
   {
     buttonState = B2_PRESSED_LONG;
-    handledLongPress = true;
+    wasLongPress = true;
   }
-  else if (btn3.wasReleased() && !handledLongPress)
+  else if (btn3.wasReleased() && !wasLongPress)
   {
     buttonState = B3_PRESSED;
   }
-  else if (btn3.wasReleased() && handledLongPress)
+  else if (btn3.wasReleased() && wasLongPress)
   {
-    handledLongPress = false;
+    wasLongPress = false;
   }
-  else if (btn3.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn3.pressedFor(LONG_PRESS) && !wasLongPress)
   {
     buttonState = B3_PRESSED_LONG;
-    handledLongPress = true;
+    wasLongPress = true;
   }
-  else if (btn4.wasReleased() && !handledLongPress)
+  else if (btn4.wasReleased() && !wasLongPress)
   {
     buttonState = B4_PRESSED;
   }
-  else if (btn4.wasReleased() && handledLongPress)
+  else if (btn4.wasReleased() && wasLongPress)
   {
-    handledLongPress = false;
+    wasLongPress = false;
   }
-  else if (btn4.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn4.pressedFor(LONG_PRESS) && !wasLongPress)
   {
     buttonState = B4_PRESSED_LONG;
-    handledLongPress = true;
+    wasLongPress = true;
   }
-  else if (btn5.wasReleased() && !handledLongPress)
+  else if (btn5.wasReleased() && !wasLongPress)
   {
     buttonState = B5_PRESSED;
   }
-  else if (btn5.wasReleased() && handledLongPress)
+  else if (btn5.wasReleased() && wasLongPress)
   {
-    handledLongPress = false;
+    wasLongPress = false;
   }
-  else if (btn5.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn5.pressedFor(LONG_PRESS) && !wasLongPress)
   {
     buttonState = B5_PRESSED_LONG;
-    handledLongPress = true;
+    wasLongPress = true;
   }
-  else if (btn6.wasReleased() && !handledLongPress)
+  else if (btn6.wasReleased() && !wasLongPress)
   {
     buttonState = B6_PRESSED;
   }
-  else if (btn6.wasReleased() && handledLongPress)
+  else if (btn6.wasReleased() && wasLongPress)
   {
-    handledLongPress = false;
+    wasLongPress = false;
   }
-  else if (btn6.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn6.pressedFor(LONG_PRESS) && !wasLongPress)
   {
     buttonState = B6_PRESSED_LONG;
-    handledLongPress = true;
+    wasLongPress = true;
   }
   else
   {
@@ -549,6 +555,17 @@ void handleButtonClicks()
 {
   switch (buttonState)
   {
+  case B4_AND_B5_PRESSED:
+    startHonking();
+    Heltec.display->clear();
+    Heltec.display->drawHorizontalLine(2, 50, 124);
+    Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
+    Heltec.display->setFont(DSEG14_Classic_Mini_Regular_40);
+    Heltec.display->drawString(64, 1, "HONK");
+    Heltec.display->setFont(ArialMT_Plain_10);
+    Heltec.display->drawString(64, 52, "Channel " + String(channel));
+    Heltec.display->display();
+    break;
   case B1_PRESSED:
     playPause();
     break;
@@ -568,16 +585,24 @@ void handleButtonClicks()
     resetClock(false, clockStartTime);
     break;
   case B4_PRESSED:
-    resetClock(false, timeToDisplay - 1);
+    if (!isClockRunning) {
+      resetClock(false, timeToDisplay - 1);
+    }
     break;
   case B4_PRESSED_LONG:
-    resetClock(false, timeToDisplay - 10);
+    if (!isClockRunning) {
+      resetClock(false, timeToDisplay - 10);
+    }
     break;
   case B5_PRESSED:
-    resetClock(false, timeToDisplay + 1);
+    if (!isClockRunning) {
+      resetClock(false, timeToDisplay + 1);
+    }
     break;
   case B5_PRESSED_LONG:
-    resetClock(false, timeToDisplay + 10);
+    if (!isClockRunning) {
+      resetClock(false, timeToDisplay + 10);
+    }
     break;
   case B6_PRESSED:
   playPause();
