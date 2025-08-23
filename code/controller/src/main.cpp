@@ -260,9 +260,6 @@ void sendBCommand()
 void toggleResetTime()
 {
   if (!isClockRunning){
-    Serial.println("Toggle Start Time");
-    Serial.println("Current Start Time: " + String(clockStartTime));
-    Serial.println("isClockRunning: " + String(isClockRunning));
     if (clockStartTime == 30) {
       clockStartTime = 80;
     } else {
