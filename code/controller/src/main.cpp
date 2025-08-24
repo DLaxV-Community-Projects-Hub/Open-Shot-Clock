@@ -70,6 +70,7 @@ bool wasLongPress = false;
 
 enum buttonStates_t
 {
+  B4_AND_B5_PRESSED,
   B5_PRESSED,
   B5_PRESSED_LONG,
   B6_PRESSED,
@@ -82,7 +83,6 @@ enum buttonStates_t
   B2_PRESSED_LONG,
   B3_PRESSED,
   B3_PRESSED_LONG,
-  B4_AND_B5_PRESSED,
   NONE
 };
 
@@ -500,10 +500,12 @@ void updateButtonState()
   else if (btn1.wasReleased() && wasLongPress)
   {
     wasLongPress = false;
+    wasLongPress = false;
   }
   else if (btn1.pressedFor(LONG_PRESS) && !wasLongPress)
   {
     buttonState = B1_PRESSED_LONG;
+    wasLongPress = true;
     wasLongPress = true;
   }
   else if (btn2.wasReleased() && !wasLongPress)
@@ -581,6 +583,17 @@ void handleButtonClicks()
 {
   switch (buttonState)
   {
+  case B4_AND_B5_PRESSED:
+    startHonking();
+    Heltec.display->clear();
+    Heltec.display->drawHorizontalLine(2, 50, 124);
+    Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
+    Heltec.display->setFont(DSEG14_Classic_Mini_Regular_40);
+    Heltec.display->drawString(64, 1, "HONK");
+    Heltec.display->setFont(ArialMT_Plain_10);
+    Heltec.display->drawString(64, 52, "Channel " + String(channel));
+    Heltec.display->display();
+    break;
   case B1_PRESSED:
     playPause();
     break;
@@ -600,16 +613,24 @@ void handleButtonClicks()
     toggleResetTime();
     break;
   case B4_PRESSED:
-    resetClock(false, timeToDisplay - 1);
+    if (!isClockRunning) {
+      resetClock(false, timeToDisplay - 1);
+    }
     break;
   case B4_PRESSED_LONG:
-    resetClock(false, timeToDisplay - 10);
+    if (!isClockRunning) {
+      resetClock(false, timeToDisplay - 10);
+    }
     break;
   case B5_PRESSED:
-    resetClock(false, timeToDisplay + 1);
+    if (!isClockRunning) {
+      resetClock(false, timeToDisplay + 1);
+    }
     break;
   case B5_PRESSED_LONG:
-    resetClock(false, timeToDisplay + 10);
+    if (!isClockRunning) {
+      resetClock(false, timeToDisplay + 10);
+    }
     break;
   case B6_PRESSED:
   playPause();
