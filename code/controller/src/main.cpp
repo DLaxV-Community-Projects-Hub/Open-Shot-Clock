@@ -29,11 +29,13 @@
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
-#define SCREEN_ADDRESS 0x3D
+#define SCREEN_ADDRESS 0x3C
 
 //===============================================================
 // variables, constants, objects
 //===============================================================
+uint32_t lastTime=0;
+uint16_t voltageRaw=0, currentRaw=0;
 
 int channel;
 int defaultChannel = 1;
@@ -119,7 +121,7 @@ AsyncWebSocket ws("/ws");
 
 Preferences preferences;
 
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, RST_OLED);
 
 //===============================================================
 // function prototypes
@@ -156,6 +158,9 @@ void setDataDisplay()
   display.setFont(NULL);
   display.setCursor(32, 57);
   display.printf("Channel %d",channel);
+
+  display.setCursor(90,57);
+  display.printf("%d",voltageRaw);
 }
 
 void notifyClients(String message)
@@ -744,11 +749,22 @@ void initRadio() {
   ESP_LOGI("RADIO","Freq: %f, Sync: %i",frequency, syncword);
 }
 
+void task( void* )
+{
+  volatile int x=0;
+  while(1)
+  {
+      x++;
+  }
+}
+
 void setup()
 {
+  ESP_LOGE("Init", "START"); 
   #ifdef OSC_CONTROLLER_R0
   pinMode(PIN_PWR, OUTPUT);
   digitalWrite(PIN_PWR, 1);
+  ESP_LOGE("Init", "As OSC R0"); 
   pinMode(V_SENSE, ANALOG);
   pinMode(I_SENSE, ANALOG);
   pinMode(LED_ERR, OUTPUT);
@@ -763,11 +779,44 @@ void setup()
   pinMode(PIN_B5, INPUT_PULLUP);
 
   pinMode(OLED_nEN, OUTPUT);
+  digitalWrite(OLED_nEN, LOW);
   
-  delay(100);
+  pinMode(UART_TXEN, OUTPUT);
+  digitalWrite(UART_TXEN, HIGH);
+
+  delay(100); 
   
+  Wire.setPins(SDA, SCL);
+
   Wire.begin();
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+
+
+  ESP_LOGI("I2C","Scanning bus...");
+  int nDevices = 0;
+  uint8_t error =0;
+  for(int address = 1; address < 127; address++ )
+  {
+    // The i2c_scanner uses the return value of
+    // the Write.endTransmisstion to see if
+    // a device did acknowledge to the address.
+    Wire.beginTransmission(address);
+    error = Wire.endTransmission();
+ 
+    if (error == 0)
+    {
+      ESP_LOGI("I2C","device found at address %d",address); 
+      nDevices++;
+    }
+    else if (error==4)
+    {
+      ESP_LOGE("I2C","Unknown error at address %d",address);
+      
+    }    
+  }
+  ESP_LOGI("I2C","Scan finished!");
+
+
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C, true)) {
     ESP_LOGE("SSD1306", "init failed"); 
     for(;;); // Don't proceed, loop forever
   }
@@ -782,13 +831,33 @@ void setup()
   delay(1000); // Pause for 1 seconds
   display.setFont(NULL);
   display.setTextSize(1);
-
+  
   loadChannelFromEEPROM();
+
+  xTaskCreatePinnedToCore(
+    task,       //Function to implement the task 
+    "taskname", //Name of the task
+    6000,       //Stack size in words 
+    NULL,       //Task input parameter 
+    0,          //Priority of the task 
+    NULL,       //Task handle.
+    0);         //Core where the task should run 
+
+    xTaskCreatePinnedToCore(
+      task,       //Function to implement the task 
+      "taskname", //Name of the task
+      6000,       //Stack size in words 
+      NULL,       //Task input parameter 
+      0,          //Priority of the task 
+      NULL,       //Task handle.
+      1);         //Core where the task should run 
 
   // RS-485
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
 
   initRadio();
+  //radio.setOutputPower(-9);
+  radio.setOutputPower(22);
 
   if (!SPIFFS.begin())
   {
@@ -818,7 +887,8 @@ void setup()
 
   timeNow = millis();
   timeOfLastPauseEvent = timeNow;
-  msLastStopCount = timeNow;
+  msLastStopCount = timeNow; 
+
 }
 
 //===============================================================
@@ -835,4 +905,15 @@ void loop()
   isClockRunning ? count() : stopCount();
 
   ElegantOTA.loop();
+
+  #if defined(OSC_CONTROLLER_R0)
+  if(timeNow - lastTime > 1000)
+  {
+    lastTime = timeNow;
+    voltageRaw = analogRead(V_SENSE);
+    currentRaw = analogRead(I_SENSE);
+    ESP_LOGI("ADC","Voltage: %d",voltageRaw);
+    ESP_LOGI("ADC","Current: %d",currentRaw);
+  }  
+  #endif
 }

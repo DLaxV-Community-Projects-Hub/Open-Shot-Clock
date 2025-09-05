@@ -42,7 +42,6 @@ const char* password = "12345678";
         static const uint8_t PIN_B6 = 3;
         static const uint8_t PIN_LED = 35;
     #endif
-    #define OLED_nEN Vext
 #elif CONTROLLER_PCB_VERSION == V0_1
     #ifdef WIFI_LoRa_32_V2
         static const uint8_t PIN_B1 = 33;
@@ -61,7 +60,6 @@ const char* password = "12345678";
         static const uint8_t PIN_B6 = 46;
         static const uint8_t PIN_LED = 35;
     #endif
-    #define OLED_nEN Vext
 #elif CONTROLLER_PCB_VERSION == V2_1
     #ifdef WIFI_LoRa_32_V2
         static const uint8_t PIN_B1 = 39;
@@ -80,7 +78,12 @@ const char* password = "12345678";
         static const uint8_t PIN_B6 = 20;    //J6
         static const uint8_t PIN_LED = 35;
     #endif
+#endif
+
+#if defined(WIFI_LoRa_32_V3) | defined(WIFI_LoRa_32_V2)
     #define OLED_nEN Vext
+    #define SCL             SCL_OLED
+    #define SDA             SDA_OLED
 #endif
 
 #if defined(OSC_CONTROLLER_R0)
@@ -98,9 +101,12 @@ const char* password = "12345678";
 
     #undef OLED_nEN
     #define OLED_nEN 11
+    #define RST_OLED -1
     
     #define V_SENSE 1
     #define I_SENSE 2
+
+    #define UART_TXEN 14
 
     #define PIN_B1 3
     #define PIN_B2 4
@@ -134,9 +140,12 @@ const char* password = "12345678";
     
     #undef OLED_nEN
     #define OLED_nEN 11
+    #define RST_OLED -1
     
     #define V_SENSE 1
     #define I_SENSE 2
+
+    #define UART_TXEN 14
 
     #define PIN_B1 3
     #define PIN_B2 4
