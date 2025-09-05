@@ -21,6 +21,7 @@ Additionally to the corrections of known issues, the following functions have be
 ### Know Issues
 * Power on mechanism is not working properly, due to missing pull-down resistor on Q403.
 * Voltage divider for battery voltage measurement leads to ~0.5mA leakage current into ESP32 pin.
+* High series resistance of inductor leads to high dropout voltage of switching regulator.
 
 ### Patches
 * Solder 10k 0603 resistor directly between pins 1-2 of Q403.
