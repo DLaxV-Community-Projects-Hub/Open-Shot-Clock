@@ -4,6 +4,10 @@
 	(generator_version "8.0")
 	(uuid "128bc47f-cd82-462d-8613-199c49fa6ee7")
 	(paper "A4")
+	(title_block
+		(title "Open Shot Clock Controller")
+		(rev "2.2")
+	)
 	(lib_symbols
 		(symbol "Connector:RJ45"
 			(pin_names
@@ -3658,6 +3662,17 @@
 			)
 		)
 		(uuid "33c946a3-5a80-4bbb-a809-5a96c81b3eba")
+	)
+	(text "chagelog:\n2.2: \n- wider V+ traces\n- comments for jumpers\n- add missing 5V connection when using JST supply"
+		(exclude_from_sim no)
+		(at 187.96 219.202 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "9f25c172-acba-4a74-aa60-2e3206541f07")
 	)
 	(global_label "GND"
 		(shape input)
