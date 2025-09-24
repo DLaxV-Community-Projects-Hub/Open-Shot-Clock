@@ -60,6 +60,7 @@ float frequency = frequencySelect[defaultChannel];
 
 String resetString = "restarting...reset your wifi connection";
 String timeCommand = "T";
+const char* preferenceName = "shot-clock";
 
 bool isClockRunning = false; // count on/off, starts off
 int defaultClockStart = 30;
@@ -75,10 +76,12 @@ unsigned long timeOfLastCountEvent;     // last time count down
 unsigned long msLastStopCount; // last time count/send in stop mode
 
 const unsigned long LONG_PRESS(400);  // we define a "long press" to be 400 milliseconds.
-bool handledLongPress = false;
+const unsigned long EXTRA_LONG_PRESS(5000);
+bool wasLongPress = false;
 
 enum buttonStates_t
 {
+  B4_AND_B5_PRESSED,
   B5_PRESSED,
   B5_PRESSED_LONG,
   B6_PRESSED,
@@ -274,6 +277,22 @@ void sendBCommand()
   sendToClock(commandB);
 }
 
+void toggleResetTime()
+{
+  if (!isClockRunning){
+    if (clockStartTime == 30) {
+      clockStartTime = 80;
+    } else {
+      clockStartTime = 30;
+    }
+    preferences.begin(preferenceName, false);
+    preferences.putInt("start-time", clockStartTime);
+    preferences.end();
+    sendStartTime(clockStartTime);
+    resetClock(false, clockStartTime);
+  }
+}
+
 void setNewStartTime(int startTime)
 {
   clockStartTime = startTime;
@@ -433,7 +452,7 @@ String settingsProcessor(const String &var)
 void setChannel(int ch)
 {
   channel = ch;
-  preferences.begin("shot-clock", false);
+  preferences.begin(preferenceName, false);
   preferences.putInt("channel", channel);
   Serial.println("Channel " + channel);
   preferences.end();
@@ -443,10 +462,18 @@ void setChannel(int ch)
 
 void loadChannelFromEEPROM()
 {
-  preferences.begin("shot-clock", false);
+  preferences.begin(preferenceName, false);
   channel = preferences.getInt("channel", defaultChannel);
   syncword = syncwordSelect[channel];
   frequency = frequencySelect[channel];
+  preferences.end();
+}
+
+void loadClockStartTimeFromEEPROM()
+{
+  preferences.begin(preferenceName, false);
+  clockStartTime = preferences.getInt("start-time", defaultClockStart);
+  timeToDisplay = clockStartTime;
   preferences.end();
 }
 
@@ -480,83 +507,91 @@ void updateButtonState()
   btn5.read();   // read the button
   btn6.read();   // read the button
 
-  if (btn1.wasReleased() && !handledLongPress)
+  if (btn4.isPressed() && btn5.wasReleased())
+  {
+    // hold down button 4 and click button 5
+    buttonState = B4_AND_B5_PRESSED;
+    wasLongPress = true;
+  }
+  else if (btn1.wasReleased() && !wasLongPress)
   {
     buttonState = B1_PRESSED;
   }
-  else if (btn1.wasReleased() && handledLongPress)
+  else if (btn1.wasReleased() && wasLongPress)
   {
-    handledLongPress = false;
+    wasLongPress = false;
+    wasLongPress = false;
   }
-  else if (btn1.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn1.pressedFor(LONG_PRESS) && !wasLongPress)
   {
     buttonState = B1_PRESSED_LONG;
-    handledLongPress = true;
+    wasLongPress = true;
+    wasLongPress = true;
   }
-  else if (btn2.wasReleased() && !handledLongPress)
+  else if (btn2.wasReleased() && !wasLongPress)
   {
     buttonState = B2_PRESSED;
   }
-  else if (btn2.wasReleased() && handledLongPress)
+  else if (btn2.wasReleased() && wasLongPress)
   {
-    handledLongPress = false;
+    wasLongPress = false;
   }
-  else if (btn2.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn2.pressedFor(EXTRA_LONG_PRESS) && !wasLongPress)
   {
     buttonState = B2_PRESSED_LONG;
-    handledLongPress = true;
+    wasLongPress = true;
   }
-  else if (btn3.wasReleased() && !handledLongPress)
+  else if (btn3.wasReleased() && !wasLongPress)
   {
     buttonState = B3_PRESSED;
   }
-  else if (btn3.wasReleased() && handledLongPress)
+  else if (btn3.wasReleased() && wasLongPress)
   {
-    handledLongPress = false;
+    wasLongPress = false;
   }
-  else if (btn3.pressedFor(LONG_PRESS * 10) && !handledLongPress)
+  else if (btn3.pressedFor(EXTRA_LONG_PRESS) && !wasLongPress)
   {
     buttonState = B3_PRESSED_LONG;
-    handledLongPress = true;
+    wasLongPress = true;
   }
-  else if (btn4.wasReleased() && !handledLongPress)
+  else if (btn4.wasReleased() && !wasLongPress)
   {
     buttonState = B4_PRESSED;
   }
-  else if (btn4.wasReleased() && handledLongPress)
+  else if (btn4.wasReleased() && wasLongPress)
   {
-    handledLongPress = false;
+    wasLongPress = false;
   }
-  else if (btn4.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn4.pressedFor(LONG_PRESS) && !wasLongPress)
   {
     buttonState = B4_PRESSED_LONG;
-    handledLongPress = true;
+    wasLongPress = true;
   }
-  else if (btn5.wasReleased() && !handledLongPress)
+  else if (btn5.wasReleased() && !wasLongPress)
   {
     buttonState = B5_PRESSED;
   }
-  else if (btn5.wasReleased() && handledLongPress)
+  else if (btn5.wasReleased() && wasLongPress)
   {
-    handledLongPress = false;
+    wasLongPress = false;
   }
-  else if (btn5.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn5.pressedFor(LONG_PRESS) && !wasLongPress)
   {
     buttonState = B5_PRESSED_LONG;
-    handledLongPress = true;
+    wasLongPress = true;
   }
-  else if (btn6.wasReleased() && !handledLongPress)
+  else if (btn6.wasReleased() && !wasLongPress)
   {
     buttonState = B6_PRESSED;
   }
-  else if (btn6.wasReleased() && handledLongPress)
+  else if (btn6.wasReleased() && wasLongPress)
   {
-    handledLongPress = false;
+    wasLongPress = false;
   }
-  else if (btn6.pressedFor(LONG_PRESS) && !handledLongPress)
+  else if (btn6.pressedFor(LONG_PRESS) && !wasLongPress)
   {
     buttonState = B6_PRESSED_LONG;
-    handledLongPress = true;
+    wasLongPress = true;
   }
   else
   {
@@ -568,6 +603,19 @@ void handleButtonClicks()
 {
   switch (buttonState)
   {
+  case B4_AND_B5_PRESSED:
+    startHonking();
+    display.clearDisplay();
+    display.drawFastHLine(2, 50, 124, SSD1306_WHITE);
+    display.setFont(NULL);
+    display.setTextSize(5);
+    display.setCursor(7, 10);
+    display.printf("HONK");
+    display.setTextSize(1);
+    display.setCursor(32, 57);
+    display.printf("Channel %d",channel);
+    display.display();
+    break;
   case B1_PRESSED:
     playPause();
     break;
@@ -578,7 +626,7 @@ void handleButtonClicks()
     resetClock(true, clockStartTime);
     break;
   case B2_PRESSED_LONG:
-    resetClock(true, clockStartTime);
+    toggleResetTime();
     break;
   case B3_PRESSED:
     resetClock(false, clockStartTime);
@@ -597,16 +645,24 @@ void handleButtonClicks()
     #endif
     break;
   case B4_PRESSED:
-    resetClock(false, timeToDisplay - 1);
+    if (!isClockRunning) {
+      resetClock(false, timeToDisplay - 1);
+    }
     break;
   case B4_PRESSED_LONG:
-    resetClock(false, timeToDisplay - 10);
+    if (!isClockRunning) {
+      resetClock(false, timeToDisplay - 10);
+    }
     break;
   case B5_PRESSED:
-    resetClock(false, timeToDisplay + 1);
+    if (!isClockRunning) {
+      resetClock(false, timeToDisplay + 1);
+    }
     break;
   case B5_PRESSED_LONG:
-    resetClock(false, timeToDisplay + 10);
+    if (!isClockRunning) {
+      resetClock(false, timeToDisplay + 10);
+    }
     break;
   case B6_PRESSED:
   playPause();
@@ -760,6 +816,9 @@ void task( void* )
 
 void setup()
 {
+  loadChannelFromEEPROM();
+  loadClockStartTimeFromEEPROM();
+
   ESP_LOGE("Init", "START"); 
   #ifdef OSC_CONTROLLER_R0
   pinMode(PIN_PWR, OUTPUT);
@@ -877,6 +936,8 @@ void setup()
   initWebserver();
 
   initOTA();
+
+
 
   display.clearDisplay();
   setPauseDisplay();
