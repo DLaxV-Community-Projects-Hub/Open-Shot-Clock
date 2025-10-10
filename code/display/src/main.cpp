@@ -108,7 +108,6 @@ MatchState matchState;
 // Function Prototypes
 void drawLoraInfo();
 void drawRS485Info();
-bool timeIsUp();
 void setupRadio();
 
 unsigned long ota_progress_millis = 0;
@@ -145,10 +144,6 @@ void initOTA()
   ElegantOTA.onEnd(onOTAEnd);
   server.begin();
   Serial.println("HTTP server started");
-}
-
-bool timeIsUp() {
-  return currentTime == 0 && previousTime != 0;
 }
 
 // flag to indicate that a packet was received
@@ -249,7 +244,9 @@ void handlePacket(){
     //Heltec.display->drawString(95, 52, rssi);
     Heltec.display->display();
   } else if (packet.startsWith(honkCommand)){
-    horn.requestHonk();
+    String honkVolumeLevelString = packet.substring(1,2);
+    uint8_t honkVolumeLevel = honkVolumeLevelString.toInt();
+    horn.requestHonk(honkVolumeLevel);
   }
 }
 
@@ -509,10 +506,6 @@ void loop() {
   else{
     client_check();
     }
-
-  if (timeIsUp()) {
-    horn.requestHonk();
-  }
 
   horn.handle();
   leds.handle();

@@ -50,6 +50,9 @@ float frequency = frequencySelect[defaultChannel];
 String resetString = "restarting...reset your wifi connection";
 String timeCommand = "T";
 const char* preferenceName = "shot-clock";
+const char* startTimePreferenceName = "start-time";
+const char* honkVolumePreferenceName = "honk-volume";
+const char* channelPreferenceName = "channel";
 
 bool isClockRunning = false; // count on/off, starts off
 int defaultClockStart = 30;
@@ -57,6 +60,7 @@ int clockStartTime = defaultClockStart;
 int timeToDisplay = clockStartTime; // Start Zahl
 String clockStr = "30";
 int brightnessLevel = 8;
+int honkVolumeLevel = 5; // 0 = off, 1 = whisper, 2 = low, 3 = medium, 4 = high, 5 = max
 
 unsigned long timeNow;              // current time from millis()
 unsigned long timeOfLastPauseEvent;      // last time Button Pause
@@ -193,6 +197,9 @@ void count()
 
       String clockMsg = getTimeSendMsg(timeCommand, timeToDisplay);
       sendToClock(clockMsg);
+      if (timeToDisplay == 0) {
+        startHonking();
+      }
 
       notifyClients(String(timeToDisplay));
       ws.cleanupClients();
@@ -247,7 +254,7 @@ void sendStartTime(int T)
 
 void startHonking()
 {
-  String commandH = "H";
+  String commandH = "H" + String(honkVolumeLevel);
   sendToClock(commandH);
 }
 
@@ -266,7 +273,7 @@ void toggleResetTime()
       clockStartTime = 30;
     }
     preferences.begin(preferenceName, false);
-    preferences.putInt("start-time", clockStartTime);
+    preferences.putInt(startTimePreferenceName, clockStartTime);
     preferences.end();
     sendStartTime(clockStartTime);
     resetClock(false, clockStartTime);
@@ -433,8 +440,8 @@ void setChannel(int ch)
 {
   channel = ch;
   preferences.begin(preferenceName, false);
-  preferences.putInt("channel", channel);
-  Serial.println("Channel " + channel);
+  preferences.putInt(channelPreferenceName, channel);
+  Serial.println("Channel " + String(channel));
   preferences.end();
   delay(1000);
   ESP.restart();
@@ -443,16 +450,34 @@ void setChannel(int ch)
 void loadChannelFromEEPROM()
 {
   preferences.begin(preferenceName, false);
-  channel = preferences.getInt("channel", defaultChannel);
+  channel = preferences.getInt(channelPreferenceName, defaultChannel);
   syncword = syncwordSelect[channel];
   frequency = frequencySelect[channel];
+  preferences.end();
+}
+
+void setHonkVolumeLevel(int level)
+{
+  honkVolumeLevel = level;
+  preferences.begin(preferenceName, false);
+  preferences.putInt(honkVolumePreferenceName, honkVolumeLevel);
+  Serial.println("Honk Volume Level " + String(honkVolumeLevel));
+  preferences.end();
+  delay(1000);
+  ESP.restart();
+}
+
+void loadHonkVolumeFromEEPROM()
+{
+  preferences.begin(preferenceName, false);
+  honkVolumeLevel = preferences.getInt(honkVolumePreferenceName, honkVolumeLevel);
   preferences.end();
 }
 
 void loadClockStartTimeFromEEPROM()
 {
   preferences.begin(preferenceName, false);
-  clockStartTime = preferences.getInt("start-time", defaultClockStart);
+  clockStartTime = preferences.getInt(startTimePreferenceName, defaultClockStart);
   timeToDisplay = clockStartTime;
   preferences.end();
 }
@@ -768,8 +793,8 @@ void setup()
 {
 
   loadChannelFromEEPROM();
-
   loadClockStartTimeFromEEPROM();
+  loadHonkVolumeFromEEPROM();
 
   // RS-485
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);

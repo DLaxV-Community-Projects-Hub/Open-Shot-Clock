@@ -13,8 +13,15 @@ void Horn::handle() {
   }
 }
 
-void Horn::requestHonk() {
-    isHonkRequest = true;
+void Horn::requestHonk(uint8_t honkVolumeLevel) {
+  if (honkVolumeLevel > 5) {
+    honkVolumeLevel = 5; // Max volume level is 5
+  }
+  if (honkVolumeLevel < 0) {
+    honkVolumeLevel = 0; // Min volume level is 0
+  }
+  this->honkVolumeLevel = honkVolumeLevel;
+  isHonkRequest = true;
 }
 
 bool Horn::honkIsRequested(){
@@ -34,7 +41,7 @@ bool Horn::isHonkTimeOver() {
 
 void Horn::startHonking() {
   Serial.println("Starting honk");
-  pwm.setPWM(7, 4096, 0); // Horn an
+  pwm.setPWM(7, volumeMap[this->honkVolumeLevel][0], volumeMap[this->honkVolumeLevel][1]);
   isHonking = true;
   honkStartTime = millis();
 }
