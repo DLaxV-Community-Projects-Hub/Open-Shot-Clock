@@ -228,9 +228,9 @@ void stopCount()
 
 void resetClock(bool runClock, int resetTime=defaultClockStart)
 {
-  if (resetTime < 0)
+  if (resetTime < 1)
   {
-    resetTime = 0;
+    resetTime = 1;
   } else if (resetTime > 99)
   {
     resetTime = 99;
@@ -291,7 +291,7 @@ void setNewStartTime(int startTime)
   {
     clockStartTime = 99;
   }
-  resetClock(false);
+  resetClock(false, clockStartTime);
   sendStartTime(clockStartTime);
 }
 
@@ -401,7 +401,23 @@ String versionProcessor(const String& var){
 
 String settingsProcessor(const String &var)
 {
-  if (var == "SELECTED_CHANNEL1" && channel == 1)
+  if (var == "CURRENT_START_TIME")
+  {
+    return String(clockStartTime);
+  }
+  else if (var == "SELECTED_START_TIME30" && clockStartTime == 30)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_START_TIME80" && clockStartTime == 80)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_START_TIME_CUSTOM" && clockStartTime != 30 && clockStartTime != 80)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_CHANNEL1" && channel == 1)
   {
     return "selected";
   }
@@ -503,8 +519,6 @@ void setHonkVolumeLevel(int level)
   preferences.putInt(honkVolumePreferenceName, honkVolumeLevel);
   Serial.println("Honk Volume Level " + String(honkVolumeLevel));
   preferences.end();
-  delay(1000);
-  ESP.restart();
 }
 
 void loadHonkVolumeFromEEPROM()
@@ -759,6 +773,21 @@ void initWebserver()
       int level = request->getParam("v")->value().toInt();
       setHonkVolumeLevel(level);
       request->send(200, "text/html", "honk volume changed");
+    }
+    else{
+      request->send(400, "text/plain", "missing parameters");
+    } });
+
+  server.on("/starttime", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
+    if (request->hasParam("t")){
+      int time = request->getParam("t")->value().toInt();
+      if (time >= 1 && time <= 99) {
+        setNewStartTime(time);
+        request->send(200, "text/html", "start time changed");
+      } else {
+        request->send(400, "text/plain", "invalid time value: must be between 1 and 99");
+      }
     }
     else{
       request->send(400, "text/plain", "missing parameters");

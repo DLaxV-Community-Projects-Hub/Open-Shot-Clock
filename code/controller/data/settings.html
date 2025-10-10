@@ -148,6 +148,21 @@
       <option %SELECTED_HONK_VOLUME_LEVEL5% value="5">Max</option>
     </select>
   </div>
+
+  <div>
+    <h2>Start Time</h2>
+  <div class="content"></div>
+    <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 10px;"></div>
+      <button onclick="setStartTime(30)" class="select-field" style="width: auto; padding: 0 20px;">30s</button>
+      <button onclick="setStartTime(80)" class="select-field" style="width: auto; padding: 0 20px;">80s</button>
+    </div>
+    <div style="margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+      <div style="color: #888; font-size: 0.9rem;">Custom</div>
+      <input type="number" id="startTimeInput" min="1" max="99" class="select-field" 
+        value="%CURRENT_START_TIME%" onchange="setStartTime(this.value)"
+        style="width: 40px; text-align: center;">
+    </div>
+  </div>
  
 </body> 
 <script>
@@ -171,6 +186,15 @@
     request = `/channel?c=${value}`  
     sendGetRequest(request)   
   }  
+
+  const setStartTime = value => {
+    const numValue = parseInt(value)
+    if (numValue >= 1 && numValue <= 99) {
+      request = `/starttime?t=${numValue}`
+      sendGetRequest(request)
+      document.getElementById('startTimeInput').value = numValue
+    }
+  }
 
 </script>
 </html>
