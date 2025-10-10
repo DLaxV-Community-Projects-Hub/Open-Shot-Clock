@@ -121,10 +121,12 @@ h2 {
     <h2>Channel Selection</h2>
   </div>
   <div class="content">
-    <a class="link-as-button" href="/1">Channel 1</a>
-    <a class="link-as-button" href="/2">Channel 2</a>
-    <a class="link-as-button" href="/3">Channel 3</a>
-    <a class="link-as-button" href="/4">Channel 4</a>
+    <select onchange="onChannelSelect(value)" name="channel" id="channel" class="brightness-select">
+      <option %SELECTED_CHANNEL1% value="1">Channel 1</option>
+      <option %SELECTED_CHANNEL2% value="2">Channel 2</option>
+      <option %SELECTED_CHANNEL3% value="3">Channel 3</option>
+      <option %SELECTED_CHANNEL4% value="4">Channel 4</option>
+    </select>
   </div>
 
   <div>
@@ -156,6 +158,11 @@ h2 {
 
   const onHonkVolumeSelect = value =>{ 
     request = `/honkvolume?v=${value}`  
+    sendGetRequest(request)   
+  }  
+
+  const onChannelSelect = value =>{ 
+    request = `/channel?c=${value}`  
     sendGetRequest(request)   
   }  
 

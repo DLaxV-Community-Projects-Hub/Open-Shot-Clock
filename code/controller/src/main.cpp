@@ -401,7 +401,23 @@ String versionProcessor(const String& var){
 
 String settingsProcessor(const String &var)
 {
-  if (var == "SELECTED_HONK_VOLUME_LEVEL0" && honkVolumeLevel == 0)
+  if (var == "SELECTED_CHANNEL1" && channel == 1)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_CHANNEL2" && channel == 2)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_CHANNEL3" && channel == 3)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_CHANNEL4" && channel == 4)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_HONK_VOLUME_LEVEL0" && honkVolumeLevel == 0)
   {
     return "selected";
   }
@@ -771,31 +787,18 @@ void initWebserver()
             { request->send(SPIFFS, "/digital-7-mono.woff2"); });
 
   server.on("/channel", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(200, "text/html", channel_html, channelProcessor); });
-
-  /*    server.on("/channel/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/channel.html", String(), false);
-  });*/
-
-  server.on("/1", HTTP_GET, [](AsyncWebServerRequest *request)
             {
-    request->send(200, "text/plain", resetString);
-    setChannel(1); });
-
-  server.on("/2", HTTP_GET, [](AsyncWebServerRequest *request)
-            {
-    request->send(200, "text/plain", resetString);
-    setChannel(2); });
-
-  server.on("/3", HTTP_GET, [](AsyncWebServerRequest *request)
-            {
-    request->send(200, "text/plain", resetString);
-    setChannel(3); });
-
-  server.on("/4", HTTP_GET, [](AsyncWebServerRequest *request)
-            {
-    request->send(200, "text/plain", resetString);
-    setChannel(4); });
+    if (request->hasParam("c")) {
+      int ch = request->getParam("c")->value().toInt();
+      if (ch >= 1 && ch <= 4) {
+        request->send(200, "text/plain", resetString);
+        setChannel(ch);
+      } else {
+        request->send(400, "text/plain", "invalid channel");
+      }
+    } else {
+      request->send(400, "text/plain", "missing parameters");
+    } });
 }
 
 void initButtons() {
