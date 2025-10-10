@@ -119,7 +119,7 @@ Preferences preferences;
 //===============================================================
 void sendToClock(String);
 void playPause(void);
-
+void startHonking(void);
 
 
 //===============================================================
@@ -401,7 +401,31 @@ String versionProcessor(const String& var){
 
 String settingsProcessor(const String &var)
 {
-  if (var == "SELECTED_BRIGHTNESS_LEVEL1" && brightnessLevel == 1)
+  if (var == "SELECTED_HONK_VOLUME_LEVEL0" && honkVolumeLevel == 0)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_HONK_VOLUME_LEVEL1" && honkVolumeLevel == 1)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_HONK_VOLUME_LEVEL2" && honkVolumeLevel == 2)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_HONK_VOLUME_LEVEL3" && honkVolumeLevel == 3)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_HONK_VOLUME_LEVEL4" && honkVolumeLevel == 4)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_HONK_VOLUME_LEVEL5" && honkVolumeLevel == 5)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_BRIGHTNESS_LEVEL1" && brightnessLevel == 1)
   {
     return "selected";
   }
@@ -708,6 +732,17 @@ void initWebserver()
     if (request->hasParam("b")){
       brightnessLevel = request->getParam("b")->value().toInt();
       request->send(200, "text/html", "brightness changed");
+    }
+    else{
+      request->send(400, "text/plain", "missing parameters");
+    } });
+
+  server.on("/honkvolume", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
+    if (request->hasParam("v")){
+      int level = request->getParam("v")->value().toInt();
+      setHonkVolumeLevel(level);
+      request->send(200, "text/html", "honk volume changed");
     }
     else{
       request->send(400, "text/plain", "missing parameters");

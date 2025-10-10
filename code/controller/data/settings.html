@@ -69,6 +69,33 @@ h2 {
     display: block;
   } 
 
+  .link-as-button {
+    display: block;
+    padding: 15px 50px;
+    font-size: 24px;
+    text-align: center;
+    outline: none;
+    color: #fff;
+    background-color: #0f8b8d;
+    border: none;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    text-decoration: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+   }
+
+   .link-as-button:active {
+     background-color: #0f8b8d;
+     box-shadow: 2 2px #CDCDCD;
+     transform: translateY(2px);
+   }
+
 </style>
 
 <body>
@@ -93,7 +120,26 @@ h2 {
   <div>
     <h2>Channel Selection</h2>
   </div>
-  
+  <div class="content">
+    <a class="link-as-button" href="/1">Channel 1</a>
+    <a class="link-as-button" href="/2">Channel 2</a>
+    <a class="link-as-button" href="/3">Channel 3</a>
+    <a class="link-as-button" href="/4">Channel 4</a>
+  </div>
+
+  <div>
+    <h2>Honk Volume</h2>
+  </div>
+  <div class="content">
+    <select onchange="onHonkVolumeSelect(value)" name="honkVolume" id="honkVolume" class="brightness-select">
+      <option %SELECTED_HONK_VOLUME_LEVEL0% value="0">Off</option>
+      <option %SELECTED_HONK_VOLUME_LEVEL1% value="1">Whisper</option>
+      <option %SELECTED_HONK_VOLUME_LEVEL2% value="2">Low</option>
+      <option %SELECTED_HONK_VOLUME_LEVEL3% value="3">Medium</option>
+      <option %SELECTED_HONK_VOLUME_LEVEL4% value="4">High</option>
+      <option %SELECTED_HONK_VOLUME_LEVEL5% value="5">Max</option>
+    </select>
+  </div>
  
 </body> 
 <script>
@@ -106,7 +152,12 @@ h2 {
   const onBrightnessSelect = value =>{ 
     request = `/brightness?b=${value}`  
     sendGetRequest(request)   
-    }  
+  }  
+
+  const onHonkVolumeSelect = value =>{ 
+    request = `/honkvolume?v=${value}`  
+    sendGetRequest(request)   
+  }  
 
 </script>
 </html>
