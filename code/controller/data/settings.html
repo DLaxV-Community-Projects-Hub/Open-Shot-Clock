@@ -11,90 +11,96 @@
 
 <style>
     html {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
     text-align: center;
-    background-color: black;
+    background-color: #111;
+    color: #fff;
   }
 
-h1 {
-    font-size: 2,5rem;
-    color: rgb(255, 255, 255);
-    background-color: #000000;
-  }
-h2 {
-    font-size: 1,5rem;
-    color: rgb(255, 255, 255);
-    background-color: #000000;
+  body {
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
   }
 
-  @media (max-aspect-ratio: 1/1) {
-    .number {  
-      font-size: 80vw;
-    }
+  h1 {
+    font-size: 1.8rem;
+    font-weight: 300;
+    color: #fff;
+    margin: 2rem 0;
+    letter-spacing: 0.05em;
   }
-  
-  @media (min-aspect-ratio: 1/1) {
-    .number {  
-      font-size: 110vh;
-    }
+
+  h2 {
+    font-size: 1rem;
+    font-weight: 400;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 2.5rem 0 1rem;
   }
 
   .content {
-    padding: 30px;
-    max-width: 600px;
+    padding: 0;
+    max-width: 400px;
     margin: 0 auto;
-    background-color: black;
     display: flex;
-  	flex-direction: column;
-	  align-items: center;
-  	user-select: none;
-  	-webkit-touch-callout: none;
-  	-webkit-user-select: none;
-  }
-
-  .brightness-select {
-	height: 66px;
-    width: 190px;
-    font-size: 36px;
-    padding-top: 22px;
-    text-align: center;
-	text-decoration: none;
-    outline: none;
-    color: rgba(255, 165, 0, 1);
-    background-color: rgba(255, 165, 0, 0.2);
-	border: 3px solid black;
-	border-radius: 44px;
-	box-shadow: 0px 0px 0px 5px rgba(255, 165, 0, 0.2);
-	margin-bottom: 16px;
-    display: block;
-  } 
-
-  .link-as-button {
-    display: block;
-    padding: 15px 50px;
-    font-size: 24px;
-    text-align: center;
-    outline: none;
-    color: #fff;
-    background-color: #0f8b8d;
-    border: none;
-    border-radius: 5px;
-    margin-bottom: 10px;
-    text-decoration: none;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    -webkit-tap-highlight-color: rgba(0,0,0,0);
-   }
+  }
 
-   .link-as-button:active {
-     background-color: #0f8b8d;
-     box-shadow: 2 2px #CDCDCD;
-     transform: translateY(2px);
-   }
+  .select-field {
+    width: 100%;
+    height: 48px;
+    font-size: 16px;
+    text-align: center;
+    text-decoration: none;
+    outline: none;
+    color: #fff;
+    background-color: #222;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 0 16px;
+    margin-bottom: 8px;
+    display: block;
+    appearance: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .select-field:focus {
+    border-color: #444;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+  }
+
+  .select-field option {
+    background-color: #222;
+    color: #fff;
+    padding: 8px;
+  }
+
+  @media (max-width: 480px) {
+    body {
+      padding: 16px;
+    }
+
+    .content {
+      max-width: 100%;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    h2 {
+      font-size: 0.9rem;
+      margin: 2rem 0 0.8rem;
+    }
+  }
 
 </style>
 
@@ -106,7 +112,7 @@ h2 {
     <h2>Brighness Selection</h2>
   </div>
   <div class="content">
-	 <select onchange="onBrightnessSelect(value)" name="brightness" id="brightness" class="brightness-select">
+	 <select onchange="onBrightnessSelect(value)" name="brightness" id="brightness" class="select-field">
         <option %SELECTED_BRIGHTNESS_LEVEL1% value="1">level 1</option>
         <option %SELECTED_BRIGHTNESS_LEVEL2% value="2">level 2</option>
         <option %SELECTED_BRIGHTNESS_LEVEL3% value="3">level 3</option>
@@ -121,7 +127,7 @@ h2 {
     <h2>Channel Selection</h2>
   </div>
   <div class="content">
-    <select onchange="onChannelSelect(value)" name="channel" id="channel" class="brightness-select">
+    <select onchange="onChannelSelect(value)" name="channel" id="channel" class="select-field">
       <option %SELECTED_CHANNEL1% value="1">Channel 1</option>
       <option %SELECTED_CHANNEL2% value="2">Channel 2</option>
       <option %SELECTED_CHANNEL3% value="3">Channel 3</option>
@@ -133,7 +139,7 @@ h2 {
     <h2>Honk Volume</h2>
   </div>
   <div class="content">
-    <select onchange="onHonkVolumeSelect(value)" name="honkVolume" id="honkVolume" class="brightness-select">
+    <select onchange="onHonkVolumeSelect(value)" name="honkVolume" id="honkVolume" class="select-field">
       <option %SELECTED_HONK_VOLUME_LEVEL0% value="0">Off</option>
       <option %SELECTED_HONK_VOLUME_LEVEL1% value="1">Whisper</option>
       <option %SELECTED_HONK_VOLUME_LEVEL2% value="2">Low</option>
