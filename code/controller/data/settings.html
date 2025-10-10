@@ -32,7 +32,7 @@
   }
 
   h2 {
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 400;
     color: #888;
     text-transform: uppercase;
@@ -52,23 +52,37 @@
     -webkit-user-select: none;
   }
 
+  select.select-field {
+    height: 44px;
+    font-size: 16px;
+    padding: 0 14px;
+    margin-bottom: 8px;
+  }
+
+  select.select-field option {
+    padding: 8px;
+    font-size: 16px;
+  }
+
   .select-field {
     width: 100%;
-    height: 48px;
-    font-size: 16px;
+    height: 56px;
+    font-size: 18px;
     text-align: center;
     text-decoration: none;
     outline: none;
     color: #fff;
     background-color: #222;
     border: 1px solid #333;
-    border-radius: 8px;
-    padding: 0 16px;
-    margin-bottom: 8px;
+    border-radius: 12px;
+    padding: 0 20px;
+    margin-bottom: 12px;
     display: block;
     appearance: none;
     cursor: pointer;
     transition: all 0.2s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .select-field:focus {
@@ -76,15 +90,20 @@
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
   }
 
+  .select-field:active {
+    background-color: #2a2a2a;
+  }
+
   .select-field option {
     background-color: #222;
     color: #fff;
-    padding: 8px;
+    padding: 12px;
+    font-size: 18px;
   }
 
   @media (max-width: 480px) {
     body {
-      padding: 16px;
+      padding: 20px;
     }
 
     .content {
@@ -92,13 +111,13 @@
     }
 
     h1 {
-      font-size: 1.5rem;
-      margin: 1.5rem 0;
+      font-size: 1.8rem;
+      margin: 1.8rem 0;
     }
 
     h2 {
-      font-size: 0.9rem;
-      margin: 2rem 0 0.8rem;
+      font-size: 1.1rem;
+      margin: 2.5rem 0 1rem;
     }
   }
 
@@ -152,15 +171,15 @@
   <div>
     <h2>Start Time</h2>
   <div class="content"></div>
-    <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 10px;"></div>
-      <button onclick="setStartTime(30)" class="select-field" style="width: auto; padding: 0 20px;">30s</button>
-      <button onclick="setStartTime(80)" class="select-field" style="width: auto; padding: 0 20px;">80s</button>
+    <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 8px;">
+      <button onclick="setStartTime(30)" class="select-field" style="width: 85px; height: 44px; font-size: 16px;">30s</button>
+      <button onclick="setStartTime(80)" class="select-field" style="width: 85px; height: 44px; font-size: 16px;">80s</button>
     </div>
-    <div style="margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
       <div style="color: #888; font-size: 0.9rem;">Custom</div>
       <input type="number" id="startTimeInput" min="1" max="99" class="select-field" 
         value="%CURRENT_START_TIME%" onchange="setStartTime(this.value)"
-        style="width: 40px; text-align: center;">
+        style="width: 50px; height: 30px; font-size: 16px; text-align: center; padding: 0;">
     </div>
   </div>
  
