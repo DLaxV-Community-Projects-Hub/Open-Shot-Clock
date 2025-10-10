@@ -176,10 +176,13 @@
       <button onclick="setStartTime(80)" class="select-field" style="width: 85px; height: 44px; font-size: 16px;">80s</button>
     </div>
     <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-      <div style="color: #888; font-size: 0.9rem;">Custom</div>
+      <button onclick="adjustTime(-10)" class="select-field" style="width: 50px; height: 36px; font-size: 16px; padding: 0;">-10</button>
+      <button onclick="adjustTime(-1)" class="select-field" style="width: 40px; height: 36px; font-size: 16px; padding: 0;">-1</button>
       <input type="number" id="startTimeInput" min="1" max="99" class="select-field" 
         value="%CURRENT_START_TIME%" onchange="setStartTime(this.value)"
-        style="width: 50px; height: 30px; font-size: 16px; text-align: center; padding: 0;">
+        style="width: 60px; height: 36px; font-size: 16px; text-align: center; padding: 0;">
+      <button onclick="adjustTime(1)" class="select-field" style="width: 40px; height: 36px; font-size: 16px; padding: 0;">+1</button>
+      <button onclick="adjustTime(10)" class="select-field" style="width: 50px; height: 36px; font-size: 16px; padding: 0;">+10</button>
     </div>
   </div>
  
@@ -215,5 +218,13 @@
     }
   }
 
+  const adjustTime = delta => {
+    const input = document.getElementById('startTimeInput')
+    const currentValue = parseInt(input.value)
+    const newValue = Math.min(Math.max(currentValue + delta, 1), 99)
+    if (newValue !== currentValue) {
+      setStartTime(newValue)
+    }
+  }
 </script>
 </html>
