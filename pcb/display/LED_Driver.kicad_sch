@@ -6,8 +6,8 @@
 	(paper "A4")
 	(title_block
 		(title "PWM LED Driver")
-		(date "2025-04-11")
-		(rev "01")
+		(date "2026-03-01")
+		(rev "02")
 		(company "Ravenspark")
 		(comment 1 "0-Series")
 	)
@@ -3384,7 +3384,7 @@
 				(hide yes)
 			)
 		)
-		(property "JLC PN" "C409115"
+		(property "LCSC Part #" "C409115"
 			(at 236.22 121.92 0)
 			(effects
 				(font
@@ -3462,7 +3462,7 @@
 				(hide yes)
 			)
 		)
-		(property "JLC PN" "C36499167"
+		(property "LCSC Part #" "C36499167"
 			(at 264.16 135.89 0)
 			(effects
 				(font
@@ -3814,7 +3814,7 @@
 				(hide yes)
 			)
 		)
-		(property "JLC PN" "C5191634"
+		(property "LCSC Part #" "C5191634"
 			(at 50.8 81.28 0)
 			(effects
 				(font
@@ -3973,7 +3973,7 @@
 				(hide yes)
 			)
 		)
-		(property "JLC PN" "C22452"
+		(property "LCSC Part #" "C22452"
 			(at 261.62 123.19 0)
 			(effects
 				(font
@@ -4181,8 +4181,8 @@
 				(hide yes)
 			)
 		)
-		(property "JLC PN" "C2286"
-			(at 256.54 148.59 0)
+		(property "LCSC Part #" "C2286"
+			(at 256.54 148.59 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4590,8 +4590,8 @@
 				(hide yes)
 			)
 		)
-		(property "JLC PN" "C2286"
-			(at 218.44 148.59 0)
+		(property "LCSC Part #" "C2286"
+			(at 218.44 148.59 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4668,7 +4668,7 @@
 				(hide yes)
 			)
 		)
-		(property "JLC PN" "C22452"
+		(property "LCSC Part #" "C22452"
 			(at 223.52 123.19 0)
 			(effects
 				(font
@@ -4747,7 +4747,7 @@
 				(hide yes)
 			)
 		)
-		(property "JLC PN" "C307331"
+		(property "LCSC Part #" "C307331"
 			(at 50.8 39.37 0)
 			(effects
 				(font
@@ -4890,7 +4890,7 @@
 				(hide yes)
 			)
 		)
-		(property "JLC PN" "C36499167"
+		(property "LCSC Part #" "C36499167"
 			(at 226.06 135.89 0)
 			(effects
 				(font
@@ -5305,7 +5305,7 @@
 				(hide yes)
 			)
 		)
-		(property "JLC PN" "C409115"
+		(property "LCSC Part #" "C409115"
 			(at 274.32 121.92 0)
 			(effects
 				(font

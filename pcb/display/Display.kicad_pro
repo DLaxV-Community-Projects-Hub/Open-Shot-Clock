@@ -48,7 +48,7 @@
         "silk_text_thickness": 0.1,
         "silk_text_upright": false,
         "zones": {
-          "min_clearance": 0.15
+          "min_clearance": 0.175
         }
       },
       "diff_pair_dimensions": [
@@ -63,7 +63,48 @@
           "width": 0.22
         }
       ],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        [
+          "hole_clearance|119850000|57270000|19ce5b0d-e58a-470f-b104-36917486861d|4b306ce1-d027-4031-a727-70fef1053be6",
+          ""
+        ],
+        [
+          "hole_clearance|119850000|57270000|19ce5b0d-e58a-470f-b104-36917486861d|aaef4d0a-f051-4622-8dd6-e6ef341e785a",
+          ""
+        ],
+        [
+          "hole_clearance|125650000|57270000|155bc605-87ea-49f5-ae2b-7c0cb6fec179|7458f18c-66f1-4386-a5ef-c4b95dd54edd",
+          ""
+        ],
+        [
+          "hole_clearance|125650000|57270000|155bc605-87ea-49f5-ae2b-7c0cb6fec179|be9e58de-4204-4a5a-9df1-eb28c33c4828",
+          ""
+        ],
+        [
+          "starved_thermal|118430000|53090000|10187f02-4617-4d70-8ccc-72eeaeabde76|699e466e-f220-44bd-919e-e8dfd8cc5e25|F.Cu",
+          ""
+        ],
+        [
+          "starved_thermal|120000000|85980000|10187f02-4617-4d70-8ccc-72eeaeabde76|0ceca996-e3fd-4bdc-872f-722e3ab821ee|F.Cu",
+          ""
+        ],
+        [
+          "starved_thermal|125950000|57890000|10187f02-4617-4d70-8ccc-72eeaeabde76|7458f18c-66f1-4386-a5ef-c4b95dd54edd|F.Cu",
+          ""
+        ],
+        [
+          "starved_thermal|125950000|57890000|10187f02-4617-4d70-8ccc-72eeaeabde76|be9e58de-4204-4a5a-9df1-eb28c33c4828|F.Cu",
+          ""
+        ],
+        [
+          "starved_thermal|127230000|82000000|10187f02-4617-4d70-8ccc-72eeaeabde76|df026628-af26-4a8e-96c4-43333b2f1d8a|F.Cu",
+          ""
+        ],
+        [
+          "starved_thermal|92225000|100250000|10187f02-4617-4d70-8ccc-72eeaeabde76|ccbf1986-eeab-4b89-8f24-ce0686c2ae0f|F.Cu",
+          ""
+        ]
+      ],
       "meta": {
         "version": 2
       },
@@ -153,7 +194,7 @@
           "td_onpthpad": true,
           "td_onroundshapesonly": false,
           "td_onsmdpad": true,
-          "td_ontrackend": false,
+          "td_ontrackend": true,
           "td_onvia": true
         }
       ],
@@ -520,7 +561,7 @@
       "idf": "",
       "netlist": "",
       "plot": "_gerber",
-      "pos_files": "",
+      "pos_files": "_production/",
       "specctra_dsn": "",
       "step": "",
       "svg": "",
@@ -596,7 +637,13 @@
         {
           "group_by": false,
           "label": "LCSC Part #",
-          "name": "JLC PN",
+          "name": "LCSC Part #",
+          "show": true
+        },
+        {
+          "group_by": false,
+          "label": "Sim.Enable",
+          "name": "Sim.Enable",
           "show": true
         }
       ],
@@ -604,7 +651,7 @@
       "group_symbols": true,
       "include_excluded_from_bom": false,
       "name": "",
-      "sort_asc": false,
+      "sort_asc": true,
       "sort_field": "Reference"
     },
     "connection_grid_size": 50.0,
@@ -645,7 +692,7 @@
       "workbook_filename": ""
     },
     "page_layout_descr_file": "C:\\Users\\Simon\\Documents\\kicad\\8.0\\template\\RavensparkA4_00.kicad_wks",
-    "plot_directory": "_print/",
+    "plot_directory": "_print/R02/",
     "space_save_all_events": true,
     "spice_adjust_passive_values": false,
     "spice_current_sheet_as_root": false,

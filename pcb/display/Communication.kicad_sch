@@ -6,8 +6,8 @@
 	(paper "A4")
 	(title_block
 		(title "Communication")
-		(date "2025-04-11")
-		(rev "01")
+		(date "2026-03-01")
+		(rev "02")
 		(company "Ravenspark")
 		(comment 1 "0-Series")
 	)
@@ -1455,7 +1455,7 @@
 	)
 	(wire
 		(pts
-			(xy 38.1 110.49) (xy 115.57 110.49)
+			(xy 38.1 110.49) (xy 116.84 110.49)
 		)
 		(stroke
 			(width 0)
@@ -1475,7 +1475,7 @@
 	)
 	(wire
 		(pts
-			(xy 127 147.32) (xy 118.745 147.32)
+			(xy 127 147.32) (xy 119.38 147.32)
 		)
 		(stroke
 			(width 0)
@@ -1505,7 +1505,7 @@
 	)
 	(wire
 		(pts
-			(xy 38.1 115.57) (xy 109.22 115.57)
+			(xy 38.1 115.57) (xy 111.76 115.57)
 		)
 		(stroke
 			(width 0)
@@ -1555,7 +1555,7 @@
 	)
 	(wire
 		(pts
-			(xy 109.22 154.94) (xy 127 154.94)
+			(xy 111.76 154.94) (xy 127 154.94)
 		)
 		(stroke
 			(width 0)
@@ -1585,7 +1585,7 @@
 	)
 	(wire
 		(pts
-			(xy 38.1 118.11) (xy 106.68 118.11)
+			(xy 38.1 118.11) (xy 109.22 118.11)
 		)
 		(stroke
 			(width 0)
@@ -1615,7 +1615,7 @@
 	)
 	(wire
 		(pts
-			(xy 115.57 110.49) (xy 115.57 149.86)
+			(xy 116.84 110.49) (xy 116.84 149.86)
 		)
 		(stroke
 			(width 0)
@@ -1625,7 +1625,7 @@
 	)
 	(wire
 		(pts
-			(xy 139.7 66.04) (xy 139.7 67.945)
+			(xy 139.7 66.04) (xy 139.7 67.31)
 		)
 		(stroke
 			(width 0)
@@ -1635,7 +1635,7 @@
 	)
 	(wire
 		(pts
-			(xy 38.1 107.95) (xy 118.745 107.95)
+			(xy 38.1 107.95) (xy 119.38 107.95)
 		)
 		(stroke
 			(width 0)
@@ -1715,7 +1715,7 @@
 	)
 	(wire
 		(pts
-			(xy 112.395 152.4) (xy 112.395 113.03)
+			(xy 114.3 152.4) (xy 114.3 113.03)
 		)
 		(stroke
 			(width 0)
@@ -1785,7 +1785,7 @@
 	)
 	(wire
 		(pts
-			(xy 139.7 33.02) (xy 139.7 35.56)
+			(xy 139.7 34.29) (xy 139.7 35.56)
 		)
 		(stroke
 			(width 0)
@@ -1795,7 +1795,7 @@
 	)
 	(wire
 		(pts
-			(xy 109.22 115.57) (xy 109.22 154.94)
+			(xy 111.76 115.57) (xy 111.76 154.94)
 		)
 		(stroke
 			(width 0)
@@ -1845,7 +1845,7 @@
 	)
 	(wire
 		(pts
-			(xy 106.68 118.11) (xy 106.68 160.02)
+			(xy 109.22 118.11) (xy 109.22 160.02)
 		)
 		(stroke
 			(width 0)
@@ -1855,7 +1855,7 @@
 	)
 	(wire
 		(pts
-			(xy 106.68 160.02) (xy 127 160.02)
+			(xy 109.22 160.02) (xy 127 160.02)
 		)
 		(stroke
 			(width 0)
@@ -1885,7 +1885,7 @@
 	)
 	(wire
 		(pts
-			(xy 118.745 147.32) (xy 118.745 107.95)
+			(xy 119.38 147.32) (xy 119.38 107.95)
 		)
 		(stroke
 			(width 0)
@@ -1925,7 +1925,7 @@
 	)
 	(wire
 		(pts
-			(xy 115.57 149.86) (xy 127 149.86)
+			(xy 116.84 149.86) (xy 127 149.86)
 		)
 		(stroke
 			(width 0)
@@ -1935,7 +1935,7 @@
 	)
 	(wire
 		(pts
-			(xy 38.1 113.03) (xy 112.395 113.03)
+			(xy 38.1 113.03) (xy 114.3 113.03)
 		)
 		(stroke
 			(width 0)
@@ -1965,7 +1965,7 @@
 	)
 	(wire
 		(pts
-			(xy 127 152.4) (xy 112.395 152.4)
+			(xy 127 152.4) (xy 114.3 152.4)
 		)
 		(stroke
 			(width 0)
@@ -2158,6 +2158,71 @@
 		(uuid "feca5571-f136-4484-9e75-5ecf9018a93e")
 	)
 	(symbol
+		(lib_id "power:+3.3V")
+		(at 139.7 111.76 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "1be18a6f-65e8-4ad0-8f59-fedf7a033c4f")
+		(property "Reference" "#PWR013"
+			(at 139.7 115.57 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3.3V"
+			(at 139.7 107.95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 139.7 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 139.7 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
+			(at 139.7 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "426c0b14-0cbf-4110-83b0-a9b044e27557")
+		)
+		(instances
+			(project "Display"
+				(path "/909ae33d-387b-4690-b0aa-ba1ded8f44db/ee721d6c-d25d-4a91-b5ee-73389ef685fa"
+					(reference "#PWR013")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:R")
 		(at 162.56 45.72 270)
 		(unit 1)
@@ -2279,7 +2344,7 @@
 				(hide yes)
 			)
 		)
-		(property "JLC PN" "C307331"
+		(property "LCSC Part #" "C307331"
 			(at 125.73 34.29 0)
 			(effects
 				(font
@@ -2369,6 +2434,84 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:C")
+		(at 139.7 115.57 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "47f4a009-6987-4540-a6a6-c1376e326aaf")
+		(property "Reference" "C5"
+			(at 140.97 113.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1u"
+			(at 140.97 118.11 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 140.6652 119.38 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 139.7 115.57 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor"
+			(at 139.7 115.57 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part #" "C52923"
+			(at 139.7 115.57 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "bf322c0a-e4fd-4833-b28e-33e3661cac94")
+		)
+		(pin "1"
+			(uuid "b8f29b77-16d4-4b90-bee6-f860e2e05b51")
+		)
+		(instances
+			(project "Display"
+				(path "/909ae33d-387b-4690-b0aa-ba1ded8f44db/ee721d6c-d25d-4a91-b5ee-73389ef685fa"
+					(reference "C5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Ravenspark:E220-400M22S")
 		(at 139.7 154.94 0)
 		(unit 1)
@@ -2422,7 +2565,7 @@
 				(hide yes)
 			)
 		)
-		(property "JLC PN" "C2971737"
+		(property "LCSC Part #" "C2971737"
 			(at 139.7 154.94 0)
 			(effects
 				(font
@@ -2704,6 +2847,71 @@
 		)
 	)
 	(symbol
+		(lib_id "power:GND")
+		(at 139.7 119.38 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "83f72c7f-a6b1-4158-8bcb-820ad7d527cc")
+		(property "Reference" "#PWR014"
+			(at 139.7 125.73 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 139.7 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 139.7 119.38 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 139.7 119.38 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 139.7 119.38 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "d8dd180a-a1b0-43da-a02e-d087c12166e0")
+		)
+		(instances
+			(project "Display"
+				(path "/909ae33d-387b-4690-b0aa-ba1ded8f44db/ee721d6c-d25d-4a91-b5ee-73389ef685fa"
+					(reference "#PWR014")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:R")
 		(at 68.58 50.8 90)
 		(unit 1)
@@ -2826,7 +3034,7 @@
 				(hide yes)
 			)
 		)
-		(property "JLC PN" "C8963"
+		(property "LCSC Part #" "C8963"
 			(at 139.7 50.8 0)
 			(effects
 				(font
@@ -2870,7 +3078,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 139.7 67.945 0)
+		(at 139.7 67.31 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2878,7 +3086,7 @@
 		(dnp no)
 		(uuid "e4ddd040-97d5-4740-badc-0cebba6b7986")
 		(property "Reference" "#PWR0304"
-			(at 139.7 74.295 0)
+			(at 139.7 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2887,7 +3095,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 139.7 71.755 0)
+			(at 139.7 71.12 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2895,7 +3103,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 139.7 67.945 0)
+			(at 139.7 67.31 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2904,7 +3112,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 139.7 67.945 0)
+			(at 139.7 67.31 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2913,7 +3121,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 139.7 67.945 0)
+			(at 139.7 67.31 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3000,7 +3208,7 @@
 	)
 	(symbol
 		(lib_id "power:+3.3V")
-		(at 139.7 33.02 0)
+		(at 139.7 34.29 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3008,7 +3216,7 @@
 		(dnp no)
 		(uuid "f1b8e6ec-5e8a-4185-bf6a-ef9143e52bbc")
 		(property "Reference" "#PWR0302"
-			(at 139.7 36.83 0)
+			(at 139.7 38.1 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3017,7 +3225,7 @@
 			)
 		)
 		(property "Value" "+3.3V"
-			(at 139.7 29.21 0)
+			(at 139.7 30.48 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3025,7 +3233,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 139.7 33.02 0)
+			(at 139.7 34.29 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3034,7 +3242,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 139.7 33.02 0)
+			(at 139.7 34.29 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3043,7 +3251,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 139.7 33.02 0)
+			(at 139.7 34.29 0)
 			(effects
 				(font
 					(size 1.27 1.27)
