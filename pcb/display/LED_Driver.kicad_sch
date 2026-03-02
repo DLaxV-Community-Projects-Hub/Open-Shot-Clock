@@ -3435,7 +3435,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET"
+		(property "Footprint" "RVNSPRK_Packages:VSON-8_3.3x3.3mm_P0.65mm_Custom"
 			(at 269.24 133.35 0)
 			(effects
 				(font
@@ -4863,7 +4863,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET"
+		(property "Footprint" "RVNSPRK_Packages:VSON-8_3.3x3.3mm_P0.65mm_Custom"
 			(at 231.14 133.35 0)
 			(effects
 				(font

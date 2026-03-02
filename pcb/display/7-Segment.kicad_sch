@@ -2463,7 +2463,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET"
+		(property "Footprint" "RVNSPRK_Packages:VSON-8_3.3x3.3mm_P0.65mm_Custom"
 			(at 142.24 54.61 0)
 			(effects
 				(font
@@ -2554,7 +2554,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET"
+		(property "Footprint" "RVNSPRK_Packages:VSON-8_3.3x3.3mm_P0.65mm_Custom"
 			(at 167.64 54.61 0)
 			(effects
 				(font
@@ -2645,7 +2645,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET"
+		(property "Footprint" "RVNSPRK_Packages:VSON-8_3.3x3.3mm_P0.65mm_Custom"
 			(at 243.84 54.61 0)
 			(effects
 				(font
@@ -3192,7 +3192,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET"
+		(property "Footprint" "RVNSPRK_Packages:VSON-8_3.3x3.3mm_P0.65mm_Custom"
 			(at 218.44 54.61 0)
 			(effects
 				(font
@@ -3366,7 +3366,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET"
+		(property "Footprint" "RVNSPRK_Packages:VSON-8_3.3x3.3mm_P0.65mm_Custom"
 			(at 269.24 54.61 0)
 			(effects
 				(font
@@ -3680,7 +3680,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET"
+		(property "Footprint" "RVNSPRK_Packages:VSON-8_3.3x3.3mm_P0.65mm_Custom"
 			(at 193.04 54.61 0)
 			(effects
 				(font
@@ -4463,7 +4463,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET"
+		(property "Footprint" "RVNSPRK_Packages:VSON-8_3.3x3.3mm_P0.65mm_Custom"
 			(at 116.84 54.61 0)
 			(effects
 				(font
