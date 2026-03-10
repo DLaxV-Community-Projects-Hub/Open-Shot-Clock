@@ -10271,7 +10271,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "150u"
+		(property "Value" "220u"
 			(at 271.78 55.88 0)
 			(effects
 				(font
@@ -10307,7 +10307,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC Part #" "C5373402"
+		(property "LCSC Part #" "C5246542"
 			(at 271.78 53.34 0)
 			(effects
 				(font
@@ -11766,7 +11766,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "150u"
+		(property "Value" "220u"
 			(at 279.4 55.88 0)
 			(effects
 				(font
@@ -11802,7 +11802,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC Part #" "C5373402"
+		(property "LCSC Part #" "C5246542"
 			(at 279.4 53.34 0)
 			(effects
 				(font
@@ -12191,7 +12191,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "150u"
+		(property "Value" "220u"
 			(at 135.89 58.42 0)
 			(effects
 				(font
@@ -12227,7 +12227,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC Part #" "C5373402"
+		(property "LCSC Part #" "C5246542"
 			(at 134.62 55.88 0)
 			(effects
 				(font

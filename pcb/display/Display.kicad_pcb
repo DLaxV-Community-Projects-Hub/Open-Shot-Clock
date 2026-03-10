@@ -4471,6 +4471,19 @@
 				)
 			)
 		)
+		(property "LCSC Part #" "C6332201"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "b7ef1705-1f52-470c-ae63-8100f88cfe79")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
 		(property ki_fp_filters "Connector*:*_1x??_*")
 		(path "/41304c15-70aa-4081-b71c-384f57a9e2eb")
 		(sheetname "/")
@@ -5234,7 +5247,7 @@
 				)
 			)
 		)
-		(property "Value" "150u"
+		(property "Value" "220u"
 			(at 0 5.2 0)
 			(layer "F.Fab")
 			(uuid "3cdf368c-9d33-4364-be54-1cc36c36e613")
@@ -5284,7 +5297,7 @@
 				)
 			)
 		)
-		(property "LCSC Part #" "C5373402"
+		(property "LCSC Part #" "C5246542"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -14901,7 +14914,7 @@
 				)
 			)
 		)
-		(property "Value" "150u"
+		(property "Value" "220u"
 			(at 0 5.2 0)
 			(layer "F.Fab")
 			(uuid "968bd4ed-95d4-4b97-9858-837c7e5d8c0b")
@@ -14951,7 +14964,7 @@
 				)
 			)
 		)
-		(property "LCSC Part #" "C5373402"
+		(property "LCSC Part #" "C5246542"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -21198,7 +21211,7 @@
 				)
 			)
 		)
-		(property "LCSC Part #" "C307331"
+		(property "LCSC Part #" "C76948"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -34035,7 +34048,7 @@
 		(path "/5e757aa7-dd68-4c5d-b6c3-c147edf52bef")
 		(sheetname "/")
 		(sheetfile "Display.kicad_sch")
-		(attr exclude_from_pos_files allow_missing_courtyard)
+		(attr exclude_from_pos_files exclude_from_bom allow_missing_courtyard)
 		(fp_poly
 			(pts
 				(xy 2.6526 1.958752) (xy 2.669948 1.966334) (xy 2.711356 1.999128) (xy 2.746765 2.046547) (xy 2.768664 2.097151)
@@ -51524,7 +51537,7 @@
 				)
 			)
 		)
-		(property "LCSC Part #" "C307331"
+		(property "LCSC Part #" "C76948"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -55106,7 +55119,7 @@
 				)
 			)
 		)
-		(property "Value" "150u"
+		(property "Value" "220u"
 			(at 0 5.2 0)
 			(layer "F.Fab")
 			(uuid "1a2f1cd0-0fa6-4bba-9d40-41e6dab6e4a5")
@@ -55156,7 +55169,7 @@
 				)
 			)
 		)
-		(property "LCSC Part #" "C5373402"
+		(property "LCSC Part #" "C5246542"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -60797,7 +60810,7 @@
 		(path "/a66e7909-08a9-4ec3-b787-8f20641f4ed9")
 		(sheetname "/")
 		(sheetfile "Display.kicad_sch")
-		(attr exclude_from_pos_files allow_missing_courtyard)
+		(attr exclude_from_pos_files exclude_from_bom allow_missing_courtyard)
 		(fp_poly
 			(pts
 				(xy 4.188614 -2.275877) (xy 4.212327 -2.290647) (xy 4.238978 -2.312227) (xy 4.238978 -2.633773)

@@ -11870,7 +11870,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC Part #" "C307331"
+		(property "LCSC Part #" "C76948"
 			(at 20.32 139.7 0)
 			(effects
 				(font
@@ -12392,6 +12392,15 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x08, script generated"
+			(at 273.05 124.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part #" "C6332201"
 			(at 273.05 124.46 0)
 			(effects
 				(font
@@ -13069,7 +13078,7 @@
 		(lib_id "Graphic:Logo_Open_Hardware_Small")
 		(at 21.59 190.5 0)
 		(unit 1)
-		(exclude_from_sim yes)
+		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
@@ -14893,7 +14902,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC Part #" "C307331"
+		(property "LCSC Part #" "C76948"
 			(at 30.48 139.7 0)
 			(effects
 				(font
@@ -15130,7 +15139,7 @@
 		(lib_id "Graphic:Logo_Open_Hardware_Small")
 		(at 35.56 190.5 0)
 		(unit 1)
-		(exclude_from_sim yes)
+		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
