@@ -113,6 +113,7 @@ const char* password = "12345678";
     #define RXD2        RX
     #define TXD2        TX
     #define UART_TXEN   46
+    #define UART_RXEN   45
 
     #define DIO0        18
     #define LoRa_RST    37

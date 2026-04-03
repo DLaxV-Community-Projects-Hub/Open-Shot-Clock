@@ -438,6 +438,10 @@ void initPins() {
   #ifdef OSC_DISPLAY_R2
     pinMode(PWM_OE, OUTPUT);
     digitalWrite(PWM_OE, LOW); // Enable PWM output
+    pinMode(UART_TXEN, OUTPUT);
+    digitalWrite(UART_TXEN, LOW);
+    pinMode(UART_RXEN, OUTPUT);
+    digitalWrite(UART_RXEN, LOW);
   #endif
 }
 
