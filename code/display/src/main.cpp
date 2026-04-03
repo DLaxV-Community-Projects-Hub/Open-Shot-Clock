@@ -32,21 +32,28 @@ AsyncWebServer server(80);
 
 #if defined(WIFI_LoRa_32_V2)
   // Use the SX1276 Radio
-  SX1276 radio = new Module(SS, DIO0, RST_LoRa, DIO0);
+  SX1276 radio = new Module(SS, DIO0, LoRa_RST, DIO0);
   Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 #endif
 
 #if defined(WIFI_LoRa_32_V3)
   // Use the SX1262 Radio
-  SX1262 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
+  SX1262 radio = new Module(SS, DIO0, LoRa_RST, LoRa_BUSY);
   // Create a new TwoWire Object, because OLED uses the other one, that is not usable through pins
   TwoWire I2C = TwoWire(1);
   // Create PWM object using the new Wire object (i2c)
   Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, I2C);
 #endif
 
-#if defined(OSC_DISPLAY_R0) | defined(OSC_DISPLAY_R1) | defined(OSC_DISPLAY_R2)
-  LLCC68 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
+#if defined(OSC_DISPLAY_R0) | defined(OSC_DISPLAY_R1)
+  LLCC68 radio = new Module(SS, DIO0, LoRa_RST, LoRa_BUSY);
+  Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, Wire);
+  #endif
+  
+#if defined(OSC_DISPLAY_R2)
+  SPIClass spi(HSPI);
+  SPISettings spiSettings(2000000, MSBFIRST, SPI_MODE0);
+  LLCC68 radio = new Module(LoRa_NSS, DIO0, LoRa_RST, LoRa_BUSY, spi, spiSettings);
   Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, Wire);
 #endif
 
@@ -369,12 +376,19 @@ void initChannelFromEEPROM(){
 void setupRadio() {
   // initialize SX12xx with default settings
   Serial.print(F("[SX12xx] Initializing ... "));
-  int state = radio.begin();
+  #if defined(OSC_DISPLAY_R2)
+    spi.begin(LoRa_CLK, LoRa_MISO, LoRa_MOSI, LoRa_NSS);
+    int state = radio.begin();//434.0, 125.0, 9, 7, RADIOLIB_SX126X_SYNC_WORD_PRIVATE, 10, 8, 0, false);
+  #else
+    int state = radio.begin();
+  #endif
   if (state == RADIOLIB_ERR_NONE) {
     Serial.println(F("success!"));
+    ESP_LOGI("Radio","Setup successful");
   } else {
     Serial.print(F("failed, code "));
     Serial.println(state);
+    ESP_LOGE("Radio","Setup failed with code %d", state);
   }
 
   radio.setSyncWord(syncword);
@@ -389,9 +403,11 @@ void setupRadio() {
   state = radio.startReceive();
   if (state == RADIOLIB_ERR_NONE) {
     Serial.println(F("success!"));
+    ESP_LOGI("Radio","Started receiving successfully");
   } else {
     Serial.print(F("failed, code "));
     Serial.println(state);
+    ESP_LOGE("Radio","Failed to start receiving with code %d", state);
   }
 }
 
@@ -418,7 +434,15 @@ void initDisplay() {
   display.display();
 }
 
+void initPins() {
+  #ifdef OSC_DISPLAY_R2
+    pinMode(PWM_OE, OUTPUT);
+    digitalWrite(PWM_OE, LOW); // Enable PWM output
+  #endif
+}
+
 void setup() {
+  initPins();
   initChannelFromEEPROM();
 
   //RS-485
@@ -481,6 +505,7 @@ void loop() {
     // clear the string:
     packet = "";
     stringComplete = false;
+    ESP_LOGI("Main","Received RS485 message: %s", packet.c_str());
   }
 
 

@@ -62,8 +62,8 @@ const char* password = "12345678";
     #define UART_TXEN   46
 
     #define DIO0        18
-    #define RST_LoRa    7 
-    #define BUSY_LoRa   17
+    #define LoRa_RST    7 
+    #define LoRa_BUSY   17
     #define LED         38
     #define LED_ERR     48
     #define FAN_PWM     3
@@ -87,8 +87,8 @@ const char* password = "12345678";
     #define UART_TXEN   46
 
     #define DIO0        18
-    #define RST_LoRa    7 
-    #define BUSY_LoRa   17
+    #define LoRa_RST    7 
+    #define LoRa_BUSY   17
     #define LED         38
     #define LED_ERR     48
     #define FAN_PWM     3
@@ -115,12 +115,16 @@ const char* password = "12345678";
     #define UART_TXEN   46
 
     #define DIO0        18
-    #define RST_LoRa    37
-    #define BUSY_LoRa   48
+    #define LoRa_RST    37
+    #define LoRa_BUSY   48
+    #define LoRa_NSS    36
+    #define LoRa_CLK    34
+    #define LoRa_MISO   33
+    #define LoRa_MOSI   35
     #define LED         38
     #define LED_ERR     39
     #define FAN_PWM     3       // FAN_PWM is not actually used in R2, but we need to define it for the code to compile
-    #define PWM_OE      36
+    #define PWM_OE      26
     #define GPIO_X      4
     #define GPIO_Y      5
     #define GPIO_Z      6
