@@ -45,7 +45,7 @@ AsyncWebServer server(80);
   Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, I2C);
 #endif
 
-#if defined(OSC_DISPLAY_R0) | defined(OSC_DISPLAY_R1)
+#if defined(OSC_DISPLAY_R0) | defined(OSC_DISPLAY_R1) | defined(OSC_DISPLAY_R2)
   LLCC68 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
   Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, Wire);
 #endif

@@ -80,7 +80,7 @@ const char* password = "12345678";
     #define HORN_CH     15
 #endif
 
-//Open Shot Clock Display R0
+//Open Shot Clock Display R1
 #if defined(OSC_DISPLAY_R1)
     #define RXD2        RX
     #define TXD2        TX
@@ -106,4 +106,32 @@ const char* password = "12345678";
     #define PWR_GOOD    37
 
     #define HORN_CH     15
+#endif
+
+//Open Shot Clock Display R2
+#if defined(OSC_DISPLAY_R2)
+    #define RXD2        RX
+    #define TXD2        TX
+    #define UART_TXEN   46
+
+    #define DIO0        18
+    #define RST_LoRa    37
+    #define BUSY_LoRa   48
+    #define LED         38
+    #define LED_ERR     39
+    #define FAN_PWM     3       // FAN_PWM is not actually used in R2, but we need to define it for the code to compile
+    #define PWM_OE      36
+    #define GPIO_X      4
+    #define GPIO_Y      5
+    #define GPIO_Z      6
+    #define BTN1        11
+    #define BTN2        10
+
+    #define I_SENSE     1
+    #define V_SENSE     2
+
+    #define LED_STATUS  40
+    #define PWR_GOOD    41
+
+    #define HORN_CH     15      // HORN_CH is not actually used in R2, but we need to define it for the code to compile
 #endif
