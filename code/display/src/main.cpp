@@ -480,8 +480,8 @@ void loop() {
 
   if (RS485mode == false){
     if (receivedFlag) { 
-      readLoraMessage();
       receivedFlag = false;
+      readLoraMessage();
     }
   }
   //RS-485 Test
