@@ -108,7 +108,6 @@ MatchState matchState;
 // Function Prototypes
 void drawLoraInfo();
 void drawRS485Info();
-bool timeIsUp();
 void setupRadio();
 
 unsigned long ota_progress_millis = 0;
@@ -145,10 +144,6 @@ void initOTA()
   ElegantOTA.onEnd(onOTAEnd);
   server.begin();
   Serial.println("HTTP server started");
-}
-
-bool timeIsUp() {
-  return currentTime == 0 && previousTime != 0;
 }
 
 // flag to indicate that a packet was received
@@ -198,8 +193,9 @@ bool isMessageValid(String msg) {
   // 1: channel
 
   // Msg Format 2:
-  // H1
+  // H51
   // H: Command [H,B]
+  // 5: 1 number - honk volume
   // 1: channel
 
   // prepare matchstate
@@ -215,8 +211,8 @@ bool isMessageValid(String msg) {
   }
 
   // check if message matches valid patterns
-  if ( msgLength == 2 ) {
-    return matchState.Match("[HB][1-4]") == REGEXP_MATCHED;
+  if ( msgLength == 3 ) {
+    return matchState.Match("[HB][0-5][1-4]") == REGEXP_MATCHED;
   } else if ( msgLength == 5 ) {
     return matchState.Match("T[0-9][0-9][1-8][1-4]") == REGEXP_MATCHED;
   }
@@ -249,7 +245,9 @@ void handlePacket(){
     //Heltec.display->drawString(95, 52, rssi);
     Heltec.display->display();
   } else if (packet.startsWith(honkCommand)){
-    horn.requestHonk();
+    String honkVolumeLevelString = packet.substring(1,2);
+    uint8_t honkVolumeLevel = honkVolumeLevelString.toInt();
+    horn.requestHonk(honkVolumeLevel);
   }
 }
 
@@ -509,10 +507,6 @@ void loop() {
   else{
     client_check();
     }
-
-  if (timeIsUp()) {
-    horn.requestHonk();
-  }
 
   horn.handle();
   leds.handle();

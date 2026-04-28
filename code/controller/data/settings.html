@@ -11,63 +11,115 @@
 
 <style>
     html {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
     text-align: center;
-    background-color: black;
+    background-color: #111;
+    color: #fff;
   }
 
-h1 {
-    font-size: 2,5rem;
-    color: rgb(255, 255, 255);
-    background-color: #000000;
-  }
-h2 {
-    font-size: 1,5rem;
-    color: rgb(255, 255, 255);
-    background-color: #000000;
+  body {
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
   }
 
-  @media (max-aspect-ratio: 1/1) {
-    .number {  
-      font-size: 80vw;
-    }
+  h1 {
+    font-size: 1.8rem;
+    font-weight: 300;
+    color: #fff;
+    margin: 2rem 0;
+    letter-spacing: 0.05em;
   }
-  
-  @media (min-aspect-ratio: 1/1) {
-    .number {  
-      font-size: 110vh;
-    }
+
+  h2 {
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 2.5rem 0 1rem;
   }
 
   .content {
-    padding: 30px;
-    max-width: 600px;
+    padding: 0;
+    max-width: 400px;
     margin: 0 auto;
-    background-color: black;
     display: flex;
-  	flex-direction: column;
-	  align-items: center;
-  	user-select: none;
-  	-webkit-touch-callout: none;
-  	-webkit-user-select: none;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
   }
 
-  .brightness-select {
-	height: 66px;
-    width: 190px;
-    font-size: 36px;
-    padding-top: 22px;
+  select.select-field {
+    height: 44px;
+    font-size: 16px;
+    padding: 0 14px;
+    margin-bottom: 8px;
+  }
+
+  select.select-field option {
+    padding: 8px;
+    font-size: 16px;
+  }
+
+  .select-field {
+    width: 100%;
+    height: 56px;
+    font-size: 18px;
     text-align: center;
-	text-decoration: none;
+    text-decoration: none;
     outline: none;
-    color: rgba(255, 165, 0, 1);
-    background-color: rgba(255, 165, 0, 0.2);
-	border: 3px solid black;
-	border-radius: 44px;
-	box-shadow: 0px 0px 0px 5px rgba(255, 165, 0, 0.2);
-	margin-bottom: 16px;
+    color: #fff;
+    background-color: #222;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 0 20px;
+    margin-bottom: 12px;
     display: block;
-  } 
+    appearance: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .select-field:focus {
+    border-color: #444;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+  }
+
+  .select-field:active {
+    background-color: #2a2a2a;
+  }
+
+  .select-field option {
+    background-color: #222;
+    color: #fff;
+    padding: 12px;
+    font-size: 18px;
+  }
+
+  @media (max-width: 480px) {
+    body {
+      padding: 20px;
+    }
+
+    .content {
+      max-width: 100%;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin: 1.8rem 0;
+    }
+
+    h2 {
+      font-size: 1.1rem;
+      margin: 2.5rem 0 1rem;
+    }
+  }
 
 </style>
 
@@ -79,7 +131,7 @@ h2 {
     <h2>Brighness Selection</h2>
   </div>
   <div class="content">
-	 <select onchange="onBrightnessSelect(value)" name="brightness" id="brightness" class="brightness-select">
+	 <select onchange="onBrightnessSelect(value)" name="brightness" id="brightness" class="select-field">
         <option %SELECTED_BRIGHTNESS_LEVEL1% value="1">level 1</option>
         <option %SELECTED_BRIGHTNESS_LEVEL2% value="2">level 2</option>
         <option %SELECTED_BRIGHTNESS_LEVEL3% value="3">level 3</option>
@@ -93,7 +145,46 @@ h2 {
   <div>
     <h2>Channel Selection</h2>
   </div>
-  
+  <div class="content">
+    <select onchange="onChannelSelect(value)" name="channel" id="channel" class="select-field">
+      <option %SELECTED_CHANNEL1% value="1">Channel 1</option>
+      <option %SELECTED_CHANNEL2% value="2">Channel 2</option>
+      <option %SELECTED_CHANNEL3% value="3">Channel 3</option>
+      <option %SELECTED_CHANNEL4% value="4">Channel 4</option>
+    </select>
+  </div>
+
+  <div>
+    <h2>Honk Volume</h2>
+  </div>
+  <div class="content">
+    <select onchange="onHonkVolumeSelect(value)" name="honkVolume" id="honkVolume" class="select-field">
+      <option %SELECTED_HONK_VOLUME_LEVEL0% value="0">Off</option>
+      <option %SELECTED_HONK_VOLUME_LEVEL1% value="1">Whisper</option>
+      <option %SELECTED_HONK_VOLUME_LEVEL2% value="2">Low</option>
+      <option %SELECTED_HONK_VOLUME_LEVEL3% value="3">Medium</option>
+      <option %SELECTED_HONK_VOLUME_LEVEL4% value="4">High</option>
+      <option %SELECTED_HONK_VOLUME_LEVEL5% value="5">Max</option>
+    </select>
+  </div>
+
+  <div>
+    <h2>Start Time</h2>
+  <div class="content"></div>
+    <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 8px;">
+      <button onclick="setStartTime(30)" class="select-field" style="width: 85px; height: 44px; font-size: 16px;">30s</button>
+      <button onclick="setStartTime(80)" class="select-field" style="width: 85px; height: 44px; font-size: 16px;">80s</button>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+      <button onclick="adjustTime(-10)" class="select-field" style="width: 50px; height: 36px; font-size: 16px; padding: 0;">-10</button>
+      <button onclick="adjustTime(-1)" class="select-field" style="width: 40px; height: 36px; font-size: 16px; padding: 0;">-1</button>
+      <input type="number" id="startTimeInput" min="1" max="99" class="select-field" 
+        value="%CURRENT_START_TIME%" onchange="setStartTime(this.value)"
+        style="width: 60px; height: 36px; font-size: 16px; text-align: center; padding: 0;">
+      <button onclick="adjustTime(1)" class="select-field" style="width: 40px; height: 36px; font-size: 16px; padding: 0;">+1</button>
+      <button onclick="adjustTime(10)" class="select-field" style="width: 50px; height: 36px; font-size: 16px; padding: 0;">+10</button>
+    </div>
+  </div>
  
 </body> 
 <script>
@@ -106,7 +197,34 @@ h2 {
   const onBrightnessSelect = value =>{ 
     request = `/brightness?b=${value}`  
     sendGetRequest(request)   
-    }  
+  }  
 
+  const onHonkVolumeSelect = value =>{ 
+    request = `/honkvolume?v=${value}`  
+    sendGetRequest(request)   
+  }  
+
+  const onChannelSelect = value =>{ 
+    request = `/channel?c=${value}`  
+    sendGetRequest(request)   
+  }  
+
+  const setStartTime = value => {
+    const numValue = parseInt(value)
+    if (numValue >= 1 && numValue <= 99) {
+      request = `/starttime?t=${numValue}`
+      sendGetRequest(request)
+      document.getElementById('startTimeInput').value = numValue
+    }
+  }
+
+  const adjustTime = delta => {
+    const input = document.getElementById('startTimeInput')
+    const currentValue = parseInt(input.value)
+    const newValue = Math.min(Math.max(currentValue + delta, 1), 99)
+    if (newValue !== currentValue) {
+      setStartTime(newValue)
+    }
+  }
 </script>
 </html>

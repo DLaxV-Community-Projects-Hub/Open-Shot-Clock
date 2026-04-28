@@ -50,6 +50,9 @@ float frequency = frequencySelect[defaultChannel];
 String resetString = "restarting...reset your wifi connection";
 String timeCommand = "T";
 const char* preferenceName = "shot-clock";
+const char* startTimePreferenceName = "start-time";
+const char* honkVolumePreferenceName = "honk-volume";
+const char* channelPreferenceName = "channel";
 
 bool isClockRunning = false; // count on/off, starts off
 int defaultClockStart = 30;
@@ -57,6 +60,7 @@ int clockStartTime = defaultClockStart;
 int timeToDisplay = clockStartTime; // Start Zahl
 String clockStr = "30";
 int brightnessLevel = 8;
+int honkVolumeLevel = 5; // 0 = off, 1 = whisper, 2 = low, 3 = medium, 4 = high, 5 = max
 
 unsigned long timeNow;              // current time from millis()
 unsigned long timeOfLastPauseEvent;      // last time Button Pause
@@ -115,7 +119,7 @@ Preferences preferences;
 //===============================================================
 void sendToClock(String);
 void playPause(void);
-
+void startHonking(void);
 
 
 //===============================================================
@@ -193,6 +197,9 @@ void count()
 
       String clockMsg = getTimeSendMsg(timeCommand, timeToDisplay);
       sendToClock(clockMsg);
+      if (timeToDisplay == 0) {
+        startHonking();
+      }
 
       notifyClients(String(timeToDisplay));
       ws.cleanupClients();
@@ -221,9 +228,9 @@ void stopCount()
 
 void resetClock(bool runClock, int resetTime=defaultClockStart)
 {
-  if (resetTime < 0)
+  if (resetTime < 1)
   {
-    resetTime = 0;
+    resetTime = 1;
   } else if (resetTime > 99)
   {
     resetTime = 99;
@@ -247,7 +254,7 @@ void sendStartTime(int T)
 
 void startHonking()
 {
-  String commandH = "H";
+  String commandH = "H" + String(honkVolumeLevel);
   sendToClock(commandH);
 }
 
@@ -266,7 +273,7 @@ void toggleResetTime()
       clockStartTime = 30;
     }
     preferences.begin(preferenceName, false);
-    preferences.putInt("start-time", clockStartTime);
+    preferences.putInt(startTimePreferenceName, clockStartTime);
     preferences.end();
     sendStartTime(clockStartTime);
     resetClock(false, clockStartTime);
@@ -284,7 +291,7 @@ void setNewStartTime(int startTime)
   {
     clockStartTime = 99;
   }
-  resetClock(false);
+  resetClock(false, clockStartTime);
   sendStartTime(clockStartTime);
 }
 
@@ -394,7 +401,63 @@ String versionProcessor(const String& var){
 
 String settingsProcessor(const String &var)
 {
-  if (var == "SELECTED_BRIGHTNESS_LEVEL1" && brightnessLevel == 1)
+  if (var == "CURRENT_START_TIME")
+  {
+    return String(clockStartTime);
+  }
+  else if (var == "SELECTED_START_TIME30" && clockStartTime == 30)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_START_TIME80" && clockStartTime == 80)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_START_TIME_CUSTOM" && clockStartTime != 30 && clockStartTime != 80)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_CHANNEL1" && channel == 1)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_CHANNEL2" && channel == 2)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_CHANNEL3" && channel == 3)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_CHANNEL4" && channel == 4)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_HONK_VOLUME_LEVEL0" && honkVolumeLevel == 0)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_HONK_VOLUME_LEVEL1" && honkVolumeLevel == 1)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_HONK_VOLUME_LEVEL2" && honkVolumeLevel == 2)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_HONK_VOLUME_LEVEL3" && honkVolumeLevel == 3)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_HONK_VOLUME_LEVEL4" && honkVolumeLevel == 4)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_HONK_VOLUME_LEVEL5" && honkVolumeLevel == 5)
+  {
+    return "selected";
+  }
+  else if (var == "SELECTED_BRIGHTNESS_LEVEL1" && brightnessLevel == 1)
   {
     return "selected";
   }
@@ -433,8 +496,8 @@ void setChannel(int ch)
 {
   channel = ch;
   preferences.begin(preferenceName, false);
-  preferences.putInt("channel", channel);
-  Serial.println("Channel " + channel);
+  preferences.putInt(channelPreferenceName, channel);
+  Serial.println("Channel " + String(channel));
   preferences.end();
   delay(1000);
   ESP.restart();
@@ -443,16 +506,32 @@ void setChannel(int ch)
 void loadChannelFromEEPROM()
 {
   preferences.begin(preferenceName, false);
-  channel = preferences.getInt("channel", defaultChannel);
+  channel = preferences.getInt(channelPreferenceName, defaultChannel);
   syncword = syncwordSelect[channel];
   frequency = frequencySelect[channel];
+  preferences.end();
+}
+
+void setHonkVolumeLevel(int level)
+{
+  honkVolumeLevel = level;
+  preferences.begin(preferenceName, false);
+  preferences.putInt(honkVolumePreferenceName, honkVolumeLevel);
+  Serial.println("Honk Volume Level " + String(honkVolumeLevel));
+  preferences.end();
+}
+
+void loadHonkVolumeFromEEPROM()
+{
+  preferences.begin(preferenceName, false);
+  honkVolumeLevel = preferences.getInt(honkVolumePreferenceName, honkVolumeLevel);
   preferences.end();
 }
 
 void loadClockStartTimeFromEEPROM()
 {
   preferences.begin(preferenceName, false);
-  clockStartTime = preferences.getInt("start-time", defaultClockStart);
+  clockStartTime = preferences.getInt(startTimePreferenceName, defaultClockStart);
   timeToDisplay = clockStartTime;
   preferences.end();
 }
@@ -688,6 +767,32 @@ void initWebserver()
       request->send(400, "text/plain", "missing parameters");
     } });
 
+  server.on("/honkvolume", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
+    if (request->hasParam("v")){
+      int level = request->getParam("v")->value().toInt();
+      setHonkVolumeLevel(level);
+      request->send(200, "text/html", "honk volume changed");
+    }
+    else{
+      request->send(400, "text/plain", "missing parameters");
+    } });
+
+  server.on("/starttime", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
+    if (request->hasParam("t")){
+      int time = request->getParam("t")->value().toInt();
+      if (time >= 1 && time <= 99) {
+        setNewStartTime(time);
+        request->send(200, "text/html", "start time changed");
+      } else {
+        request->send(400, "text/plain", "invalid time value: must be between 1 and 99");
+      }
+    }
+    else{
+      request->send(400, "text/plain", "missing parameters");
+    } });
+
   // Route to load style.css file
   server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/style.css", "text/css"); });
@@ -711,31 +816,18 @@ void initWebserver()
             { request->send(SPIFFS, "/digital-7-mono.woff2"); });
 
   server.on("/channel", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(200, "text/html", channel_html, channelProcessor); });
-
-  /*    server.on("/channel/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/channel.html", String(), false);
-  });*/
-
-  server.on("/1", HTTP_GET, [](AsyncWebServerRequest *request)
             {
-    request->send(200, "text/plain", resetString);
-    setChannel(1); });
-
-  server.on("/2", HTTP_GET, [](AsyncWebServerRequest *request)
-            {
-    request->send(200, "text/plain", resetString);
-    setChannel(2); });
-
-  server.on("/3", HTTP_GET, [](AsyncWebServerRequest *request)
-            {
-    request->send(200, "text/plain", resetString);
-    setChannel(3); });
-
-  server.on("/4", HTTP_GET, [](AsyncWebServerRequest *request)
-            {
-    request->send(200, "text/plain", resetString);
-    setChannel(4); });
+    if (request->hasParam("c")) {
+      int ch = request->getParam("c")->value().toInt();
+      if (ch >= 1 && ch <= 4) {
+        request->send(200, "text/plain", resetString);
+        setChannel(ch);
+      } else {
+        request->send(400, "text/plain", "invalid channel");
+      }
+    } else {
+      request->send(400, "text/plain", "missing parameters");
+    } });
 }
 
 void initButtons() {
@@ -768,8 +860,8 @@ void setup()
 {
 
   loadChannelFromEEPROM();
-
   loadClockStartTimeFromEEPROM();
+  loadHonkVolumeFromEEPROM();
 
   // RS-485
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
