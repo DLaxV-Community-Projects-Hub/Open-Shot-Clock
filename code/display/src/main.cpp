@@ -1,27 +1,8 @@
-
-/*
-  This is a simple example show the Heltec.LoRa recived data in OLED.
-
-  The onboard OLED display is SSD1306 driver and I2C interface. In order to make the
-  OLED correctly operation, you should output a high-low-high(1-0-1) signal by soft-
-  ware to OLED's reset pin, the low-level signal at least 5ms.
-
-  OLED pins to ESP32 GPIOs via this connecthin:
-  OLED_SDA -- GPIO4
-  OLED_SCL -- GPIO15
-  OLED_RST -- GPIO16
-  
-  by Aaron.Lee from HelTec AutoMation, ChengDu, China
-  成都惠利特自动化科技有限公司
-  www.heltec.cn
-  
-  this project also realess in GitHub:
-  https://github.com/Heltec-Aaron-Lee/WiFi_Kit_series
-*/
 #include <Arduino.h>
 
-#include <heltec.h>
-#include "images.h"
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
 #include "channel.h"
 #include "version.h"
 #include "font.h"
@@ -51,19 +32,31 @@ AsyncWebServer server(80);
 
 #if defined(WIFI_LoRa_32_V2)
   // Use the SX1276 Radio
-  SX1276 radio = new Module(SS, DIO0, RST_LoRa, DIO0);
-  Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
+  SX1276 radio = new Module(SS, DIO0, LoRa_RST, DIO0);
+  Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, Wire);
+  Adafruit_SSD1306 display(128, 64, &Wire, RST_OLED);
 #endif
 
 #if defined(WIFI_LoRa_32_V3)
   // Use the SX1262 Radio
-  SX1262 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
-  // Create a new TwoWire Object, because OLED uses the other one, that is not usable through pins
-  TwoWire I2C = TwoWire(1);
-  // Create PWM object using the new Wire object (i2c)
-  Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, I2C);
+  SX1262 radio = new Module(SS, DIO0, LoRa_RST, LoRa_BUSY);
+  // Use Wire1 Object, because OLED uses the other one, that is not usable through pins
+  Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, Wire1);
+  Adafruit_SSD1306 display(128, 64, &Wire, RST_OLED);
 #endif
 
+#if defined(OSC_DISPLAY_R0) | defined(OSC_DISPLAY_R1)
+  LLCC68 radio = new Module(SS, DIO0, LoRa_RST, LoRa_BUSY);
+  Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, Wire);
+  #endif
+  
+#if defined(OSC_DISPLAY_R2)
+  SPIClass spi(HSPI);
+  SPISettings spiSettings(2000000, MSBFIRST, SPI_MODE0);
+  LLCC68 radio = new Module(LoRa_NSS, DIO0, LoRa_RST, LoRa_BUSY, spi, spiSettings);
+  Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, Wire);
+  Adafruit_SSD1306 display(128, 64, &Wire, -1);
+#endif
 
 
 LEDs leds(pwm);
@@ -75,7 +68,7 @@ String rssi = "RSSI --";
 String packSize = "--";
 String packet ;
 String resetString = "restarting...reset your wifi connection";
-String currentMode = "LoRa";
+String currentMode = "none";
 unsigned long ms;
 unsigned long lms;
 unsigned long diff;
@@ -114,7 +107,7 @@ unsigned long ota_progress_millis = 0;
 
 void onOTAStart() {
   // Log when OTA has started
-  Serial.println("OTA update started!");
+  ESP_LOGI("OTA", "OTA update started!");
   // <Add your own code here>
 }
 
@@ -122,16 +115,16 @@ void onOTAProgress(size_t current, size_t final) {
   // Log every 1 second
   if (millis() - ota_progress_millis > 1000) {
     ota_progress_millis = millis();
-    Serial.printf("OTA Progress Current: %u bytes, Final: %u bytes\n", current, final);
+    ESP_LOGI("OTA", "OTA Progress Current: %u bytes, Final: %u bytes", current, final);
   }
 }
 
 void onOTAEnd(bool success) {
   // Log when OTA has finished
   if (success) {
-    Serial.println("OTA update finished successfully!");
+    ESP_LOGI("OTA", "OTA update finished successfully!");
   } else {
-    Serial.println("There was an error during OTA update!");
+    ESP_LOGI("OTA", "There was an error during OTA update!");
   }
   // <Add your own code here>
 }
@@ -143,7 +136,7 @@ void initOTA()
   ElegantOTA.onProgress(onOTAProgress);
   ElegantOTA.onEnd(onOTAEnd);
   server.begin();
-  Serial.println("HTTP server started");
+  ESP_LOGI("OTA", "HTTP server started");
 }
 
 // flag to indicate that a packet was received
@@ -161,16 +154,19 @@ void setLoRaReceiveFlag(void) {
   receivedFlag = true;
 }
 
-void waitingHeltecDisplay(){
-    Heltec.display->clear();
-    Heltec.display->drawHorizontalLine(2, 50, 124);  
-    Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
-    Heltec.display->setFont(ArialMT_Plain_24);
-    Heltec.display->drawString(64 , 1 , "waiting");
-    Heltec.display->setFont(ArialMT_Plain_10);
-    Heltec.display->drawString(30, 52, "Channel " + String(channel));
-    Heltec.display->drawString(95, 52, "none");
-    Heltec.display->display();
+void waitingDisplay(){
+    display.clearDisplay();
+    display.drawFastHLine(0, 50, 128, SSD1306_WHITE);  
+    display.setFont(NULL);
+    display.setTextSize(3);
+    display.setCursor(2, 15);
+    display.printf("waiting"),
+    display.setTextSize(1);
+    display.setCursor(30, 57);
+    display.printf( "Channel %s (%s)", String(channel), currentMode);
+    display.setCursor(0, 57);
+    display.printf("NA");
+    display.display();
 }
 
 void client_check(){
@@ -234,16 +230,19 @@ void handlePacket(){
     leds.setBrightnessLevel(brigthnessString.toInt());
     leds.displayClock(currentTime);
       
-    Heltec.display->clear();
-    Heltec.display->drawHorizontalLine(2, 50, 124);  
-    Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
-    Heltec.display->setFont(DSEG14_Classic_Mini_Regular_40);
-    Heltec.display->drawString(64 , 1 , currentTimeString);
-    Heltec.display->setFont(ArialMT_Plain_10);
-    Heltec.display->drawString(30, 52, "Channel " + String(channel));
-    Heltec.display->drawString(90, 52, currentMode);
-    //Heltec.display->drawString(95, 52, rssi);
-    Heltec.display->display();
+    display.clearDisplay();
+    display.drawFastHLine(0, 50, 128, SSD1306_WHITE);
+    display.setFont(&DSEG7_Classic_Mini_Regular_40);
+    display.setCursor(32, 40);
+    display.printf("%s", currentTimeString);
+    display.setFont(NULL);
+    display.setTextSize(1);
+    display.setCursor(30, 57);
+    display.printf( "Channel %s (%s)", String(channel), currentMode);
+    display.setCursor(0, 57);
+    display.printf("%2.0f", radio.getRSSI(true));
+    ESP_LOGI("Handler","Received LoRa message: %s, RSSI: %2.0f", packet.c_str(), radio.getRSSI(true));
+    display.display();
   } else if (packet.startsWith(honkCommand)){
     String honkVolumeLevelString = packet.substring(1,2);
     uint8_t honkVolumeLevel = honkVolumeLevelString.toInt();
@@ -268,7 +267,7 @@ void set_channel(int ch){
   channel = ch;
   preferences.begin("shot-clock", false);
   preferences.putInt("channel", channel);
-  Serial.println("Channel " + channel);
+  ESP_LOGI("SetChannel", "Channel set to %d", channel);
   preferences.end();
   delay(1000);
   ESP.restart();
@@ -307,10 +306,7 @@ String versionProcessor(const String& var){
 }
 
 void RS485receive() {
-   //while (RS485Serial.available()) {
    while (Serial2.available()) {
-
-     //char inChar = (char)RS485Serial.read(); // Get the next byte
      char inChar = (char)Serial2.read(); // Get the next byte
 
      if (inChar == '\n') // If the incoming character is a newline break while loop
@@ -324,7 +320,7 @@ void RS485receive() {
 
     if (packet.length() > 100) // If inputString is too long break while loop
     {
-      Serial.println("ERROR");
+      ESP_LOGE("RS485receive", "Input string too long");
       break;
     }
   }
@@ -377,105 +373,114 @@ void initChannelFromEEPROM(){
 }
 
 void setupRadio() {
-  // initialize SX12xx with default settings
-  Serial.print(F("[SX12xx] Initializing ... "));
-  int state = radio.begin();
+  // initialize Radio with default settings
+  ESP_LOGI("Radio","Initializing radio...");
+  #if defined(OSC_DISPLAY_R2)
+    spi.begin(LoRa_CLK, LoRa_MISO, LoRa_MOSI, LoRa_NSS);
+  #endif
+  int state = radio.begin();//434.0, 125.0, 9, 7, RADIOLIB_SX126X_SYNC_WORD_PRIVATE, 10, 8, 0, false);
   if (state == RADIOLIB_ERR_NONE) {
-    Serial.println(F("success!"));
+    ESP_LOGI("Radio","Setup successful");
   } else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    // while (true);
+    ESP_LOGE("Radio","Setup failed with code %d", state);
   }
 
   radio.setSyncWord(syncword);
   radio.setFrequency(frequency);
 
-  // set the function that will be called
-  // when new packet is received
+  // set the function that will be called when new packet is received
   radio.setPacketReceivedAction(setLoRaReceiveFlag);
 
   // start listening for LoRa packets
-  Serial.print(F("[SX12xx] Starting to listen ... "));
+  ESP_LOGI("Radio","Starting to listen...");
   state = radio.startReceive();
   if (state == RADIOLIB_ERR_NONE) {
-    Serial.println(F("success!"));
+    ESP_LOGI("Radio","Started receiving successfully");
   } else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    // while (true);
+    ESP_LOGE("Radio","Failed to start receiving with code %d", state);
   }
 }
 
 void initI2C() {
   #ifdef WIFI_LoRa_32_V3
-    I2C.setPins(SDA_LED, SCL_LED);
+    Wire1.setPins(SDA_LED, SCL_LED);
+    Wire1.begin();
   #endif
+  Wire.setPins(SDA, SCL);
+  Wire.begin();
 
   pwm.begin();
   pwm.setPWMFreq(200);  // This is the maximum recommended PWM frequency for LEDs
 }
 
-void setup() {
+void initDisplay() {
+  #if defined(WIFI_LoRa_32_V2) | defined(WIFI_LoRa_32_V3)
+    pinMode(Vext,OUTPUT);
+    digitalWrite(Vext, LOW);
+  #endif
 
+  delay(100); 
+
+  display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
+  display.setRotation(0);
+  display.setTextColor(SSD1306_WHITE);
+  display.clearDisplay();
+  display.display();
+}
+
+void initPins() {
+  #ifdef OSC_DISPLAY_R2
+    pinMode(PWM_OE, OUTPUT);
+    digitalWrite(PWM_OE, LOW); // Enable PWM output
+    pinMode(UART_TXEN, OUTPUT);
+    digitalWrite(UART_TXEN, LOW);
+    pinMode(UART_RXEN, OUTPUT);
+    digitalWrite(UART_RXEN, LOW);
+  #endif
+}
+
+void setup() {
+  initPins();
   initChannelFromEEPROM();
 
   //RS-485
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
+  Serial.begin(115200);
   
   inputString.reserve(200);
   
-  long band=434000000;  // not used anymore, because radioLib handles LoRa
-  Heltec.begin(true /*Display Enable*/, false /*LoRa Enable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
-
   setupRadio();
 
   initI2C();
 
   leds.allSegmentsOff();
 
-  Heltec.display->init();
-  // Heltec.display->flipScreenVertically();  
-  Heltec.display->setFont(ArialMT_Plain_10);
+  initDisplay();
   
-  Heltec.display->clear();
-  
-  //Heltec.display->drawString(0, 0, "Heltec.LoRa Initial success!");
-  //Heltec.display->drawString(0, 10, "LED Test abgeschlossen");
-  //Heltec.display->drawString(0, 0, "Wait for incoming data...");
-  Heltec.display->display();
-  
-
   //ESP32 As access point
   WiFi.mode(WIFI_AP); //Access Point mode
   WiFi.softAP(ssid, password);
 
   IPAddress myIP = WiFi.softAPIP(); //Get IP address
-  Serial.print("HotSpt IP:");
-  Serial.println(myIP);
+  ESP_LOGI("WiFi","Access Point IP address: %s", myIP.toString().c_str());
   
   initWebserver();
 
   initOTA();
   
   leds.showWaitingAnimation();
-  waitingHeltecDisplay();
+  waitingDisplay();
 }
 
 void drawLoraInfo() {
   currentMode = "LoRa";
-  // Heltec.display->drawString(90, 52, "LoRa");
-  // Heltec.display->display();
 }
 
 void drawRS485Info() {
   currentMode = "RS485";
-  // Heltec.display->drawString(90, 52, "RS485");
-  // Heltec.display->display();
 }
 
 void loop() {
-
   ElegantOTA.loop(); 
 
   if (RS485mode == false){
@@ -499,10 +504,9 @@ void loop() {
     stringComplete = false;
   }
 
-
   if (clientFlag == false){
     leds.showWaitingAnimation();
-    waitingHeltecDisplay();
+    waitingDisplay();
     }
   else{
     client_check();
