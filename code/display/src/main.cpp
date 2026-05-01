@@ -58,9 +58,12 @@ AsyncWebServer server(80);
   Adafruit_SSD1306 display(128, 64, &Wire, -1);
 #endif
 
-
 LEDs leds(pwm);
+#if defined(WIFI_LoRa_32_V2) | defined(WIFI_LoRa_32_V3)
 Horn horn(pwm);
+#else if defined(OSC_DISPLAY_R0) | defined(OSC_DISPLAY_R1) | defined(OSC_DISPLAY_R2)
+Horn horn(pwm, 15);
+#endif
 
 Preferences preferences;
 

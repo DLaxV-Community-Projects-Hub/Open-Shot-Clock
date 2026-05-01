@@ -17,9 +17,10 @@ private:
     bool isHonkRequest = false;
     unsigned long honkStartTime = 0;
     uint8_t honkVolumeLevel = 5; // Default volume level
+    uint8_t hornPin;
 
 public:
-    Horn(Adafruit_PWMServoDriver);
+    Horn(Adafruit_PWMServoDriver, uint8_t hornPin = 7);
     ~Horn();
 
     void handle();

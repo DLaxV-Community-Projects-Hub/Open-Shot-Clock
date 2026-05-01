@@ -1,7 +1,7 @@
 #include "Horn.h"
 
-Horn::Horn(Adafruit_PWMServoDriver pwm)
-    : pwm{pwm} {};
+Horn::Horn(Adafruit_PWMServoDriver pwm, uint8_t hornPin)
+    : pwm{pwm}, hornPin{hornPin} {}
 
 Horn::~Horn(){}
 
@@ -41,14 +41,14 @@ bool Horn::isHonkTimeOver() {
 
 void Horn::startHonking() {
   Serial.println("Starting honk");
-  pwm.setPWM(7, volumeMap[this->honkVolumeLevel][0], volumeMap[this->honkVolumeLevel][1]);
+  pwm.setPWM(hornPin, volumeMap[this->honkVolumeLevel][0], volumeMap[this->honkVolumeLevel][1]);
   isHonking = true;
   honkStartTime = millis();
 }
 
 void Horn::stopHonking() {
   Serial.println("Stopping Honk");
-  uint8_t state = pwm.setPWM(7, 0, 4096);
+  uint8_t state = pwm.setPWM(hornPin, 0, 4096);
   if (state == 0) { // Horn aus
     isHonking = false;
   }; 
