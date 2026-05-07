@@ -1,6 +1,8 @@
 #include <Arduino.h>
 
-#include <heltec.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include "osc_logo.h"
 #include "images.h"
 #include "channel.h"
 #include "version.h"
@@ -22,9 +24,19 @@
 #include <Preferences.h>
 #include <RadioLib.h>
 
+
+#define BUFF_LEN 32
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define SCREEN_ADDRESS 0x3C
+
 //===============================================================
 // variables, constants, objects
 //===============================================================
+uint32_t lastTime=0;
+uint16_t voltageRaw=0, currentRaw=0;
+float voltage=0.0f;
 
 int channel;
 int defaultChannel = 1;
@@ -87,6 +99,7 @@ enum buttonStates_t
   B2_PRESSED_LONG,
   B3_PRESSED,
   B3_PRESSED_LONG,
+  B1_AND_B2_PRESSED,
   NONE
 };
 
@@ -106,13 +119,18 @@ Button btn1(PIN_B1), // define the button
 #if defined(WIFI_LoRa_32_V3)
   SX1262 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
 #endif
+#if defined(OSC_CONTROLLER_R0) | defined(OSC_CONTROLLER_R1)
+  SPIClass spi(HSPI);
+  SPISettings spiSettings(2000000, MSBFIRST, SPI_MODE0);
+  LLCC68 radio = new Module(LoRa_NSS, DIO0, RST_LoRa, BUSY_LoRa, spi, spiSettings);
+#endif
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
 Preferences preferences;
 
-
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, RST_OLED);
 
 //===============================================================
 // function prototypes
@@ -130,24 +148,28 @@ void resetTimers()
   timeOfLastCountEvent = timeNow;
   timeOfLastPauseEvent = timeNow;
   timeOfLastPlayEvent = timeNow;
+  msLastStopCount = timeNow;
 }
 
 void setPauseDisplay()
 {
-  Heltec.display->fillRect(12, 16, 3, 16);
-  Heltec.display->fillRect(18, 16, 3, 16);
+  display.fillRect(12, 16, 3, 16, SSD1306_WHITE);
+  display.fillRect(18, 16, 3, 16, SSD1306_WHITE);
 }
 
 void setDataDisplay()
 {
+  static uint8_t level = 0, signalStrength = 0;
   clockStr = timeToDisplay < 10 ? "0" + String(timeToDisplay) : String(timeToDisplay);
 
-  Heltec.display->drawHorizontalLine(2, 50, 124);
-  Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
-  Heltec.display->setFont(DSEG14_Classic_Mini_Regular_40);
-  Heltec.display->drawString(64, 1, clockStr);
-  Heltec.display->setFont(ArialMT_Plain_10);
-  Heltec.display->drawString(64, 52, "Channel " + String(channel));
+  display.drawFastHLine(2, 50, 124, SSD1306_WHITE);
+  display.setFont(&DSEG7_Classic_Mini_Regular_40);
+  display.setCursor(32, 40);
+  display.printf("%s", clockStr);
+  
+  display.setFont(NULL);
+  display.setCursor(32, 57);
+  display.printf("Channel %d",channel);
 }
 
 void notifyClients(String message)
@@ -171,13 +193,14 @@ String getTimeSendMsg(String command, int time)
 
 void sendToClock(String Msg)
 {
-  Heltec.display->clear();
+  display.clearDisplay();
   setDataDisplay();
   if (!isClockRunning) setPauseDisplay();
-  Heltec.display->display();
+  display.display();
 
   String msgWithChannel = Msg + String(channel);
 
+  ESP_LOGI("ClockMessage","Sending to clock: %s", msgWithChannel.c_str());
   // send serial for cabled clock over RS485
   Serial2.println(msgWithChannel);
 
@@ -210,6 +233,7 @@ void count()
   else
   {
     isClockRunning = !isClockRunning;
+    startHonking();
   }
 }
 
@@ -344,16 +368,15 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
   }
 }
 
-void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
-             void *arg, uint8_t *data, size_t len)
+void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
   switch (type)
   {
   case WS_EVT_CONNECT:
-    Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+    ESP_LOGI("WebSocket","client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
     break;
   case WS_EVT_DISCONNECT:
-    Serial.printf("WebSocket client #%u disconnected\n", client->id());
+    ESP_LOGI("WebSocket","client #%u disconnected\n", client->id());
     break;
   case WS_EVT_DATA:
     handleWebSocketMessage(arg, data, len);
@@ -379,7 +402,8 @@ String channelProcessor(const String &var)
   return links;
 }
 
-String versionProcessor(const String& var){
+String versionProcessor(const String& var)
+{
   String val = "";
   if(var == "PCB_VERSION_PLACEHOLDER"){
     val = String(CONTROLLER_PCB_VERSION);
@@ -544,16 +568,16 @@ void playPause()
     notifyClients("false");
     timeOfLastPauseEvent = timeNow; // wenn auf Pause gewechselt, dann Zeit Letzter PAuse Speichern
     setPauseDisplay();
-    Heltec.display->display();
+    display.display();
   }
   else
   {
     notifyClients("true");
     timeOfLastPlayEvent = timeNow; // wenn auf Play gewechselt, dann Zeit Letztes Play Speichern
 
-    Heltec.display->clear();
+    display.clearDisplay();
     setDataDisplay();
-    Heltec.display->display();
+    display.display();
   }
 }
 
@@ -572,6 +596,11 @@ void updateButtonState()
     buttonState = B4_AND_B5_PRESSED;
     wasLongPress = true;
   }
+  else  if (btn1.isPressed() && btn2.wasReleased())
+  {
+    // hold down button 1 and click button 2
+    buttonState = B1_AND_B2_PRESSED;
+  }
   else if (btn1.wasReleased() && !wasLongPress)
   {
     buttonState = B1_PRESSED;
@@ -579,12 +608,10 @@ void updateButtonState()
   else if (btn1.wasReleased() && wasLongPress)
   {
     wasLongPress = false;
-    wasLongPress = false;
   }
   else if (btn1.pressedFor(LONG_PRESS) && !wasLongPress)
   {
     buttonState = B1_PRESSED_LONG;
-    wasLongPress = true;
     wasLongPress = true;
   }
   else if (btn2.wasReleased() && !wasLongPress)
@@ -646,6 +673,7 @@ void updateButtonState()
   else if (btn6.wasReleased() && wasLongPress)
   {
     wasLongPress = false;
+    wasLongPress = false;
   }
   else if (btn6.pressedFor(LONG_PRESS) && !wasLongPress)
   {
@@ -664,14 +692,16 @@ void handleButtonClicks()
   {
   case B4_AND_B5_PRESSED:
     startHonking();
-    Heltec.display->clear();
-    Heltec.display->drawHorizontalLine(2, 50, 124);
-    Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
-    Heltec.display->setFont(DSEG14_Classic_Mini_Regular_40);
-    Heltec.display->drawString(64, 1, "HONK");
-    Heltec.display->setFont(ArialMT_Plain_10);
-    Heltec.display->drawString(64, 52, "Channel " + String(channel));
-    Heltec.display->display();
+    display.clearDisplay();
+    display.drawFastHLine(2, 50, 124, SSD1306_WHITE);
+    display.setFont(NULL);
+    display.setTextSize(5);
+    display.setCursor(7, 10);
+    display.printf("HONK");
+    display.setTextSize(1);
+    display.setCursor(32, 57);
+    display.printf("Channel %d",channel);
+    display.display();
     break;
   case B1_PRESSED:
     playPause();
@@ -683,7 +713,7 @@ void handleButtonClicks()
     resetClock(true, clockStartTime);
     break;
   case B2_PRESSED_LONG:
-    resetClock(true, clockStartTime);
+    toggleResetTime();
     break;
   case B3_PRESSED:
     resetClock(false, clockStartTime);
@@ -695,8 +725,14 @@ void handleButtonClicks()
     if (!isClockRunning) {
       resetClock(false, timeToDisplay - 1);
     }
+    if (!isClockRunning) {
+      resetClock(false, timeToDisplay - 1);
+    }
     break;
   case B4_PRESSED_LONG:
+    if (!isClockRunning) {
+      resetClock(false, timeToDisplay - 10);
+    }
     if (!isClockRunning) {
       resetClock(false, timeToDisplay - 10);
     }
@@ -705,8 +741,14 @@ void handleButtonClicks()
     if (!isClockRunning) {
       resetClock(false, timeToDisplay + 1);
     }
+    if (!isClockRunning) {
+      resetClock(false, timeToDisplay + 1);
+    }
     break;
   case B5_PRESSED_LONG:
+    if (!isClockRunning) {
+      resetClock(false, timeToDisplay + 10);
+    }
     if (!isClockRunning) {
       resetClock(false, timeToDisplay + 10);
     }
@@ -730,7 +772,7 @@ void initOTA()
 {
   ElegantOTA.begin(&server);  // Start ElegantOTA
   server.begin();
-  Serial.println("HTTP server started");
+  ESP_LOGI("OTA","HTTP server started");
 }
 
 void initWebSocket()
@@ -842,23 +884,83 @@ void initButtons() {
 
 void initRadio() {
   // initialize SX12xx with default settings
-  Serial.print(F("[SX12xx] Initializing ... "));
-  int state = radio.begin();
+  ESP_LOGI("Radio","LoRa Initializing ... ");
+
+  #if defined(OSC_CONTROLLER_R0) | defined(OSC_CONTROLLER_R1)
+    spi.begin(LoRa_CLK, LoRa_MISO, LoRa_MOSI, LoRa_NSS); 
+    int state = radio.begin();//(434.0, 125.0, 9, 7, RADIOLIB_SX126X_SYNC_WORD_PRIVATE, 10, 8, 0, false);
+  #else
+    int state = radio.begin();
+  #endif
+
   if (state == RADIOLIB_ERR_NONE) {
-    Serial.println(F("success!"));
+    ESP_LOGI("Radio","success!");
   } else {
-    Serial.print(F("failed, code "));
+    ESP_LOGE("Radio","failed, code ");
     Serial.println(state);
     while (true);
   }
 
   radio.setSyncWord(syncword);
   radio.setFrequency(frequency);
+  
+  ESP_LOGI("RADIO","Freq: %f, Sync: %i",frequency, syncword);
 }
 
 void setup()
 {
+  loadChannelFromEEPROM();
+  loadClockStartTimeFromEEPROM();
 
+  ESP_LOGE("Init", "START"); 
+  #if defined(OSC_CONTROLLER_R0) | defined(OSC_CONTROLLER_R1)
+    pinMode(PIN_PWR, OUTPUT);
+    digitalWrite(PIN_PWR, HIGH);
+    ESP_LOGE("Init", "As OSC R1"); 
+    pinMode(V_SENSE, ANALOG);
+    pinMode(I_SENSE, ANALOG);
+    pinMode(LED_ERR, OUTPUT);
+    pinMode(PIN_HORN, OUTPUT);
+    pinMode(UART_TXEN, OUTPUT);
+    digitalWrite(UART_TXEN, HIGH);
+  #endif
+
+  #if defined(OSC_CONTROLLER_R1)
+    pinMode(V_BAT_SENSE, ANALOG);
+    pinMode(V_BAT_SENSE_EN, OUTPUT);
+    digitalWrite(V_BAT_SENSE_EN, HIGH);
+  #endif
+  
+  pinMode(LED_OK, OUTPUT);
+  pinMode(PIN_B1, INPUT_PULLUP);
+  pinMode(PIN_B2, INPUT_PULLUP);
+  pinMode(PIN_B3, INPUT_PULLUP);
+  pinMode(PIN_B4, INPUT_PULLUP);
+  pinMode(PIN_B5, INPUT_PULLUP);
+
+  pinMode(OLED_nEN, OUTPUT);
+  digitalWrite(OLED_nEN, LOW);
+  
+  delay(100); 
+  
+  Wire.setPins(SDA, SCL);
+  Wire.begin();
+
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C, true)) {
+    ESP_LOGE("SSD1306", "init failed"); 
+  }
+
+  display.clearDisplay();
+  #ifdef FLIPSCREEN
+    display.setRotation(2);  
+  #endif
+  display.setTextColor(SSD1306_WHITE);
+  display.drawBitmap(29, 0, osc_logo.data, osc_logo.width, osc_logo.height, SSD1306_WHITE);
+  display.display();
+  delay(1000); // Pause for 1 seconds
+  display.setFont(NULL);
+  display.setTextSize(1);
+  
   loadChannelFromEEPROM();
   loadClockStartTimeFromEEPROM();
   loadHonkVolumeFromEEPROM();
@@ -866,55 +968,39 @@ void setup()
   // RS-485
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
 
-  long band = 434000000;  // not used anymore, because RadioLib handles LoRa
-  Heltec.begin(true /*Display Enable*/, false /*LoRa Disable*/, true /*Serial Enable*/, false /*PABOOST Enable*/, band /*long BAND*/);
-
   initRadio();
 
   if (!SPIFFS.begin())
   {
-    Serial.println("An Error has occurred while mounting SPIFFS");
+    ESP_LOGE("SPIFFS","An Error has occurred while mounting SPIFFS");
     return;
   }
-
-  Serial.println();
-  Serial.print("MAC: ");
-  Serial.println(WiFi.macAddress());
-
-  Heltec.display->init();
-
-  #ifdef FLIPSCREEN
-    Heltec.display->flipScreenVertically();
-  #endif
-
-  Heltec.display->setFont(ArialMT_Plain_10);
+  ESP_LOGI("MAC","Address: %s", WiFi.macAddress().c_str());
 
   // ESP32 As access point
   WiFi.mode(WIFI_AP); // Access Point mode
   WiFi.softAP(ssid, password);
 
   IPAddress myIP = WiFi.softAPIP(); // Get IP address
-  Serial.print("HotSpt IP:");
-  Serial.println(myIP);
+  ESP_LOGI("AP", "%s", myIP.toString());
 
   initWebSocket();
-
   initWebserver();
 
   initOTA();
 
 
 
-  Heltec.display->clear();
+  display.clearDisplay();
   setPauseDisplay();
   setDataDisplay();
-  Heltec.display->display();
+  display.display();
 
   initButtons();
 
   timeNow = millis();
   timeOfLastPauseEvent = timeNow;
-  msLastStopCount = timeNow;
+  msLastStopCount = timeNow; 
 }
 
 //===============================================================
@@ -931,4 +1017,15 @@ void loop()
   isClockRunning ? count() : stopCount();
 
   ElegantOTA.loop();
+
+  #if defined(OSC_CONTROLLER_R0) | defined(OSC_CONTROLLER_R1)
+  if(timeNow - lastTime > 1000)
+  {
+    lastTime = timeNow;
+    voltageRaw = analogRead(V_BAT_SENSE);
+    voltage = (voltageRaw * V_BAT_GAIN);
+    ESP_LOGI("ADC","Voltage: %f",voltage);
+    digitalWrite(LED_ERR, !digitalRead(LED_ERR));
+  }  
+  #endif
 }
