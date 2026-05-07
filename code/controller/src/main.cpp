@@ -36,6 +36,7 @@
 //===============================================================
 uint32_t lastTime=0;
 uint16_t voltageRaw=0, currentRaw=0;
+float voltage=0.0f;
 
 int channel;
 int defaultChannel = 1;
@@ -94,6 +95,7 @@ enum buttonStates_t
   B2_PRESSED_LONG,
   B3_PRESSED,
   B3_PRESSED_LONG,
+  B1_AND_B2_PRESSED,
   NONE
 };
 
@@ -132,7 +134,6 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, RST_OLED);
 void sendToClock(String);
 void playPause(void);
 
-
 //===============================================================
 // functions
 //===============================================================
@@ -141,6 +142,7 @@ void resetTimers()
   timeOfLastCountEvent = timeNow;
   timeOfLastPauseEvent = timeNow;
   timeOfLastPlayEvent = timeNow;
+  msLastStopCount = timeNow;
 }
 
 void setPauseDisplay()
@@ -151,6 +153,7 @@ void setPauseDisplay()
 
 void setDataDisplay()
 {
+  static uint8_t level = 0, signalStrength = 0;
   clockStr = timeToDisplay < 10 ? "0" + String(timeToDisplay) : String(timeToDisplay);
 
   display.drawFastHLine(2, 50, 124, SSD1306_WHITE);
@@ -161,9 +164,6 @@ void setDataDisplay()
   display.setFont(NULL);
   display.setCursor(32, 57);
   display.printf("Channel %d",channel);
-
-  display.setCursor(90,57);
-  display.printf("%d",voltageRaw);
 }
 
 void notifyClients(String message)
@@ -194,11 +194,18 @@ void sendToClock(String Msg)
 
   String msgWithChannel = Msg + String(channel);
 
+  ESP_LOGI("ClockMessage","Sending to clock: %s", msgWithChannel.c_str());
   // send serial for cabled clock over RS485
   Serial2.println(msgWithChannel);
 
   // send lora
   radio.transmit(msgWithChannel);
+}
+
+void startHonking()
+{
+  String commandH = "H1";
+  sendToClock(commandH);
 }
 
 void count()
@@ -223,6 +230,7 @@ void count()
   else
   {
     isClockRunning = !isClockRunning;
+    startHonking();
   }
 }
 
@@ -263,12 +271,6 @@ void resetClock(bool runClock, int resetTime=defaultClockStart)
 void sendStartTime(int T)
 {
   notifyClients("SW" + T);
-}
-
-void startHonking()
-{
-  String commandH = "H";
-  sendToClock(commandH);
 }
 
 void sendBCommand()
@@ -357,8 +359,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
   }
 }
 
-void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
-             void *arg, uint8_t *data, size_t len)
+void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
   switch (type)
   {
@@ -392,7 +393,8 @@ String channelProcessor(const String &var)
   return links;
 }
 
-String versionProcessor(const String& var){
+String versionProcessor(const String& var)
+{
   String val = "";
   if(var == "PCB_VERSION_PLACEHOLDER"){
     val = String(CONTROLLER_PCB_VERSION);
@@ -513,6 +515,11 @@ void updateButtonState()
     buttonState = B4_AND_B5_PRESSED;
     wasLongPress = true;
   }
+  else  if (btn1.isPressed() && btn2.wasReleased())
+  {
+    // hold down button 1 and click button 2
+    buttonState = B1_AND_B2_PRESSED;
+  }
   else if (btn1.wasReleased() && !wasLongPress)
   {
     buttonState = B1_PRESSED;
@@ -521,6 +528,7 @@ void updateButtonState()
   {
     wasLongPress = false;
     wasLongPress = false;
+
   }
   else if (btn1.pressedFor(LONG_PRESS) && !wasLongPress)
   {
@@ -632,16 +640,16 @@ void handleButtonClicks()
     resetClock(false, clockStartTime);
     break;
   case B3_PRESSED_LONG:
-    #ifdef OSC_CONTROLLER_R0
-    display.clearDisplay();
-    display.setFont(0);
-    display.setTextSize(3);
-    display.setCursor(0, 40);
-    display.printf("PWR OFF!");
-    display.setTextSize(1);
-    display.display();
-    digitalWrite(PIN_PWR,0);  
-    delay(5000);  //wait here until HW switches off
+    #if defined(OSC_CONTROLLER_R0) | defined(OSC_CONTROLLER_R1)
+      display.clearDisplay();
+      display.setFont(0);
+      display.setTextSize(3);
+      display.setCursor(0, 40);
+      display.printf("PWR OFF!");
+      display.setTextSize(1);
+      display.display();
+      digitalWrite(PIN_PWR,0);  
+      delay(5000);  //wait here until HW switches off
     #endif
     break;
   case B4_PRESSED:
@@ -782,11 +790,11 @@ void initButtons() {
 
 void initRadio() {
   // initialize SX12xx with default settings
-  ESP_LOGI("Radio","[SX12xx] Initializing ... ");
+  ESP_LOGI("Radio","LoRa Initializing ... ");
 
-  #if defined(OSC_CONTROLLER_R0)
-  spi.begin(LoRa_CLK, LoRa_MISO, LoRa_MOSI, LoRa_NSS); 
-  int state = radio.begin();//434.0, 125.0, 9, 7, RADIOLIB_SX126X_SYNC_WORD_PRIVATE, 10, 8, 0, false);
+  #if defined(OSC_CONTROLLER_R0) | defined(OSC_CONTROLLER_R1)
+    spi.begin(LoRa_CLK, LoRa_MISO, LoRa_MOSI, LoRa_NSS); 
+    int state = radio.begin();//(434.0, 125.0, 9, 7, RADIOLIB_SX126X_SYNC_WORD_PRIVATE, 10, 8, 0, false);
   #else
     int state = radio.begin();
   #endif
@@ -805,32 +813,31 @@ void initRadio() {
   ESP_LOGI("RADIO","Freq: %f, Sync: %i",frequency, syncword);
 }
 
-void task( void* )
-{
-  volatile int x=0;
-  while(1)
-  {
-      x++;
-  }
-}
-
 void setup()
 {
   loadChannelFromEEPROM();
   loadClockStartTimeFromEEPROM();
 
   ESP_LOGE("Init", "START"); 
-  #ifdef OSC_CONTROLLER_R0
-  pinMode(PIN_PWR, OUTPUT);
-  digitalWrite(PIN_PWR, 1);
-  ESP_LOGE("Init", "As OSC R0"); 
-  pinMode(V_SENSE, ANALOG);
-  pinMode(I_SENSE, ANALOG);
-  pinMode(LED_ERR, OUTPUT);
-  pinMode(PIN_HORN, OUTPUT);
+  #if defined(OSC_CONTROLLER_R0) | defined(OSC_CONTROLLER_R1)
+    pinMode(PIN_PWR, OUTPUT);
+    digitalWrite(PIN_PWR, HIGH);
+    ESP_LOGE("Init", "As OSC R1"); 
+    pinMode(V_SENSE, ANALOG);
+    pinMode(I_SENSE, ANALOG);
+    pinMode(LED_ERR, OUTPUT);
+    pinMode(PIN_HORN, OUTPUT);
+    pinMode(UART_TXEN, OUTPUT);
+    digitalWrite(UART_TXEN, HIGH);
+  #endif
+
+  #if defined(OSC_CONTROLLER_R1)
+    pinMode(V_BAT_SENSE, ANALOG);
+    pinMode(V_BAT_SENSE_EN, OUTPUT);
+    digitalWrite(V_BAT_SENSE_EN, HIGH);
   #endif
   
-  pinMode(LED, OUTPUT);
+  pinMode(LED_OK, OUTPUT);
   pinMode(PIN_B1, INPUT_PULLUP);
   pinMode(PIN_B2, INPUT_PULLUP);
   pinMode(PIN_B3, INPUT_PULLUP);
@@ -840,49 +847,18 @@ void setup()
   pinMode(OLED_nEN, OUTPUT);
   digitalWrite(OLED_nEN, LOW);
   
-  pinMode(UART_TXEN, OUTPUT);
-  digitalWrite(UART_TXEN, HIGH);
-
   delay(100); 
   
   Wire.setPins(SDA, SCL);
-
   Wire.begin();
-
-
-  ESP_LOGI("I2C","Scanning bus...");
-  int nDevices = 0;
-  uint8_t error =0;
-  for(int address = 1; address < 127; address++ )
-  {
-    // The i2c_scanner uses the return value of
-    // the Write.endTransmisstion to see if
-    // a device did acknowledge to the address.
-    Wire.beginTransmission(address);
-    error = Wire.endTransmission();
- 
-    if (error == 0)
-    {
-      ESP_LOGI("I2C","device found at address %d",address); 
-      nDevices++;
-    }
-    else if (error==4)
-    {
-      ESP_LOGE("I2C","Unknown error at address %d",address);
-      
-    }    
-  }
-  ESP_LOGI("I2C","Scan finished!");
-
 
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C, true)) {
     ESP_LOGE("SSD1306", "init failed"); 
-    for(;;); // Don't proceed, loop forever
   }
 
   display.clearDisplay();
   #ifdef FLIPSCREEN
-  display.setRotation(2);  
+    display.setRotation(2);  
   #endif
   display.setTextColor(SSD1306_WHITE);
   display.drawBitmap(29, 0, osc_logo.data, osc_logo.width, osc_logo.height, SSD1306_WHITE);
@@ -893,30 +869,10 @@ void setup()
   
   loadChannelFromEEPROM();
 
-  xTaskCreatePinnedToCore(
-    task,       //Function to implement the task 
-    "taskname", //Name of the task
-    6000,       //Stack size in words 
-    NULL,       //Task input parameter 
-    0,          //Priority of the task 
-    NULL,       //Task handle.
-    0);         //Core where the task should run 
-
-    xTaskCreatePinnedToCore(
-      task,       //Function to implement the task 
-      "taskname", //Name of the task
-      6000,       //Stack size in words 
-      NULL,       //Task input parameter 
-      0,          //Priority of the task 
-      NULL,       //Task handle.
-      1);         //Core where the task should run 
-
   // RS-485
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
 
   initRadio();
-  //radio.setOutputPower(-9);
-  radio.setOutputPower(22);
 
   if (!SPIFFS.begin())
   {
@@ -937,8 +893,6 @@ void setup()
 
   initOTA();
 
-
-
   display.clearDisplay();
   setPauseDisplay();
   setDataDisplay();
@@ -949,7 +903,6 @@ void setup()
   timeNow = millis();
   timeOfLastPauseEvent = timeNow;
   msLastStopCount = timeNow; 
-
 }
 
 //===============================================================
@@ -967,14 +920,14 @@ void loop()
 
   ElegantOTA.loop();
 
-  #if defined(OSC_CONTROLLER_R0)
+  #if defined(OSC_CONTROLLER_R0) | defined(OSC_CONTROLLER_R1)
   if(timeNow - lastTime > 1000)
   {
     lastTime = timeNow;
-    voltageRaw = analogRead(V_SENSE);
-    currentRaw = analogRead(I_SENSE);
-    ESP_LOGI("ADC","Voltage: %d",voltageRaw);
-    ESP_LOGI("ADC","Current: %d",currentRaw);
+    voltageRaw = analogRead(V_BAT_SENSE);
+    voltage = (voltageRaw * V_BAT_GAIN);
+    ESP_LOGI("ADC","Voltage: %f",voltage);
+    digitalWrite(LED_ERR, !digitalRead(LED_ERR));
   }  
   #endif
 }
