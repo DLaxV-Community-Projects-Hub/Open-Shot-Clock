@@ -725,14 +725,8 @@ void handleButtonClicks()
     if (!isClockRunning) {
       resetClock(false, timeToDisplay - 1);
     }
-    if (!isClockRunning) {
-      resetClock(false, timeToDisplay - 1);
-    }
     break;
   case B4_PRESSED_LONG:
-    if (!isClockRunning) {
-      resetClock(false, timeToDisplay - 10);
-    }
     if (!isClockRunning) {
       resetClock(false, timeToDisplay - 10);
     }
@@ -741,14 +735,8 @@ void handleButtonClicks()
     if (!isClockRunning) {
       resetClock(false, timeToDisplay + 1);
     }
-    if (!isClockRunning) {
-      resetClock(false, timeToDisplay + 1);
-    }
     break;
   case B5_PRESSED_LONG:
-    if (!isClockRunning) {
-      resetClock(false, timeToDisplay + 10);
-    }
     if (!isClockRunning) {
       resetClock(false, timeToDisplay + 10);
     }
