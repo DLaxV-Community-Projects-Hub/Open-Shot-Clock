@@ -19,6 +19,7 @@
 
 #include <SPIFFS.h>
 
+#include "ShotClockLogic.h"
 #include "config.h"
 
 #include <Preferences.h>
@@ -66,19 +67,10 @@ const char* startTimePreferenceName = "start-time";
 const char* honkVolumePreferenceName = "honk-volume";
 const char* channelPreferenceName = "channel";
 
-bool isClockRunning = false; // count on/off, starts off
-int defaultClockStart = 30;
-int clockStartTime = defaultClockStart;
-int timeToDisplay = clockStartTime; // Start Zahl
+int _timeToDisplay; // Start Zahl
 String clockStr = "30";
-int brightnessLevel = 8;
-int honkVolumeLevel = 5; // 0 = off, 1 = whisper, 2 = low, 3 = medium, 4 = high, 5 = max
 
 unsigned long timeNow;              // current time from millis()
-unsigned long timeOfLastPauseEvent;      // last time Button Pause
-unsigned long timeOfLastPlayEvent;      // last time Button Play
-unsigned long timeOfLastCountEvent;     // last time count down
-unsigned long msLastStopCount; // last time count/send in stop mode
 
 const unsigned long LONG_PRESS(400);  // we define a "long press" to be 400 milliseconds.
 const unsigned long EXTRA_LONG_PRESS(5000);
@@ -125,6 +117,8 @@ Button btn1(PIN_B1), // define the button
   LLCC68 radio = new Module(LoRa_NSS, DIO0, RST_LoRa, BUSY_LoRa, spi, spiSettings);
 #endif
 
+ShotClockLogic shotClockLogic = ShotClockLogic();
+
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
@@ -136,21 +130,10 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, RST_OLED);
 // function prototypes
 //===============================================================
 void sendToClock(String);
-void playPause(void);
-void startHonking(void);
-
 
 //===============================================================
 // functions
 //===============================================================
-void resetTimers()
-{
-  timeOfLastCountEvent = timeNow;
-  timeOfLastPauseEvent = timeNow;
-  timeOfLastPlayEvent = timeNow;
-  msLastStopCount = timeNow;
-}
-
 void setPauseDisplay()
 {
   display.fillRect(12, 16, 3, 16, SSD1306_WHITE);
@@ -160,7 +143,7 @@ void setPauseDisplay()
 void setDataDisplay()
 {
   static uint8_t level = 0, signalStrength = 0;
-  clockStr = timeToDisplay < 10 ? "0" + String(timeToDisplay) : String(timeToDisplay);
+  clockStr = _timeToDisplay < 10 ? "0" + String(_timeToDisplay) : String(_timeToDisplay);
 
   display.drawFastHLine(2, 50, 124, SSD1306_WHITE);
   display.setFont(&DSEG7_Classic_Mini_Regular_40);
@@ -175,27 +158,17 @@ void setDataDisplay()
 void notifyClients(String message)
 {
   ws.textAll(message);
-}
-
-String getTimeSendMsg(String command, int time)
-{
-  String clockMsg;
-  if (time < 10)
-  {
-    clockMsg = command + 0 + time + brightnessLevel;
-  }
-  else
-  {
-    clockMsg = command + time + brightnessLevel;
-  }
-  return clockMsg;
+  ws.cleanupClients();
 }
 
 void sendToClock(String Msg)
 {
   display.clearDisplay();
   setDataDisplay();
-  if (!isClockRunning) setPauseDisplay();
+  if(!shotClockLogic.isClockRunning())
+  {
+    setPauseDisplay();
+  }
   display.display();
 
   String msgWithChannel = Msg + String(channel);
@@ -208,67 +181,23 @@ void sendToClock(String Msg)
   radio.transmit(msgWithChannel);
 }
 
-void count()
-{
-  unsigned long msAlreadyPassedInCurrentSecond = (timeOfLastPauseEvent - timeOfLastCountEvent) + (timeNow - timeOfLastPlayEvent);
-
-  if (timeToDisplay > 0)
+void updateClock(uint8_t timeToDisplay, uint8_t brightnessLevel) {
+  String clockMsg;
+  if (timeToDisplay < 10)
   {
-    if (msAlreadyPassedInCurrentSecond >= 1000)
-    {
-      timeToDisplay--;
-
-      String clockMsg = getTimeSendMsg(timeCommand, timeToDisplay);
-      sendToClock(clockMsg);
-      if (timeToDisplay == 0) {
-        startHonking();
-      }
-
-      notifyClients(String(timeToDisplay));
-      ws.cleanupClients();
-
-      resetTimers();
-    }
+    clockMsg = timeCommand + 0 + timeToDisplay + brightnessLevel;
   }
   else
   {
-    isClockRunning = !isClockRunning;
-    startHonking();
+    clockMsg = timeCommand + timeToDisplay + brightnessLevel;
   }
-}
-
-void stopCount()
-{
-  // the displays need to be updated every second
-  if (timeNow - msLastStopCount >= 1000)
-  {
-    String clockMsg = getTimeSendMsg(timeCommand, timeToDisplay);
-    sendToClock(clockMsg);
-    notifyClients(String(timeToDisplay));
-    ws.cleanupClients();
-    msLastStopCount = timeNow;
-  }
-}
-
-void resetClock(bool runClock, int resetTime=defaultClockStart)
-{
-  if (resetTime < 1)
-  {
-    resetTime = 1;
-  } else if (resetTime > 99)
-  {
-    resetTime = 99;
-  }
-  
-  timeToDisplay = resetTime;
-  String clockMsg = getTimeSendMsg(timeCommand, timeToDisplay);
+  _timeToDisplay = timeToDisplay;
   sendToClock(clockMsg);
+}
 
-  notifyClients(String(timeToDisplay));
-  ws.cleanupClients();
-  resetTimers();
-  isClockRunning = runClock;
-  runClock ? notifyClients("true") : notifyClients("false");
+void honkClock(uint8_t honkVolumeLevel) {
+  String commandH = "H" + String(honkVolumeLevel);
+  sendToClock(commandH);
 }
 
 void sendStartTime(int T)
@@ -276,48 +205,6 @@ void sendStartTime(int T)
   notifyClients("SW" + T);
 }
 
-void startHonking()
-{
-  String commandH = "H" + String(honkVolumeLevel);
-  sendToClock(commandH);
-}
-
-void sendBCommand()
-{
-  String commandB = "B";
-  sendToClock(commandB);
-}
-
-void toggleResetTime()
-{
-  if (!isClockRunning){
-    if (clockStartTime == 30) {
-      clockStartTime = 80;
-    } else {
-      clockStartTime = 30;
-    }
-    preferences.begin(preferenceName, false);
-    preferences.putInt(startTimePreferenceName, clockStartTime);
-    preferences.end();
-    sendStartTime(clockStartTime);
-    resetClock(false, clockStartTime);
-  }
-}
-
-void setNewStartTime(int startTime)
-{
-  clockStartTime = startTime;
-  if (clockStartTime < 0)
-  {
-    clockStartTime = 0;
-  }
-  if (clockStartTime > 99)
-  {
-    clockStartTime = 99;
-  }
-  resetClock(false, clockStartTime);
-  sendStartTime(clockStartTime);
-}
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 {
@@ -327,43 +214,43 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     data[len] = 0;
     if (strcmp((char *)data, "reset") == 0)
     {
-      resetClock(true);
+      shotClockLogic.resetClock(true);
     }
     if (strcmp((char *)data, "playpause") == 0)
     {
-      playPause();
+      shotClockLogic.playPause();
     }
     if (strcmp((char *)data, "setTime30") == 0)
     {
-      resetClock(false, 30);
+      shotClockLogic.resetClock(false, 30);
     }
     if (strcmp((char *)data, "setTimePlus10") == 0)
     {
-      resetClock(false, timeToDisplay + 10);
+      shotClockLogic.adjustTime(10);
     }
     if (strcmp((char *)data, "setTimeMinus10") == 0)
     {
-      resetClock(false, timeToDisplay - 10);
+      shotClockLogic.adjustTime(-10);
     }
     if (strcmp((char *)data, "setTimePlus5") == 0)
     {
-      resetClock(false, timeToDisplay + 5);
+      shotClockLogic.adjustTime(5);
     }
     if (strcmp((char *)data, "setTimeMinus5") == 0)
     {
-      resetClock(false, timeToDisplay - 5);
+      shotClockLogic.adjustTime(-5);
     }
     if (strcmp((char *)data, "setTimePlus1") == 0)
     {
-      resetClock(false, timeToDisplay + 1);
+      shotClockLogic.adjustTime(1);
     }
     if (strcmp((char *)data, "setTimeMinus1") == 0)
     {
-      resetClock(false, timeToDisplay - 1);
+      shotClockLogic.adjustTime(-1);
     }
     if (strcmp((char *)data, "SW") == 0)
     {
-      sendStartTime(clockStartTime);
+      sendStartTime(shotClockLogic.getResetTime());
     }
   }
 }
@@ -427,17 +314,17 @@ String settingsProcessor(const String &var)
 {
   if (var == "CURRENT_START_TIME")
   {
-    return String(clockStartTime);
+    return String(shotClockLogic.getResetTime());
   }
-  else if (var == "SELECTED_START_TIME30" && clockStartTime == 30)
+  else if (var == "SELECTED_START_TIME30" && shotClockLogic.getResetTime() == 30)
   {
     return "selected";
   }
-  else if (var == "SELECTED_START_TIME80" && clockStartTime == 80)
+  else if (var == "SELECTED_START_TIME80" && shotClockLogic.getResetTime() == 80)
   {
     return "selected";
   }
-  else if (var == "SELECTED_START_TIME_CUSTOM" && clockStartTime != 30 && clockStartTime != 80)
+  else if (var == "SELECTED_START_TIME_CUSTOM" && shotClockLogic.getResetTime() != 30 && shotClockLogic.getResetTime() != 80)
   {
     return "selected";
   }
@@ -457,59 +344,59 @@ String settingsProcessor(const String &var)
   {
     return "selected";
   }
-  else if (var == "SELECTED_HONK_VOLUME_LEVEL0" && honkVolumeLevel == 0)
+  else if (var == "SELECTED_HONK_VOLUME_LEVEL0" && shotClockLogic.getHonkVolumeLevel() == 0)
   {
     return "selected";
   }
-  else if (var == "SELECTED_HONK_VOLUME_LEVEL1" && honkVolumeLevel == 1)
+  else if (var == "SELECTED_HONK_VOLUME_LEVEL1" && shotClockLogic.getHonkVolumeLevel() == 1)
   {
     return "selected";
   }
-  else if (var == "SELECTED_HONK_VOLUME_LEVEL2" && honkVolumeLevel == 2)
+  else if (var == "SELECTED_HONK_VOLUME_LEVEL2" && shotClockLogic.getHonkVolumeLevel() == 2)
   {
     return "selected";
   }
-  else if (var == "SELECTED_HONK_VOLUME_LEVEL3" && honkVolumeLevel == 3)
+  else if (var == "SELECTED_HONK_VOLUME_LEVEL3" && shotClockLogic.getHonkVolumeLevel() == 3)
   {
     return "selected";
   }
-  else if (var == "SELECTED_HONK_VOLUME_LEVEL4" && honkVolumeLevel == 4)
+  else if (var == "SELECTED_HONK_VOLUME_LEVEL4" && shotClockLogic.getHonkVolumeLevel() == 4)
   {
     return "selected";
   }
-  else if (var == "SELECTED_HONK_VOLUME_LEVEL5" && honkVolumeLevel == 5)
+  else if (var == "SELECTED_HONK_VOLUME_LEVEL5" && shotClockLogic.getHonkVolumeLevel() == 5)
   {
     return "selected";
   }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL1" && brightnessLevel == 1)
+  else if (var == "SELECTED_BRIGHTNESS_LEVEL1" && shotClockLogic.getBrightnessLevel() == 1)
   {
     return "selected";
   }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL2" && brightnessLevel == 2)
+  else if (var == "SELECTED_BRIGHTNESS_LEVEL2" && shotClockLogic.getBrightnessLevel() == 2)
   {
     return "selected";
   }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL3" && brightnessLevel == 3)
+  else if (var == "SELECTED_BRIGHTNESS_LEVEL3" && shotClockLogic.getBrightnessLevel() == 3)
   {
     return "selected";
   }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL4" && brightnessLevel == 4)
+  else if (var == "SELECTED_BRIGHTNESS_LEVEL4" && shotClockLogic.getBrightnessLevel() == 4)
   {
     return "selected";
   }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL5" && brightnessLevel == 5)
+  else if (var == "SELECTED_BRIGHTNESS_LEVEL5" && shotClockLogic.getBrightnessLevel() == 5)
   {
     return "selected";
   }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL6" && brightnessLevel == 6)
+  else if (var == "SELECTED_BRIGHTNESS_LEVEL6" && shotClockLogic.getBrightnessLevel() == 6)
   {
     return "selected";
   }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL7" && brightnessLevel == 7)
+  else if (var == "SELECTED_BRIGHTNESS_LEVEL7" && shotClockLogic.getBrightnessLevel() == 7)
   {
     return "selected";
   }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL8" && brightnessLevel == 8)
+  else if (var == "SELECTED_BRIGHTNESS_LEVEL8" && shotClockLogic.getBrightnessLevel() == 8)
   {
     return "selected";
   }
@@ -534,51 +421,6 @@ void loadChannelFromEEPROM()
   syncword = syncwordSelect[channel];
   frequency = frequencySelect[channel];
   preferences.end();
-}
-
-void setHonkVolumeLevel(int level)
-{
-  honkVolumeLevel = level;
-  preferences.begin(preferenceName, false);
-  preferences.putInt(honkVolumePreferenceName, honkVolumeLevel);
-  Serial.println("Honk Volume Level " + String(honkVolumeLevel));
-  preferences.end();
-}
-
-void loadHonkVolumeFromEEPROM()
-{
-  preferences.begin(preferenceName, false);
-  honkVolumeLevel = preferences.getInt(honkVolumePreferenceName, honkVolumeLevel);
-  preferences.end();
-}
-
-void loadClockStartTimeFromEEPROM()
-{
-  preferences.begin(preferenceName, false);
-  clockStartTime = preferences.getInt(startTimePreferenceName, defaultClockStart);
-  timeToDisplay = clockStartTime;
-  preferences.end();
-}
-
-void playPause()
-{
-  isClockRunning = !isClockRunning; // ON > OFF oder OFF > ON // fängt OFF an
-  if (isClockRunning == false)
-  {
-    notifyClients("false");
-    timeOfLastPauseEvent = timeNow; // wenn auf Pause gewechselt, dann Zeit Letzter PAuse Speichern
-    setPauseDisplay();
-    display.display();
-  }
-  else
-  {
-    notifyClients("true");
-    timeOfLastPlayEvent = timeNow; // wenn auf Play gewechselt, dann Zeit Letztes Play Speichern
-
-    display.clearDisplay();
-    setDataDisplay();
-    display.display();
-  }
 }
 
 void updateButtonState()
@@ -691,7 +533,7 @@ void handleButtonClicks()
   switch (buttonState)
   {
   case B4_AND_B5_PRESSED:
-    startHonking();
+    shotClockLogic.honk();
     display.clearDisplay();
     display.drawFastHLine(2, 50, 124, SSD1306_WHITE);
     display.setFont(NULL);
@@ -700,52 +542,45 @@ void handleButtonClicks()
     display.printf("HONK");
     display.setTextSize(1);
     display.setCursor(32, 57);
-    display.printf("Channel %d",channel);
+    display.printf("Channel %d", channel);
     display.display();
     break;
   case B1_PRESSED:
-    playPause();
+    shotClockLogic.playPause();
     break;
   case B1_PRESSED_LONG:
-    playPause();
+    shotClockLogic.playPause();
     break;
   case B2_PRESSED:
-    resetClock(true, clockStartTime);
+    shotClockLogic.resetClock(true);
     break;
   case B2_PRESSED_LONG:
-    toggleResetTime();
+    shotClockLogic.resetClock(true);
     break;
   case B3_PRESSED:
-    resetClock(false, clockStartTime);
+    shotClockLogic.resetClock(false);
     break;
   case B3_PRESSED_LONG:
-    toggleResetTime();
+    shotClockLogic.toggleResetTime();
+    shotClockLogic.resetClock(false);
     break;
   case B4_PRESSED:
-    if (!isClockRunning) {
-      resetClock(false, timeToDisplay - 1);
-    }
+    shotClockLogic.adjustTime(-1);
     break;
   case B4_PRESSED_LONG:
-    if (!isClockRunning) {
-      resetClock(false, timeToDisplay - 10);
-    }
+    shotClockLogic.adjustTime(-10);
     break;
   case B5_PRESSED:
-    if (!isClockRunning) {
-      resetClock(false, timeToDisplay + 1);
-    }
+    shotClockLogic.adjustTime(1);
     break;
   case B5_PRESSED_LONG:
-    if (!isClockRunning) {
-      resetClock(false, timeToDisplay + 10);
-    }
+    shotClockLogic.adjustTime(10);
     break;
   case B6_PRESSED:
-  playPause();
+    shotClockLogic.playPause();
     break;
   case B6_PRESSED_LONG:
-  playPause();
+    shotClockLogic.playPause();
     break;
   default:
     break;
@@ -755,7 +590,6 @@ void handleButtonClicks()
 //===============================================================
 // Setup
 //===============================================================
-
 void initOTA()
 {
   ElegantOTA.begin(&server);  // Start ElegantOTA
@@ -790,7 +624,8 @@ void initWebserver()
   server.on("/brightness", HTTP_GET, [](AsyncWebServerRequest *request)
             {
     if (request->hasParam("b")){
-      brightnessLevel = request->getParam("b")->value().toInt();
+      int level = request->getParam("b")->value().toInt();
+      shotClockLogic.setBrightness(level);
       request->send(200, "text/html", "brightness changed");
     }
     else{
@@ -801,7 +636,7 @@ void initWebserver()
             {
     if (request->hasParam("v")){
       int level = request->getParam("v")->value().toInt();
-      setHonkVolumeLevel(level);
+      shotClockLogic.setHonkVolumeLevel(level);
       request->send(200, "text/html", "honk volume changed");
     }
     else{
@@ -813,7 +648,7 @@ void initWebserver()
     if (request->hasParam("t")){
       int time = request->getParam("t")->value().toInt();
       if (time >= 1 && time <= 99) {
-        setNewStartTime(time);
+        shotClockLogic.setResetTime(time);
         request->send(200, "text/html", "start time changed");
       } else {
         request->send(400, "text/plain", "invalid time value: must be between 1 and 99");
@@ -897,9 +732,6 @@ void initRadio() {
 
 void setup()
 {
-  loadChannelFromEEPROM();
-  loadClockStartTimeFromEEPROM();
-
   ESP_LOGE("Init", "START"); 
   #if defined(OSC_CONTROLLER_R0) | defined(OSC_CONTROLLER_R1)
     pinMode(PIN_PWR, OUTPUT);
@@ -937,7 +769,6 @@ void setup()
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C, true)) {
     ESP_LOGE("SSD1306", "init failed"); 
   }
-
   display.clearDisplay();
   #ifdef FLIPSCREEN
     display.setRotation(2);  
@@ -950,8 +781,6 @@ void setup()
   display.setTextSize(1);
   
   loadChannelFromEEPROM();
-  loadClockStartTimeFromEEPROM();
-  loadHonkVolumeFromEEPROM();
 
   // RS-485
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
@@ -977,8 +806,6 @@ void setup()
 
   initOTA();
 
-
-
   display.clearDisplay();
   setPauseDisplay();
   setDataDisplay();
@@ -986,23 +813,21 @@ void setup()
 
   initButtons();
 
+  shotClockLogic.begin(updateClock, honkClock, notifyClients);
+
   timeNow = millis();
-  timeOfLastPauseEvent = timeNow;
-  msLastStopCount = timeNow; 
 }
 
 //===============================================================
 // loop
 //===============================================================
-
 void loop()
 {
   timeNow = millis();
+  shotClockLogic.handle();
 
   updateButtonState();
   handleButtonClicks();
-
-  isClockRunning ? count() : stopCount();
 
   ElegantOTA.loop();
 
