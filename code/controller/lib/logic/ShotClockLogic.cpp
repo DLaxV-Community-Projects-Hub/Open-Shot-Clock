@@ -67,18 +67,18 @@ void ShotClockLogic::setBrightness(uint8_t brightness)
   brightnessLevel = brightness;
 }
 
-/// @brief Toggles the reset time between 30 and 80 seconds.
+/// @brief Toggles the reset time between SHORT and LONG.
 /// @brief Sets the reset time for the clock.
 /// @param time The reset time to set.
 void ShotClockLogic::toggleResetTime()
 {
-  if (_resetTime == 30)
+  if (_resetTime == RESET_TIME_SHORT)
   {
-    setResetTime(80);
+    setResetTime(RESET_TIME_LONG);
   }
   else
   {
-    setResetTime(30);
+    setResetTime(RESET_TIME_SHORT);
   }
 }
 
@@ -164,6 +164,37 @@ void ShotClockLogic::setHonkVolumeLevel(uint8_t level)
   preferences.putUChar(honkVolumePreferenceName, honkVolumeLevel);
   preferences.end();
   ESP_LOGI("ShotClockLogic", "Changed honk volume level to: %d", honkVolumeLevel);
+}
+
+ String ShotClockLogic::settingsProcessor(const String& var)
+{
+  if (var == "CURRENT_START_TIME") return String(getResetTime());
+
+  const char* pStart = "SELECTED_START_TIME";
+  if (var.startsWith(pStart)) {
+      int resetTime = getResetTime();
+      if (var.endsWith("CUSTOM")) {
+          return (resetTime != RESET_TIME_SHORT && resetTime != RESET_TIME_LONG) ? "selected" : "";
+      }
+      return (var.substring(strlen(pStart)).toInt() == resetTime) ? "selected" : "";
+  }
+  
+  const char* pChannel = "SELECTED_CHANNEL";
+  if (var.startsWith(pChannel)) {
+      return (var.substring(strlen(pChannel)).toInt() == channel) ? "selected" : "";
+  }
+  
+  const char* pHonk = "SELECTED_HONK_VOLUME_LEVEL";
+  if (var.startsWith(pHonk)) {
+      return (var.substring(strlen(pHonk)).toInt() == getHonkVolumeLevel()) ? "selected" : "";
+  }
+  
+  const char* pBright = "SELECTED_BRIGHTNESS_LEVEL";
+  if (var.startsWith(pBright)) {
+      return (var.substring(strlen(pBright)).toInt() == getBrightnessLevel()) ? "selected" : "";
+  }
+
+  return String();
 }
 
 void ShotClockLogic::honkClock(uint8_t honkVolumeLevel)

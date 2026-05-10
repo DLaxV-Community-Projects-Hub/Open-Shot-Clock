@@ -104,6 +104,22 @@ Button btn1(PIN_B1), // define the button
     btn5(PIN_B5),
     btn6(PIN_B6);
 
+struct ButtonConfig {
+    Button* btn; 
+    buttonStates_t stateShort;
+    buttonStates_t stateLong;
+    uint32_t pressTime;
+};
+
+static ButtonConfig configs[] = {
+        {&btn1, B1_PRESSED, B1_PRESSED_LONG, LONG_PRESS},
+        {&btn2, B2_PRESSED, B2_PRESSED_LONG, LONG_PRESS},
+        {&btn3, B3_PRESSED, B3_PRESSED_LONG, EXTRA_LONG_PRESS},
+        {&btn4, B4_PRESSED, B4_PRESSED_LONG, LONG_PRESS},
+        {&btn5, B5_PRESSED, B5_PRESSED_LONG, LONG_PRESS},
+        {&btn6, B6_PRESSED, B6_PRESSED_LONG, LONG_PRESS}
+    };
+
 #if defined(WIFI_LoRa_32_V2)
   SX1276 radio = new Module(SS, DIO0, RST_LoRa, DIO0);
 #endif
@@ -310,99 +326,6 @@ String versionProcessor(const String& var)
   return val;
 }
 
-String settingsProcessor(const String &var)
-{
-  if (var == "CURRENT_START_TIME")
-  {
-    return String(shotClockLogic.getResetTime());
-  }
-  else if (var == "SELECTED_START_TIME30" && shotClockLogic.getResetTime() == 30)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_START_TIME80" && shotClockLogic.getResetTime() == 80)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_START_TIME_CUSTOM" && shotClockLogic.getResetTime() != 30 && shotClockLogic.getResetTime() != 80)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_CHANNEL1" && channel == 1)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_CHANNEL2" && channel == 2)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_CHANNEL3" && channel == 3)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_CHANNEL4" && channel == 4)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_HONK_VOLUME_LEVEL0" && shotClockLogic.getHonkVolumeLevel() == 0)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_HONK_VOLUME_LEVEL1" && shotClockLogic.getHonkVolumeLevel() == 1)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_HONK_VOLUME_LEVEL2" && shotClockLogic.getHonkVolumeLevel() == 2)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_HONK_VOLUME_LEVEL3" && shotClockLogic.getHonkVolumeLevel() == 3)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_HONK_VOLUME_LEVEL4" && shotClockLogic.getHonkVolumeLevel() == 4)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_HONK_VOLUME_LEVEL5" && shotClockLogic.getHonkVolumeLevel() == 5)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL1" && shotClockLogic.getBrightnessLevel() == 1)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL2" && shotClockLogic.getBrightnessLevel() == 2)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL3" && shotClockLogic.getBrightnessLevel() == 3)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL4" && shotClockLogic.getBrightnessLevel() == 4)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL5" && shotClockLogic.getBrightnessLevel() == 5)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL6" && shotClockLogic.getBrightnessLevel() == 6)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL7" && shotClockLogic.getBrightnessLevel() == 7)
-  {
-    return "selected";
-  }
-  else if (var == "SELECTED_BRIGHTNESS_LEVEL8" && shotClockLogic.getBrightnessLevel() == 8)
-  {
-    return "selected";
-  }
-  return String();
-}
-
 void setChannel(int ch)
 {
   channel = ch;
@@ -425,165 +348,85 @@ void loadChannelFromEEPROM()
 
 void updateButtonState()
 {
-  btn1.read(); // read the button
-  btn2.read(); // read the button
-  btn3.read(); // read the button
-  btn4.read();   // read the button
-  btn5.read();   // read the button
-  btn6.read();   // read the button
+  // Update all button states first
+  for (auto& c : configs) {
+      c.btn->read();
+  }
 
-  if (btn4.isPressed() && btn5.wasReleased())
-  {
-    // hold down button 4 and click button 5
-    buttonState = B4_AND_B5_PRESSED;
-    wasLongPress = true;
+  // First handle special combinations of buttons
+  if (btn4.isPressed() && btn5.wasReleased()) {
+      buttonState = B4_AND_B5_PRESSED;
+      wasLongPress = true;
+      return;
   }
-  else  if (btn1.isPressed() && btn2.wasReleased())
-  {
-    // hold down button 1 and click button 2
-    buttonState = B1_AND_B2_PRESSED;
+  if (btn1.isPressed() && btn2.wasReleased()) {
+      buttonState = B1_AND_B2_PRESSED;
+      return;
   }
-  else if (btn1.wasReleased() && !wasLongPress)
-  {
-    buttonState = B1_PRESSED;
+
+  // Evaluate all other buttons and update state
+  for (auto& c : configs) {
+      if (c.btn->wasReleased()) {
+          if (wasLongPress) {
+              wasLongPress = false; 
+          } else {
+              buttonState = c.stateShort;
+          }
+          return; 
+      }
+      if (c.btn->pressedFor(c.pressTime) && !wasLongPress) {
+          buttonState = c.stateLong;
+          wasLongPress = true;
+          return;
+      }
   }
-  else if (btn1.wasReleased() && wasLongPress)
-  {
-    wasLongPress = false;
-  }
-  else if (btn1.pressedFor(LONG_PRESS) && !wasLongPress)
-  {
-    buttonState = B1_PRESSED_LONG;
-    wasLongPress = true;
-  }
-  else if (btn2.wasReleased() && !wasLongPress)
-  {
-    buttonState = B2_PRESSED;
-  }
-  else if (btn2.wasReleased() && wasLongPress)
-  {
-    wasLongPress = false;
-  }
-  else if (btn2.pressedFor(LONG_PRESS) && !wasLongPress)
-  {
-    buttonState = B2_PRESSED_LONG;
-    wasLongPress = true;
-  }
-  else if (btn3.wasReleased() && !wasLongPress)
-  {
-    buttonState = B3_PRESSED;
-  }
-  else if (btn3.wasReleased() && wasLongPress)
-  {
-    wasLongPress = false;
-  }
-  else if (btn3.pressedFor(EXTRA_LONG_PRESS) && !wasLongPress)
-  {
-    buttonState = B3_PRESSED_LONG;
-    wasLongPress = true;
-  }
-  else if (btn4.wasReleased() && !wasLongPress)
-  {
-    buttonState = B4_PRESSED;
-  }
-  else if (btn4.wasReleased() && wasLongPress)
-  {
-    wasLongPress = false;
-  }
-  else if (btn4.pressedFor(LONG_PRESS) && !wasLongPress)
-  {
-    buttonState = B4_PRESSED_LONG;
-    wasLongPress = true;
-  }
-  else if (btn5.wasReleased() && !wasLongPress)
-  {
-    buttonState = B5_PRESSED;
-  }
-  else if (btn5.wasReleased() && wasLongPress)
-  {
-    wasLongPress = false;
-  }
-  else if (btn5.pressedFor(LONG_PRESS) && !wasLongPress)
-  {
-    buttonState = B5_PRESSED_LONG;
-    wasLongPress = true;
-  }
-  else if (btn6.wasReleased() && !wasLongPress)
-  {
-    buttonState = B6_PRESSED;
-  }
-  else if (btn6.wasReleased() && wasLongPress)
-  {
-    wasLongPress = false;
-    wasLongPress = false;
-  }
-  else if (btn6.pressedFor(LONG_PRESS) && !wasLongPress)
-  {
-    buttonState = B6_PRESSED_LONG;
-    wasLongPress = true;
-  }
-  else
-  {
-    buttonState = NONE;
-  }
+
+  buttonState = NONE;
 }
 
 void handleButtonClicks()
 {
   switch (buttonState)
   {
-  case B4_AND_B5_PRESSED:
-    shotClockLogic.honk();
-    display.clearDisplay();
-    display.drawFastHLine(2, 50, 124, SSD1306_WHITE);
-    display.setFont(NULL);
-    display.setTextSize(5);
-    display.setCursor(7, 10);
-    display.printf("HONK");
-    display.setTextSize(1);
-    display.setCursor(32, 57);
-    display.printf("Channel %d", channel);
-    display.display();
-    break;
-  case B1_PRESSED:
-    shotClockLogic.playPause();
-    break;
-  case B1_PRESSED_LONG:
-    shotClockLogic.playPause();
-    break;
-  case B2_PRESSED:
-    shotClockLogic.resetClock(true);
-    break;
-  case B2_PRESSED_LONG:
-    shotClockLogic.resetClock(true);
-    break;
-  case B3_PRESSED:
-    shotClockLogic.resetClock(false);
-    break;
-  case B3_PRESSED_LONG:
-    shotClockLogic.toggleResetTime();
-    shotClockLogic.resetClock(false);
-    break;
-  case B4_PRESSED:
-    shotClockLogic.adjustTime(-1);
-    break;
-  case B4_PRESSED_LONG:
-    shotClockLogic.adjustTime(-10);
-    break;
-  case B5_PRESSED:
-    shotClockLogic.adjustTime(1);
-    break;
-  case B5_PRESSED_LONG:
-    shotClockLogic.adjustTime(10);
-    break;
-  case B6_PRESSED:
-    shotClockLogic.playPause();
-    break;
-  case B6_PRESSED_LONG:
-    shotClockLogic.playPause();
-    break;
-  default:
-    break;
+    case B1_PRESSED:
+    case B1_PRESSED_LONG:
+    case B6_PRESSED:
+    case B6_PRESSED_LONG:
+      shotClockLogic.playPause();
+      break;
+    case B2_PRESSED:
+    case B2_PRESSED_LONG:
+      shotClockLogic.resetClock(true);
+      break;
+    case B3_PRESSED:
+      shotClockLogic.resetClock(false);
+      break;
+    case B3_PRESSED_LONG:
+      shotClockLogic.toggleResetTime();
+      shotClockLogic.resetClock(false);
+      break;
+
+    case B4_PRESSED:      shotClockLogic.adjustTime(-1);  break;
+    case B4_PRESSED_LONG: shotClockLogic.adjustTime(-10); break;
+    case B5_PRESSED:      shotClockLogic.adjustTime(1);   break;
+    case B5_PRESSED_LONG: shotClockLogic.adjustTime(10);  break;
+
+    case B4_AND_B5_PRESSED:
+      shotClockLogic.honk();
+      display.clearDisplay();
+      display.drawFastHLine(2, 50, 124, SSD1306_WHITE);
+      display.setFont(NULL);
+      display.setTextSize(5);
+      display.setCursor(7, 10);
+      display.printf("HONK");
+      display.setTextSize(1);
+      display.setCursor(32, 57);
+      display.printf("Channel %d", channel);
+      display.display();
+      break;
+      
+    default:
+      break;
   }
 }
 
@@ -610,53 +453,51 @@ void initWebserver()
             { request->send(SPIFFS, "/index.html", String(), false); });
 
   server.on("/controller", HTTP_GET, [](AsyncWebServerRequest *request)
-            {
-  request->send(SPIFFS, "/controller.html", String(), false);
-  });
+            { request->send(SPIFFS, "/controller.html", String(), false); });
 
   server.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(SPIFFS, "/settings.html", String(), false, settingsProcessor); });
+            { request->send(SPIFFS, "/settings.html", String(), false, [](const String &var) -> String
+                            { return shotClockLogic.settingsProcessor(var); }); });
 
-  server.on("/version", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/html", version_html, versionProcessor);
-  });
+  server.on("/version", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(200, "text/html", version_html, versionProcessor); });
 
   server.on("/brightness", HTTP_GET, [](AsyncWebServerRequest *request)
             {
-    if (request->hasParam("b")){
-      int level = request->getParam("b")->value().toInt();
-      shotClockLogic.setBrightness(level);
-      request->send(200, "text/html", "brightness changed");
-    }
-    else{
-      request->send(400, "text/plain", "missing parameters");
-    } });
+              if (request->hasParam("b")){
+                int level = request->getParam("b")->value().toInt();
+                shotClockLogic.setBrightness(level);
+                request->send(200, "text/html", "brightness changed");
+              }
+              else{
+                request->send(400, "text/plain", "missing parameters");
+              } });
 
   server.on("/honkvolume", HTTP_GET, [](AsyncWebServerRequest *request)
             {
-    if (request->hasParam("v")){
-      int level = request->getParam("v")->value().toInt();
-      shotClockLogic.setHonkVolumeLevel(level);
-      request->send(200, "text/html", "honk volume changed");
-    }
-    else{
-      request->send(400, "text/plain", "missing parameters");
-    } });
+              if (request->hasParam("v")){
+                int level = request->getParam("v")->value().toInt();
+                shotClockLogic.setHonkVolumeLevel(level);
+                request->send(200, "text/html", "honk volume changed");
+              }
+              else{
+                request->send(400, "text/plain", "missing parameters");
+              } });
 
   server.on("/starttime", HTTP_GET, [](AsyncWebServerRequest *request)
             {
-    if (request->hasParam("t")){
-      int time = request->getParam("t")->value().toInt();
-      if (time >= 1 && time <= 99) {
-        shotClockLogic.setResetTime(time);
-        request->send(200, "text/html", "start time changed");
-      } else {
-        request->send(400, "text/plain", "invalid time value: must be between 1 and 99");
-      }
-    }
-    else{
-      request->send(400, "text/plain", "missing parameters");
-    } });
+              if (request->hasParam("t")){
+                int time = request->getParam("t")->value().toInt();
+                if (time >= 1 && time <= 99) {
+                  shotClockLogic.setResetTime(time);
+                  request->send(200, "text/html", "start time changed");
+                } else {
+                  request->send(400, "text/plain", "invalid time value: must be between 1 and 99");
+                }
+              }
+              else{
+                request->send(400, "text/plain", "missing parameters");
+              } });
 
   // Route to load style.css file
   server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -682,17 +523,17 @@ void initWebserver()
 
   server.on("/channel", HTTP_GET, [](AsyncWebServerRequest *request)
             {
-    if (request->hasParam("c")) {
-      int ch = request->getParam("c")->value().toInt();
-      if (ch >= 1 && ch <= 4) {
-        request->send(200, "text/plain", resetString);
-        setChannel(ch);
-      } else {
-        request->send(400, "text/plain", "invalid channel");
-      }
-    } else {
-      request->send(400, "text/plain", "missing parameters");
-    } });
+            if (request->hasParam("c")) {
+              int ch = request->getParam("c")->value().toInt();
+              if (ch >= 1 && ch <= 4) {
+                request->send(200, "text/plain", resetString);
+                setChannel(ch);
+              } else {
+                request->send(400, "text/plain", "invalid channel");
+              }
+            } else {
+              request->send(400, "text/plain", "missing parameters");
+            } });
 }
 
 void initButtons() {

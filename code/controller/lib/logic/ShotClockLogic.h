@@ -27,10 +27,15 @@ class ShotClockLogic {
       return isRunning;
     }
 
+    String settingsProcessor(const String& var);
+
      uint8_t getTimeToDisplay() { return timeToDisplay;}
      uint8_t getResetTime() { return _resetTime; }
      uint8_t getHonkVolumeLevel() { return honkVolumeLevel; }
      uint8_t getBrightnessLevel() { return brightnessLevel;}
+
+     const uint8_t RESET_TIME_SHORT = 30;
+     const uint8_t RESET_TIME_LONG = 80;
 
   private:
 
@@ -60,6 +65,11 @@ class ShotClockLogic {
     const char* honkVolumePreferenceName = "honk-volume";
     const char* channelPreferenceName = "channel";
 
+    typedef struct settings
+    {
+      const char* name;
+    };
+    
 
     int channel = 1;
     int defaultClockStart = 30;
