@@ -1,3 +1,4 @@
+#pragma once
 // Created by https://oleddisplay.squix.ch/ Consider a donation
 // In case of problems make sure that you are using the font file with the correct version!
 const uint8_t DSEG7_Classic_Mini_Regular_40Bitmaps[] PROGMEM = {

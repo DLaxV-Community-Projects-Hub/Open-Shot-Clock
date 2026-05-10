@@ -65,12 +65,6 @@ class ShotClockLogic {
     const char* honkVolumePreferenceName = "honk-volume";
     const char* channelPreferenceName = "channel";
 
-    typedef struct settings
-    {
-      const char* name;
-    };
-    
-
     int channel = 1;
     int defaultClockStart = 30;
 

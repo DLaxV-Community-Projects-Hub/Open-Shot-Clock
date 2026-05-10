@@ -1,12 +1,7 @@
 #include <Arduino.h>
 
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
-#include "osc_logo.h"
-#include "images.h"
 #include "channel.h"
 #include "version.h"
-#include "font.h"
 
 #include <JC_Button.h>
 
@@ -20,6 +15,7 @@
 #include <SPIFFS.h>
 
 #include "ShotClockLogic.h"
+#include "ShotClockUI.h"
 #include "config.h"
 
 #include <Preferences.h>
@@ -140,7 +136,7 @@ AsyncWebSocket ws("/ws");
 
 Preferences preferences;
 
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, RST_OLED);
+ShotClockUI shotclockUI = ShotClockUI(Wire, RST_OLED, OLED_nEN);
 
 //===============================================================
 // function prototypes
@@ -150,26 +146,6 @@ void sendToClock(String);
 //===============================================================
 // functions
 //===============================================================
-void setPauseDisplay()
-{
-  display.fillRect(12, 16, 3, 16, SSD1306_WHITE);
-  display.fillRect(18, 16, 3, 16, SSD1306_WHITE);
-}
-
-void setDataDisplay()
-{
-  static uint8_t level = 0, signalStrength = 0;
-  clockStr = _timeToDisplay < 10 ? "0" + String(_timeToDisplay) : String(_timeToDisplay);
-
-  display.drawFastHLine(2, 50, 124, SSD1306_WHITE);
-  display.setFont(&DSEG7_Classic_Mini_Regular_40);
-  display.setCursor(32, 40);
-  display.printf("%s", clockStr);
-  
-  display.setFont(NULL);
-  display.setCursor(32, 57);
-  display.printf("Channel %d",channel);
-}
 
 void notifyClients(String message)
 {
@@ -179,13 +155,7 @@ void notifyClients(String message)
 
 void sendToClock(String Msg)
 {
-  display.clearDisplay();
-  setDataDisplay();
-  if(!shotClockLogic.isClockRunning())
-  {
-    setPauseDisplay();
-  }
-  display.display();
+  shotclockUI.setDataDisplay(_timeToDisplay, channel, shotClockLogic.isClockRunning());
 
   String msgWithChannel = Msg + String(channel);
 
@@ -220,7 +190,6 @@ void sendStartTime(int T)
 {
   notifyClients("SW" + T);
 }
-
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 {
@@ -356,7 +325,7 @@ void updateButtonState()
   // First handle special combinations of buttons
   if (btn4.isPressed() && btn5.wasReleased()) {
       buttonState = B4_AND_B5_PRESSED;
-      wasLongPress = true;
+      //wasLongPress = true;
       return;
   }
   if (btn1.isPressed() && btn2.wasReleased()) {
@@ -413,16 +382,7 @@ void handleButtonClicks()
 
     case B4_AND_B5_PRESSED:
       shotClockLogic.honk();
-      display.clearDisplay();
-      display.drawFastHLine(2, 50, 124, SSD1306_WHITE);
-      display.setFont(NULL);
-      display.setTextSize(5);
-      display.setCursor(7, 10);
-      display.printf("HONK");
-      display.setTextSize(1);
-      display.setCursor(32, 57);
-      display.printf("Channel %d", channel);
-      display.display();
+      shotclockUI.showHonk(channel);
       break;
       
     default:
@@ -548,7 +508,7 @@ void initButtons() {
 
 void initRadio() {
   // initialize SX12xx with default settings
-  ESP_LOGI("Radio","LoRa Initializing ... ");
+  ESP_LOGI("RADIO","Initializing ... ");
 
   #if defined(OSC_CONTROLLER_R0) | defined(OSC_CONTROLLER_R1)
     spi.begin(LoRa_CLK, LoRa_MISO, LoRa_MOSI, LoRa_NSS); 
@@ -558,11 +518,9 @@ void initRadio() {
   #endif
 
   if (state == RADIOLIB_ERR_NONE) {
-    ESP_LOGI("Radio","success!");
+    ESP_LOGI("RADIO","success!");
   } else {
-    ESP_LOGE("Radio","failed, code ");
-    Serial.println(state);
-    while (true);
+    ESP_LOGE("RADIO","failed, code %d", state);
   }
 
   radio.setSyncWord(syncword);
@@ -607,20 +565,12 @@ void setup()
   Wire.setPins(SDA, SCL);
   Wire.begin();
 
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C, true)) {
-    ESP_LOGE("SSD1306", "init failed"); 
-  }
-  display.clearDisplay();
   #ifdef FLIPSCREEN
-    display.setRotation(2);  
-  #endif
-  display.setTextColor(SSD1306_WHITE);
-  display.drawBitmap(29, 0, osc_logo.data, osc_logo.width, osc_logo.height, SSD1306_WHITE);
-  display.display();
-  delay(1000); // Pause for 1 seconds
-  display.setFont(NULL);
-  display.setTextSize(1);
-  
+  shotclockUI.begin(true);
+  #else
+   shotclockUI.begin(false);  
+   #endif
+   
   loadChannelFromEEPROM();
 
   // RS-485
@@ -647,11 +597,6 @@ void setup()
 
   initOTA();
 
-  display.clearDisplay();
-  setPauseDisplay();
-  setDataDisplay();
-  display.display();
-
   initButtons();
 
   shotClockLogic.begin(updateClock, honkClock, notifyClients);
@@ -666,6 +611,7 @@ void loop()
 {
   timeNow = millis();
   shotClockLogic.handle();
+  shotclockUI.handle();
 
   updateButtonState();
   handleButtonClicks();
