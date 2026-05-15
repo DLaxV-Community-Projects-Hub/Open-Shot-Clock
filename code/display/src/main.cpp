@@ -18,6 +18,8 @@
 #include "config.h"
 #include "LEDs.h"
 #include "Horn.h"
+#include "SCLink.h"
+#include "DisplayLink.h"
 
 #include <RadioLib.h>
 
@@ -39,21 +41,21 @@ AsyncWebServer server(80);
 
 #if defined(WIFI_LoRa_32_V3)
   // Use the SX1262 Radio
-  SX1262 radio = new Module(SS, DIO0, LoRa_RST, LoRa_BUSY);
+  DisplayLink protocol = DisplayLink(new Module(SS, DIO0, LoRa_RST, LoRa_BUSY));
   // Use Wire1 Object, because OLED uses the other one, that is not usable through pins
   Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, Wire1);
   Adafruit_SSD1306 display(128, 64, &Wire, RST_OLED);
 #endif
 
 #if defined(OSC_DISPLAY_R0) | defined(OSC_DISPLAY_R1)
-  LLCC68 radio = new Module(SS, DIO0, LoRa_RST, LoRa_BUSY);
+ DisplayLink protocol = DisplayLink( new Module(SS, DIO0, LoRa_RST, LoRa_BUSY));
   Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, Wire);
   #endif
   
 #if defined(OSC_DISPLAY_R2)
   SPIClass spi(HSPI);
   SPISettings spiSettings(2000000, MSBFIRST, SPI_MODE0);
-  LLCC68 radio = new Module(LoRa_NSS, DIO0, LoRa_RST, LoRa_BUSY, spi, spiSettings);
+  DisplayLink protocol = DisplayLink(new Module(LoRa_NSS, DIO0, LoRa_RST, LoRa_BUSY, spi, spiSettings));
   Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, Wire);
   Adafruit_SSD1306 display(128, 64, &Wire, -1);
 #endif
@@ -64,6 +66,10 @@ Horn horn(pwm);
 #else if defined(OSC_DISPLAY_R0) | defined(OSC_DISPLAY_R1) | defined(OSC_DISPLAY_R2)
 Horn horn(pwm, 15);
 #endif
+
+uint32_t lastTime=0;
+uint16_t voltageRaw=0;
+float voltage;
 
 Preferences preferences;
 
@@ -142,6 +148,34 @@ void initOTA()
   ESP_LOGI("OTA", "HTTP server started");
 }
 
+
+SCLink::telemetryResponse_t handleCMDTelemetry(){
+  static uint8_t battery=0, rssi=0;
+  battery = ++battery<=8? battery : 0;
+  rssi = ++rssi<=4? rssi:0;
+  SCLink::telemetryResponse_t resp = {battery,rssi};
+  ESP_LOGI("handleTelemetry","1: %d, 2: %d",resp.batteryLevel, resp.rssi);
+  return resp;
+}
+
+void handleCMDTime(uint8_t time, uint8_t brightness){
+  leds.displayClock(time);
+  leds.setBrightnessLevel(brightness);
+  lms = millis();
+  clientFlag = true;
+}
+
+void handleCMDHonk(uint8_t volume){
+  horn.requestHonk(volume);
+    lms = millis();
+  clientFlag = true;
+}
+
+void receiveTimeout()
+{
+    clientFlag = false;
+}
+
 // flag to indicate that a packet was received
 volatile bool receivedFlag = false;
 
@@ -218,7 +252,7 @@ bool isMessageValid(String msg) {
   return false;
 }
 
-void handlePacket(){
+/*void handlePacket(){
   if(!isMessageValid(packet)) {
     return;
   }
@@ -264,7 +298,7 @@ void readLoraMessage() {
     radio.reset();
     setupRadio();
   }
-}
+}*/
 
 void set_channel(int ch){
   channel = ch;
@@ -375,7 +409,7 @@ void initChannelFromEEPROM(){
   preferences.end();
 }
 
-void setupRadio() {
+/*void setupRadio() {
   // initialize Radio with default settings
   ESP_LOGI("Radio","Initializing radio...");
   #if defined(OSC_DISPLAY_R2)
@@ -392,17 +426,17 @@ void setupRadio() {
   radio.setFrequency(frequency);
 
   // set the function that will be called when new packet is received
-  radio.setPacketReceivedAction(setLoRaReceiveFlag);
+  //radio.setPacketReceivedAction(setLoRaReceiveFlag);
 
   // start listening for LoRa packets
   ESP_LOGI("Radio","Starting to listen...");
-  state = radio.startReceive();
+  //state = radio.startReceive();
   if (state == RADIOLIB_ERR_NONE) {
     ESP_LOGI("Radio","Started receiving successfully");
   } else {
     ESP_LOGE("Radio","Failed to start receiving with code %d", state);
   }
-}
+}*/
 
 void initI2C() {
   #ifdef WIFI_LoRa_32_V3
@@ -439,6 +473,7 @@ void initPins() {
     digitalWrite(UART_TXEN, LOW);
     pinMode(UART_RXEN, OUTPUT);
     digitalWrite(UART_RXEN, LOW);
+    pinMode(V_SENSE, ANALOG);
   #endif
 }
 
@@ -452,7 +487,7 @@ void setup() {
   
   inputString.reserve(200);
   
-  setupRadio();
+  //setupRadio();
 
   initI2C();
 
@@ -470,6 +505,15 @@ void setup() {
   initWebserver();
 
   initOTA();
+
+  delay(500);
+
+  ESP_LOGI("Radio","Initializing radio...");
+  #if defined(OSC_DISPLAY_R2)
+    spi.begin(LoRa_CLK, LoRa_MISO, LoRa_MOSI, LoRa_NSS);
+  #endif
+
+  protocol.begin(syncword, frequency, handleCMDTelemetry,handleCMDTime, handleCMDHonk, nullptr, 2500); // Assuming device ID is 1
   
   leds.showWaitingAnimation();
   waitingDisplay();
@@ -489,17 +533,19 @@ void loop() {
   if (RS485mode == false){
     if (receivedFlag) { 
       receivedFlag = false;
-      readLoraMessage();
+      //readLoraMessage();
     }
   }
   //RS-485 Test
   RS485receive();
 
+  protocol.handler();
+
   // print the string when a newline arrives:
   if (stringComplete) {
     lms = millis();
     clientFlag = true;
-    handlePacket();
+    //handlePacket();
     drawRS485Info();
 
     // clear the string:
@@ -514,6 +560,21 @@ void loop() {
   else{
     client_check();
     }
+
+    
+  #if defined(OSC_DISPLAY_R2) | defined(OSC_DISPLAY_R1)
+  if(millis() - lastTime > 4800)
+  {
+    voltageRaw = analogRead(V_SENSE);
+    voltage = (voltageRaw * V_GAIN);
+    ESP_LOGI("ADC","Voltage: %f, %d",voltage, analogReadMilliVolts(V_SENSE));
+    
+    lastTime = millis();
+    uint32_t tmp ;
+    for(int i=0;i<1000;i++) tmp = analogReadMilliVolts(V_SENSE);
+    ESP_LOGI("ADC","1000x %dms",millis()- lastTime);
+  }
+  #endif
 
   horn.handle();
   leds.handle();

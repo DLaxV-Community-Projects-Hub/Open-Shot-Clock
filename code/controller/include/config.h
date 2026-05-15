@@ -81,20 +81,20 @@ const char* password = "12345678";
 #endif
 
 #if defined(WIFI_LoRa_32_V3) | defined(WIFI_LoRa_32_V2)
-    #define OLED_nEN Vext
+    #define OLED_nEN        Vext
     #define SCL             SCL_OLED
     #define SDA             SDA_OLED
 #endif
 
 //RS-485
 #if defined(WIFI_LoRa_32_V2)
-    #define RXD2 13
-    #define TXD2 12
+    #define RXD2            13
+    #define TXD2            12
 #endif
 
 #if defined(WIFI_LoRa_32_V3)
-    #define RXD2 6
-    #define TXD2 5
+    #define RXD2            6
+    #define TXD2            5
 #endif
 
 #if defined(OSC_CONTROLLER_R0) || defined(OSC_CONTROLLER_R1)

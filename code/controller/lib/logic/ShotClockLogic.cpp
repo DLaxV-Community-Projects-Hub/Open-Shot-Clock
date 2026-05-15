@@ -50,7 +50,7 @@ void ShotClockLogic::handle()
   }
   else
   {
-    if (timeNow - msLastStopCount >= 1000)
+    if (timeNow - msLastStopCount >= 5000)
     {
       ESP_LOGI("ShotClockLogic", "Paused!");
       updateClock(timeToDisplay, brightnessLevel);

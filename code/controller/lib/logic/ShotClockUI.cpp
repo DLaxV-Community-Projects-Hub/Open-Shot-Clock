@@ -23,9 +23,9 @@ void ShotClockUI::begin(bool flipScreen) {
     display.setTextSize(1);
 
     #if CORE_DEBUG_LEVEL == 5
-        updateTelemetryInfo(0, 1, 4);
-        updateTelemetryInfo(1, 4, 1);
-        updateTelemetryInfo(2, 3, 4);
+        //updateTelemetryInfo(0, 1, 4);
+        //updateTelemetryInfo(1, 4, 1);
+        //updateTelemetryInfo(2, 3, 4);
     #endif
 }
 
@@ -51,6 +51,8 @@ void ShotClockUI::showHonk(int channel) {
 /// @param running Whether the clock is running
 void ShotClockUI::setDataDisplay(uint16_t timeToDisplay, int channel, bool running) 
 {
+  ESP_LOGI("setDataDisplay","in func");
+
     display.clearDisplay();
 
     if(!running)

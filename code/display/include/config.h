@@ -106,6 +106,7 @@ const char* password = "12345678";
 
     #define I_SENSE     1
     #define V_SENSE     2
+    #define V_GAIN (3.3f * 11.0f / 4096.0f)
 
     #define LED_STATUS  36
     #define PWR_GOOD    37
@@ -139,6 +140,7 @@ const char* password = "12345678";
 
     #define I_SENSE     1
     #define V_SENSE     2
+    #define V_GAIN (3.3f * 11.0f / 4096.0f)
 
     #define LED_STATUS  40
     #define PWR_GOOD    41

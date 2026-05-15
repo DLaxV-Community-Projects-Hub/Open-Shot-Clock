@@ -27,6 +27,9 @@ class ShotClockLogic {
       return isRunning;
     }
 
+    uint8_t getSyncWord() {return syncword; }
+    float getFrequency() {return frequency; }
+
     String settingsProcessor(const String& var);
 
      uint8_t getTimeToDisplay() { return timeToDisplay;}
@@ -67,6 +70,7 @@ class ShotClockLogic {
 
     int channel = 1;
     int defaultClockStart = 30;
+
 
     uint8_t syncwordSelect[5]={
     0x12,   //  not needed

@@ -17,6 +17,8 @@
 #include "ShotClockLogic.h"
 #include "ShotClockUI.h"
 #include "config.h"
+#include <SCLink.h>
+#include "ControllerLink.h"
 
 #include <Preferences.h>
 #include <RadioLib.h>
@@ -31,7 +33,7 @@
 //===============================================================
 // variables, constants, objects
 //===============================================================
-uint32_t lastTime=0;
+uint32_t lastTime=0, timeTelemetry=0;
 uint16_t voltageRaw=0, currentRaw=0;
 float voltage=0.0f;
 
@@ -45,6 +47,7 @@ uint8_t syncwordSelect[5]={
   0x34,   //  Kanal 3  
   0x45    //  Kanal 4
 };
+
 uint8_t syncword = syncwordSelect[defaultChannel];
 
 float frequencySelect[5]={
@@ -118,15 +121,19 @@ static ButtonConfig configs[] = {
 
 #if defined(WIFI_LoRa_32_V2)
   SX1276 radio = new Module(SS, DIO0, RST_LoRa, DIO0);
+ControllerLink protocol = ControllerLink(new Module(SS, DIO0, RST_LoRa, DIO0));
 #endif
 
 #if defined(WIFI_LoRa_32_V3)
-  SX1262 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
+  //SX1262 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
+ControllerLink protocol = ControllerLink(new Module(SS, DIO0, RST_LoRa, BUSY_LoRa));
 #endif
 #if defined(OSC_CONTROLLER_R0) | defined(OSC_CONTROLLER_R1)
   SPIClass spi(HSPI);
   SPISettings spiSettings(2000000, MSBFIRST, SPI_MODE0);
   LLCC68 radio = new Module(LoRa_NSS, DIO0, RST_LoRa, BUSY_LoRa, spi, spiSettings);
+ControllerLink protocol = ControllerLink();
+
 #endif
 
 ShotClockLogic shotClockLogic = ShotClockLogic();
@@ -137,6 +144,7 @@ AsyncWebSocket ws("/ws");
 Preferences preferences;
 
 ShotClockUI shotclockUI = ShotClockUI(Wire, RST_OLED, OLED_nEN);
+//Protocol protocol = Protocol();
 
 //===============================================================
 // function prototypes
@@ -153,9 +161,14 @@ void notifyClients(String message)
   ws.cleanupClients();
 }
 
+void handleCMDTelemetry(const SCLink::telemetryResponse_t &data){
+  static uint8_t id=0;
+  ESP_LOGI("handleTelemetry","1: %d, 2: %d", data.batteryLevel, data.rssi);
+  shotclockUI.updateTelemetryInfo(id++ % 3, data.batteryLevel, data.rssi);
+}
+
 void sendToClock(String Msg)
 {
-  shotclockUI.setDataDisplay(_timeToDisplay, channel, shotClockLogic.isClockRunning());
 
   String msgWithChannel = Msg + String(channel);
 
@@ -164,7 +177,8 @@ void sendToClock(String Msg)
   Serial2.println(msgWithChannel);
 
   // send lora
-  radio.transmit(msgWithChannel);
+  //radio.transmit(msgWithChannel);
+  
 }
 
 void updateClock(uint8_t timeToDisplay, uint8_t brightnessLevel) {
@@ -178,12 +192,23 @@ void updateClock(uint8_t timeToDisplay, uint8_t brightnessLevel) {
     clockMsg = timeCommand + timeToDisplay + brightnessLevel;
   }
   _timeToDisplay = timeToDisplay;
-  sendToClock(clockMsg);
+  //sendToClock(clockMsg);
+  
+  uint8_t dummy[5] {_timeToDisplay, brightnessLevel};
+  dummy[0] = _timeToDisplay; // send time in dummy data for RSSI display
+  dummy[1] = brightnessLevel;
+  ESP_LOGI("UpdateClock","t: %d, b: %d", _timeToDisplay, brightnessLevel);
+  
+  //protocol.updateTime(_timeToDisplay, brightnessLevel);
+
+  shotclockUI.setDataDisplay(_timeToDisplay, channel, shotClockLogic.isClockRunning());
 }
 
 void honkClock(uint8_t honkVolumeLevel) {
-  String commandH = "H" + String(honkVolumeLevel);
-  sendToClock(commandH);
+  //String commandH = "H" + String(honkVolumeLevel);
+  //sendToClock(commandH);
+
+  protocol.sendHonk(honkVolumeLevel);
 }
 
 void sendStartTime(int T)
@@ -506,7 +531,7 @@ void initButtons() {
   btn6.begin();
 }
 
-void initRadio() {
+/*void initRadio() {
   // initialize SX12xx with default settings
   ESP_LOGI("RADIO","Initializing ... ");
 
@@ -527,7 +552,7 @@ void initRadio() {
   radio.setFrequency(frequency);
   
   ESP_LOGI("RADIO","Freq: %f, Sync: %i",frequency, syncword);
-}
+}*/
 
 void setup()
 {
@@ -576,7 +601,7 @@ void setup()
   // RS-485
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
 
-  initRadio();
+  //initRadio();
 
   if (!SPIFFS.begin())
   {
@@ -584,6 +609,11 @@ void setup()
     return;
   }
   ESP_LOGI("MAC","Address: %s", WiFi.macAddress().c_str());
+
+  uint8_t mac[8];
+  esp_efuse_mac_get_default(mac);
+  ESP_LOGI("MAC","EDUSE: %s", mac);
+  ESP_LOGI("MAC", "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], mac[6], mac[7]);
 
   // ESP32 As access point
   WiFi.mode(WIFI_AP); // Access Point mode
@@ -599,7 +629,10 @@ void setup()
 
   initButtons();
 
+
   shotClockLogic.begin(updateClock, honkClock, notifyClients);
+  protocol.begin(shotClockLogic.getSyncWord(), shotClockLogic.getFrequency(), handleCMDTelemetry, nullptr, 1000); // Assuming device ID is 1
+  //protocol.addCommandHandler((SCLink::command_t){SCLink::CMD_TELEMETRY, handleCMDTelemetry, false});
 
   timeNow = millis();
 }
@@ -612,14 +645,29 @@ void loop()
   timeNow = millis();
   shotClockLogic.handle();
   shotclockUI.handle();
+  protocol.handler();
 
   updateButtonState();
   handleButtonClicks();
 
+  if(false)//(!shotClockLogic.isClockRunning() && timeNow - timeTelemetry > 8800)
+  {
+    timeTelemetry = timeNow;
+    uint8_t tmp = 0;
+    //protocol.transmit(SCLink::DISPLAY_1, SCLink::CMD_TELEMETRY, &tmp, 1);
+    protocol.requestTelemetry(SCLink::DISPLAY_1);
+  }
+
+    if(timeNow - lastTime > 8800)
+  {
+    lastTime = timeNow;
+    protocol.discover();
+  }
+
   ElegantOTA.loop();
 
   #if defined(OSC_CONTROLLER_R0) | defined(OSC_CONTROLLER_R1)
-  if(timeNow - lastTime > 1000)
+  if(timeNow - lastTime > 4800)
   {
     lastTime = timeNow;
     voltageRaw = analogRead(V_BAT_SENSE);
