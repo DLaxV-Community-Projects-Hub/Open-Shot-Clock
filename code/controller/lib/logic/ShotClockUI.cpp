@@ -31,7 +31,7 @@ void ShotClockUI::begin(bool flipScreen) {
 
 /// @brief Shows the honk display
 /// @param channel The channel to display
-void ShotClockUI::showHonk(int channel) {
+void ShotClockUI::showHonk(uint8_t channel) {
     display.clearDisplay();
     display.drawFastHLine(0, 48, 128, SSD1306_WHITE);
     display.setFont(NULL);
@@ -84,7 +84,7 @@ void ShotClockUI::handle() {
     lastTime = millis();
     if(!telemetryList.empty())
     {
-        telemetryId = (telemetryId + 1) % telemetryList.size();
+        telemetryId = (telemetryId + 1) % telemetryList.size()+1;
     }
   }
 }
@@ -110,6 +110,7 @@ void ShotClockUI::updateTelemetryInfo(uint8_t id, uint8_t batteryLevel, uint8_t 
 /// @param id The telemetry ID to print
 void ShotClockUI::printTelemetryInfo(uint8_t id)
 {
+    ESP_LOGV("DISPLAY","Print Telemetry; id: %d", id);
     for(const auto& telemetry : telemetryList) {
         if(telemetry.id == id) {
             display.setFont(NULL);

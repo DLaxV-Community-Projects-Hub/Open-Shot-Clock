@@ -4,14 +4,14 @@
 #include <stdint.h>
 #include <Preferences.h>
 
+#include "ShotClockUI.h"
+#include "ControllerLink.h"
 
-class ShotClockLogic {
+class ShotClockLogic : public IControllerLinkHandler{
   public:
-    typedef  void (*updateClockCallback)(uint8_t timeToDisplay, uint8_t brightnessLevel);
-    typedef  void (*honkClockCallback)(uint8_t honkVolumeLevel);
     typedef  void (*notifyClientsCallback)(String message);
 
-    void begin(updateClockCallback updateCallback, honkClockCallback honkCallback, notifyClientsCallback notifyCallback);
+    void begin(IControllerUI *iUI, IControllerLink *iLink, notifyClientsCallback notifyCallback);
     void handle();
     void setBrightness(uint8_t brightness);
 
@@ -27,6 +27,9 @@ class ShotClockLogic {
       return isRunning;
     }
 
+    void handleTelemetry(SCLink::telemetryResponse_t response) override;
+    void handleTimeout() override;
+
     uint8_t getSyncWord() {return syncword; }
     float getFrequency() {return frequency; }
 
@@ -41,14 +44,11 @@ class ShotClockLogic {
      const uint8_t RESET_TIME_LONG = 80;
 
   private:
+    void resetTimers();
 
-  void count();
-  void stopCount();
-  void resetTimers();
-
-  void notifyClients(String message);
-  void updateClock(uint8_t timeToDisplay, uint8_t brightnessLevel);
-  void honkClock(uint8_t honkVolumeLevel);
+    void notifyClients(String message);
+    void updateClock(uint8_t timeToDisplay, uint8_t brightnessLevel);
+    void honkClock(uint8_t honkVolumeLevel);
 
     int8_t timeToDisplay = 0;
     uint8_t brightnessLevel = 8;
@@ -56,11 +56,9 @@ class ShotClockLogic {
     int8_t _resetTime = 30;
     bool isRunning = false;
 
-    updateClockCallback updateClockCB;
-    honkClockCallback honkClockCB;
     notifyClientsCallback notifyClientsCB;
 
-    uint32_t timeOfLastPauseEvent, timeOfLastCountEvent,timeNow,  timeOfLastPlayEvent, msLastStopCount;
+    uint32_t timeOfLastPauseEvent, timeOfLastCountEvent,timeNow,  timeOfLastPlayEvent, msLastStopCount, msLastTelemetry;
 
     Preferences preferences;
     const char* preferenceName = "shot-clock";
@@ -89,4 +87,7 @@ class ShotClockLogic {
     434.5F   //  Kanal 4
     };
     float frequency;
+
+    IControllerUI *pControllerUI = nullptr;
+    IControllerLink *pControllerLink = nullptr;
 };

@@ -20,6 +20,7 @@
 #include "Horn.h"
 #include "SCLink.h"
 #include "DisplayLink.h"
+#include "DisplayLogic.h"
 
 #include <RadioLib.h>
 
@@ -66,6 +67,8 @@ Horn horn(pwm);
 #else if defined(OSC_DISPLAY_R0) | defined(OSC_DISPLAY_R1) | defined(OSC_DISPLAY_R2)
 Horn horn(pwm, 15);
 #endif
+
+DisplayLogic displayLogic(horn, leds);
 
 uint32_t lastTime=0;
 uint16_t voltageRaw=0;
@@ -148,49 +151,6 @@ void initOTA()
   ESP_LOGI("OTA", "HTTP server started");
 }
 
-
-SCLink::telemetryResponse_t handleCMDTelemetry(){
-  static uint8_t battery=0, rssi=0;
-  battery = ++battery<=8? battery : 0;
-  rssi = ++rssi<=4? rssi:0;
-  SCLink::telemetryResponse_t resp = {battery,rssi};
-  ESP_LOGI("handleTelemetry","1: %d, 2: %d",resp.batteryLevel, resp.rssi);
-  return resp;
-}
-
-void handleCMDTime(uint8_t time, uint8_t brightness){
-  leds.displayClock(time);
-  leds.setBrightnessLevel(brightness);
-  lms = millis();
-  clientFlag = true;
-}
-
-void handleCMDHonk(uint8_t volume){
-  horn.requestHonk(volume);
-    lms = millis();
-  clientFlag = true;
-}
-
-void receiveTimeout()
-{
-    clientFlag = false;
-}
-
-// flag to indicate that a packet was received
-volatile bool receivedFlag = false;
-
-// this function is called when a complete packet
-// is received by the module
-// IMPORTANT: this function MUST be 'void' type
-//            and MUST NOT have any arguments!
-#if defined(ESP8266) || defined(ESP32)
-  ICACHE_RAM_ATTR
-#endif
-void setLoRaReceiveFlag(void) {
-  // we got a packet, set the flag
-  receivedFlag = true;
-}
-
 void waitingDisplay(){
     display.clearDisplay();
     display.drawFastHLine(0, 50, 128, SSD1306_WHITE);  
@@ -213,7 +173,7 @@ void client_check(){
   if (diff >= 2100) {
     clientFlag = false;
     RS485mode = false;
-    leds.showWaitingAnimation();
+    //leds.showWaitingAnimation();
     }
 }
 
@@ -409,35 +369,6 @@ void initChannelFromEEPROM(){
   preferences.end();
 }
 
-/*void setupRadio() {
-  // initialize Radio with default settings
-  ESP_LOGI("Radio","Initializing radio...");
-  #if defined(OSC_DISPLAY_R2)
-    spi.begin(LoRa_CLK, LoRa_MISO, LoRa_MOSI, LoRa_NSS);
-  #endif
-  int state = radio.begin();//434.0, 125.0, 9, 7, RADIOLIB_SX126X_SYNC_WORD_PRIVATE, 10, 8, 0, false);
-  if (state == RADIOLIB_ERR_NONE) {
-    ESP_LOGI("Radio","Setup successful");
-  } else {
-    ESP_LOGE("Radio","Setup failed with code %d", state);
-  }
-
-  radio.setSyncWord(syncword);
-  radio.setFrequency(frequency);
-
-  // set the function that will be called when new packet is received
-  //radio.setPacketReceivedAction(setLoRaReceiveFlag);
-
-  // start listening for LoRa packets
-  ESP_LOGI("Radio","Starting to listen...");
-  //state = radio.startReceive();
-  if (state == RADIOLIB_ERR_NONE) {
-    ESP_LOGI("Radio","Started receiving successfully");
-  } else {
-    ESP_LOGE("Radio","Failed to start receiving with code %d", state);
-  }
-}*/
-
 void initI2C() {
   #ifdef WIFI_LoRa_32_V3
     Wire1.setPins(SDA_LED, SCL_LED);
@@ -487,12 +418,7 @@ void setup() {
   
   inputString.reserve(200);
   
-  //setupRadio();
-
   initI2C();
-
-  leds.allSegmentsOff();
-
   initDisplay();
   
   //ESP32 As access point
@@ -513,9 +439,9 @@ void setup() {
     spi.begin(LoRa_CLK, LoRa_MISO, LoRa_MOSI, LoRa_NSS);
   #endif
 
-  protocol.begin(syncword, frequency, handleCMDTelemetry,handleCMDTime, handleCMDHonk, nullptr, 2500); // Assuming device ID is 1
+  displayLogic.begin();
+  protocol.begin(&displayLogic, syncword, frequency, 2500); // Assuming device ID is 1
   
-  leds.showWaitingAnimation();
   waitingDisplay();
 }
 
@@ -530,12 +456,6 @@ void drawRS485Info() {
 void loop() {
   ElegantOTA.loop(); 
 
-  if (RS485mode == false){
-    if (receivedFlag) { 
-      receivedFlag = false;
-      //readLoraMessage();
-    }
-  }
   //RS-485 Test
   RS485receive();
 
@@ -554,7 +474,6 @@ void loop() {
   }
 
   if (clientFlag == false){
-    leds.showWaitingAnimation();
     waitingDisplay();
     }
   else{
@@ -576,6 +495,5 @@ void loop() {
   }
   #endif
 
-  horn.handle();
-  leds.handle();
+  displayLogic.handle();
 }

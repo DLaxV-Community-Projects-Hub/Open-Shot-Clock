@@ -1,39 +1,37 @@
 #include "DisplayLink.h"
 
-void DisplayLink::begin(uint8_t syncWord, float frequncy, handleTelemetry cbTelemetry, handleUpdateTime cbTime, handleHonk cbHonk, timeoutCallback callback, uint16_t timeout)
+void DisplayLink::begin(IDisplayLink *iLink, uint8_t syncWord, float frequncy, uint16_t timeout)
 {
-    SCLink::begin(SCLink::UNINITIALIZED, syncWord, frequncy, true, timeout, callback);
-    _cbTelemetry = cbTelemetry;
-    _cbUpdateTime = cbTime;
-    _cbHonk = cbHonk;
+    pILink = iLink;
+    SCLink::begin(SCLink::UNINITIALIZED, syncWord, frequncy, true, timeout, [this]() -> void {this->pILink->handleTimeout();});
 
-    addCommandHandler((SCLink::command_t){SCLink::CMD_TELEMETRY, [this](uint8_t *data, uint8_t len) -> void { return this->handleTelemetryCommand(data, len); }, false});
-    addCommandHandler((SCLink::command_t){SCLink::CMD_TIME,      [this](uint8_t *data, uint8_t len) -> void { return this->handleUpdateTimeCommand(data, len); }, false});
-    addCommandHandler((SCLink::command_t){SCLink::CMD_HONK,      [this](uint8_t *data, uint8_t len) -> void { return this->handleHonkCommand(data, len); }, false});
-    addCommandHandler((SCLink::command_t){SCLink::CMD_DISCOVER,  [this](uint8_t *data, uint8_t len) -> void { return this->handleDiscoverCommand(data, len); }, false});
-    addCommandHandler((SCLink::command_t){SCLink::CMD_SET_ID,    [this](uint8_t *data, uint8_t len) -> void { return this->handleSetIdCommand(data, len); }, false});
-    addCommandHandler((SCLink::command_t){SCLink::CMD_SHOW_ID,   [this](uint8_t *data, uint8_t len) -> void { return this->handleShowIdCommand(data, len); }, false});
+    addCommandHandler((SCLink::command_t){SCLink::CMD_TELEMETRY, [this](uint8_t *data, uint8_t len) -> void {  this->handleTelemetryCommand(data, len); }, false});
+    addCommandHandler((SCLink::command_t){SCLink::CMD_TIME,      [this](uint8_t *data, uint8_t len) -> void {  this->handleUpdateTimeCommand(data, len); }, false});
+    addCommandHandler((SCLink::command_t){SCLink::CMD_HONK,      [this](uint8_t *data, uint8_t len) -> void {  this->handleHonkCommand(data, len); }, false});
+    addCommandHandler((SCLink::command_t){SCLink::CMD_DISCOVER,  [this](uint8_t *data, uint8_t len) -> void {  this->handleDiscoverCommand(data, len); }, false});
+    addCommandHandler((SCLink::command_t){SCLink::CMD_SET_ID,    [this](uint8_t *data, uint8_t len) -> void {  this->handleSetIdCommand(data, len); }, false});
+    addCommandHandler((SCLink::command_t){SCLink::CMD_SHOW_ID,   [this](uint8_t *data, uint8_t len) -> void {  this->handleShowIdCommand(data, len); }, false});
 }
+
+#pragma region Command Handlers
+// This section contains the mapping of received data to actual values used in the functions
 
 void DisplayLink::handleTelemetryCommand(uint8_t *data, uint8_t dataLength)
 {
     telemetryResponse_t tmp = {0};
-    if (_cbTelemetry != nullptr)
-        tmp = _cbTelemetry();
+    if(pILink) tmp = pILink->handleTelemetry();
     transmit(SCLink::CONTROLLER, SCLink::CMD_TELEMETRY, (uint8_t *)&tmp, sizeof(tmp));
 }
 
 void DisplayLink::handleUpdateTimeCommand(uint8_t *data, uint8_t dataLength)
 {
     ESP_LOGI("display", "addr: %p", data);
-    if (_cbUpdateTime != nullptr)
-        _cbUpdateTime(data[0], data[1]);
+    if(pILink) pILink->handleUpdateTime(data[0], data[1]);
 }
 
 void DisplayLink::handleHonkCommand(uint8_t *data, uint8_t dataLength)
 {
-    if (_cbHonk != nullptr)
-        _cbHonk(data[0]);
+    if(pILink) pILink->handleHonk(data[0]);
 }
 
 void DisplayLink::handleDiscoverCommand(uint8_t *data, uint8_t dataLength)
@@ -67,5 +65,7 @@ void DisplayLink::handleSetIdCommand(uint8_t *data, uint8_t dataLength)
 
 void DisplayLink::handleShowIdCommand(uint8_t *data, uint8_t dataLength)
 {
-    // TODO:
+    if(pILink) pILink->handleShowId(data[0]);
 }
+
+#pragma endregion

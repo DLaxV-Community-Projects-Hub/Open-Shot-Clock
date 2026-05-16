@@ -1,13 +1,15 @@
 #include "ShotClockLogic.h"
 
+#pragma region Public Functions
+
 /// @brief Initializes the shot clock logic and loads the saved preferences. Also sets the callback functions for updating the clock display, honking, and notifying clients.
 /// @param updateCallback
 /// @param honkCallback
 /// @param notifyCallback
-void ShotClockLogic::begin(updateClockCallback updateCallback, honkClockCallback honkCallback, notifyClientsCallback notifyCallback)
+void ShotClockLogic::begin(IControllerUI *iUI, IControllerLink *iLink, notifyClientsCallback notifyCallback)
 {
-  updateClockCB = updateCallback;
-  honkClockCB = honkCallback;
+  pControllerUI = iUI;
+  pControllerLink = iLink;
   notifyClientsCB = notifyCallback;
   preferences.begin(preferenceName, false);
   channel = preferences.getInt(channelPreferenceName, channel);
@@ -17,6 +19,8 @@ void ShotClockLogic::begin(updateClockCallback updateCallback, honkClockCallback
   frequency = frequencySelect[channel];
   timeToDisplay = _resetTime;
   preferences.end();
+
+  pControllerLink->discover();
 }
 
 /// @brief Main handler function that should be called in the main loop. It checks if the clock is running and either counts down or stops counting accordingly.
@@ -50,7 +54,13 @@ void ShotClockLogic::handle()
   }
   else
   {
-    if (timeNow - msLastStopCount >= 5000)
+    if (timeNow - msLastTelemetry >= 10000)
+    {
+      msLastTelemetry = timeNow;
+      ESP_LOGI("ShotClockLogic", "Request Telemtry");
+      pControllerLink->requestTelemetry(SCLink::DISPLAY_1);
+    }
+    if (timeNow - msLastStopCount >= 1000)
     {
       ESP_LOGI("ShotClockLogic", "Paused!");
       updateClock(timeToDisplay, brightnessLevel);
@@ -139,17 +149,10 @@ void ShotClockLogic::resetClock(bool play)
 void ShotClockLogic::honk()
 {
   ESP_LOGI("ShotClockLogic", "HONK! Honk volume level: %d", honkVolumeLevel);
-  honkClock(honkVolumeLevel);
+  pControllerLink->sendHonk(honkVolumeLevel);
+  pControllerUI->showHonk(1);
 }
 
-/// @brief Resets the internal timers used for counting and pausing.
-void ShotClockLogic::resetTimers()
-{
-  timeOfLastCountEvent = timeNow;
-  timeOfLastPauseEvent = timeNow;
-  timeOfLastPlayEvent = timeNow;
-  msLastStopCount = timeNow;
-}
 
 /// @brief Sets the volume level for the honk sound.
 /// @param level The volume level to set.
@@ -196,21 +199,28 @@ void ShotClockLogic::setHonkVolumeLevel(uint8_t level)
 
   return String();
 }
+#pragma endregion
+
+#pragma region Private Functions
+
+/// @brief Resets the internal timers used for counting and pausing.
+void ShotClockLogic::resetTimers()
+{
+  timeOfLastCountEvent = timeNow;
+  timeOfLastPauseEvent = timeNow;
+  timeOfLastPlayEvent = timeNow;
+  msLastStopCount = timeNow;
+}
 
 void ShotClockLogic::honkClock(uint8_t honkVolumeLevel)
 {
-  if (honkClockCB != nullptr)
-  {
-    honkClockCB(honkVolumeLevel);
-  }
+  if(pControllerUI) pControllerUI->showHonk(honkVolumeLevel);
 }
 
 void ShotClockLogic::updateClock(uint8_t timeToDisplay, uint8_t brightnessLevel)
 {
-  if (updateClockCB != nullptr)
-  {
-    updateClockCB(timeToDisplay, brightnessLevel);
-  }
+  if(pControllerUI) pControllerUI->setDataDisplay(timeToDisplay, channel, isRunning);
+  if(pControllerLink) pControllerLink->updateTime(timeToDisplay, brightnessLevel);
 }
 
 void ShotClockLogic::notifyClients(String message)
@@ -220,3 +230,20 @@ void ShotClockLogic::notifyClients(String message)
     notifyClientsCB(message);
   }
 }
+#pragma endregion
+
+#pragma region Command Handlers
+// This section contains the command handlers
+
+void ShotClockLogic::handleTelemetry(SCLink::telemetryResponse_t response)
+{
+  ESP_LOGI("SC LOGIC","Received Telemetry: id: %d, bat: %d, rssi: %d",response.id, response.batteryLevel, response.rssi);
+  if(pControllerUI) pControllerUI->updateTelemetryInfo(response.id, response.batteryLevel, response.rssi);
+}
+
+void ShotClockLogic::handleTimeout()
+{
+  ESP_LOGI("SC LOGIC","CMD Timeout");
+}
+
+#pragma endregion

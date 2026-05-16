@@ -33,6 +33,7 @@ public:
 
     typedef struct
     {
+        uint8_t id;
         uint8_t batteryLevel;
         uint8_t rssi;
     } telemetryResponse_t;
@@ -50,8 +51,9 @@ public:
             uint8_t receiverId;
             uint8_t senderId;
             uint8_t commandId;
-            uint8_t data[4];
+            uint8_t data[8];
         } cmd;
+        uint8_t length;
         bool requiresResp;
     } protocol_t;
 
@@ -82,10 +84,10 @@ protected:
 private:
     void waitForResponse();
     void startTransmission();
-    void timeout();
     static void defaultCallback() {}
     void scanChannel();
     void handlePendingTransmits();
+    void timeout();
 
     timeoutCallback timeoutCB;
 

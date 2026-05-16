@@ -69,8 +69,9 @@ void SCLink::transmit(uint8_t receiverId, uint8_t command, uint8_t *data, uint8_
     packet[0] = receiverId;
     packet[1] = id;
     packet[2] = command;*/
-    protocol_t tmp = {{receiverId, id, command, {0}}, requiresResponse};
+    protocol_t tmp = {{receiverId, id, command, {0}},dataLength, requiresResponse};
     memcpy(&tmp.cmd.data, data, dataLength);
+    tmp.length +=3;
 
     txList.push_back(tmp);
 
@@ -85,7 +86,7 @@ void SCLink::startTransmission()
         txTime = millis();
         ESP_LOGI("StartTransmission", "CMD sent: cmd: %d, sender: %d, receiver: %d", txList.front().cmd.commandId, txList.front().cmd.senderId, txList.front().cmd.receiverId);
 
-        radio.startTransmit((uint8_t *)&txList.front(), sizeof(protocol_t) - 1);
+        radio.startTransmit((uint8_t *)&txList.front(), txList.front().length);
     }
 }
 
@@ -131,7 +132,7 @@ void SCLink::handleCommand(uint8_t command, uint8_t *data, uint8_t dataLength)
     {
         if (cmd.command == command && cmd.callback != nullptr)
         {
-            ESP_LOGI("handleCMD", "Command found %d", cmd.callback);
+            ESP_LOGV("HANDLE","Handler found, calling...");
             cmd.callback(data, dataLength);
         }
     }
@@ -155,7 +156,6 @@ void SCLink::handlePendingTransmits()
 
 void SCLink::handler()
 {
-
     switch (radioState)
     {
     case RADIO_STATE_ACD:
@@ -207,7 +207,9 @@ void SCLink::handler()
         if (radioRXTXFlag)
         {
             radioRXTXFlag = false;
-            radio.readData((uint8_t *)&rxData, sizeof(protocol_t));
+            rxData.length = radio.getPacketLength();
+            ESP_LOGI("SCLink", "Packet len: %d", rxData.length);
+            radio.readData((uint8_t *)&rxData, rxData.length);
             waitForResponse();
             if (rxData.cmd.receiverId != id && rxData.cmd.receiverId != BOARDCAST)
             {
@@ -215,8 +217,8 @@ void SCLink::handler()
             }
             else
             {
-                ESP_LOGI("SCLink", "Packet received from %d, command: %d", rxData.cmd.senderId, rxData.cmd.commandId);
-                handleCommand(rxData.cmd.commandId, rxData.cmd.data, 4);
+                ESP_LOGI("SCLink", "Packet received from %d, command: %d, len: %d", rxData.cmd.senderId, rxData.cmd.commandId, rxData.length);
+                handleCommand(rxData.cmd.commandId, rxData.cmd.data, rxData.length-3);
             }
         }
         else

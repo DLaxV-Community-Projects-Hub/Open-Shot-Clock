@@ -41,6 +41,7 @@ public:
     int getBrightnessLevel();
     void setBrightnessLevel(int);
     void displayClock(byte);
+    void showSymbol(uint8_t);
     void handle();
     void showWaitingAnimation();
     void allSegmentsOff();
@@ -58,6 +59,16 @@ public:
     {true, true, true, true, true, true, true},          //8
     {true, true, true, false, true, true, true}          //9
     };
+
+bool symbols[7][7] = {
+    {true,  true,  true,  true,  false, true,  true},  // A
+    {false, true,  true,  true,  true,  false, false}, // C
+    {false, true,  true,  true,  true,  false, true},  // E
+    {false, true,  true,  true,  false, false, true},  // F
+    {true,  false, true,  true,  false, true,  true},  // H
+    {false, false,  true,  true,  true, false, false}, // L
+    {true,  false, true,  true,  true,  true,  false}, // U
+};
 
     uint16_t ticks[9][2]={
         {0, 4096},           // 0 (off)

@@ -64,6 +64,16 @@ void LEDs::displayClock(byte c)
     }
 }
 
+void LEDs::showSymbol(uint8_t symbol)
+{
+    symbol = constrain(symbol, 0, 6);
+    for (int i = 0; i < 7; i++)
+    {
+        segment(i, symbols[symbol][i]);
+        segment10(i, symbols[symbol][i]);
+    }
+}
+
 int LEDs::getBrightnessLevel()
 {
     return brightnessLevel;
