@@ -12,6 +12,8 @@ public:
     virtual void handleTelemetry(SCLink::telemetryResponse_t) = 0;
     // Called when a timeout happended while waiting for a response
     virtual void handleTimeout() = 0;
+    // Called when an ID was set and confirmed on slave
+    virtual void handleSetId(uint8_t) = 0;
 };
 
 /**
@@ -60,4 +62,6 @@ private:
 
     telemetryCallback _telemetryCallback;
     IControllerLinkHandler *pILink = nullptr;
+
+    uint8_t nextFreeID = DISPLAY_1;
 };

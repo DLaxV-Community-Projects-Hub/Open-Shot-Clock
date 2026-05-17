@@ -13,7 +13,10 @@ DisplayLogic::~DisplayLogic()
 
 SCLink::telemetryResponse_t DisplayLogic::handleTelemetry()
 {
-    SCLink::telemetryResponse_t resp = {1,2};
+    uint8_t tmpLevel = 255;
+    if(vbatPin_ >= 0) tmpLevel = constrain(map(vBatAvg, 1400, 1910, 0, 8),0,8);
+    ESP_LOGI("TEL Display","val %dmv maped to: %d",vBatAvg, tmpLevel);
+    SCLink::telemetryResponse_t resp = {0, tmpLevel ,2};
     return resp;
 }
 
@@ -48,10 +51,29 @@ void DisplayLogic::handle()
 {
   horn_.handle();
   leds_.handle();
+
+  if(millis() - tLastADC > 3300)
+  {
+    ESP_LOGI("ADC","measure");
+    if(vbatPin_ >=0)
+    {
+        uint32_t tmp =analogReadMilliVolts(vbatPin_);
+        vBatAvg = ((vBatAvg << 2) + tmp) / 5;
+        ESP_LOGI("ADC","measured %d, avg %d", tmp, vBatAvg);
+    }
+    tLastADC = millis();
+  }
 }
 
-void DisplayLogic::begin()
+void DisplayLogic::begin(int8_t vBatPin)
 {
+    vbatPin_ = vBatPin;
+    ESP_LOGI("VBAT","Using pin: %d", vbatPin_);
+    if(vbatPin_ >=0)
+    {
+        pinMode(vbatPin_, ANALOG);
+    }
     leds_.allSegmentsOff();    
 }
 #pragma endregion
+

@@ -20,7 +20,10 @@ void ShotClockLogic::begin(IControllerUI *iUI, IControllerLink *iLink, notifyCli
   timeToDisplay = _resetTime;
   preferences.end();
 
-  pControllerLink->discover();
+  uint32_t tmp = UPDATE_INTERVALL;
+  ESP_LOGI("SCLogic","INTERVALL: %d",tmp);
+
+  //pControllerLink->discover();
 }
 
 /// @brief Main handler function that should be called in the main loop. It checks if the clock is running and either counts down or stops counting accordingly.
@@ -28,46 +31,75 @@ void ShotClockLogic::handle()
 {
   timeNow = millis();
 
-  if (isRunning)
+  switch (state)
   {
-    unsigned long msAlreadyPassedInCurrentSecond = (timeOfLastPauseEvent - timeOfLastCountEvent) + (timeNow - timeOfLastPlayEvent);
-    if (timeToDisplay > 0)
+  case LOGIC_DISCOVER:
+    pControllerLink->discover();
+    discoverCount++;
+    msDiscoverStart = timeNow;
+    state = LOGIC_DISCOVER_WAIT;
+    break;
+
+    case LOGIC_DISCOVER_WAIT:
+    if(timeNow -msDiscoverStart> 2000)
     {
-      if (msAlreadyPassedInCurrentSecond >= 1000)
+      if(discoverCount < 4)
       {
-        timeToDisplay--;
-        ESP_LOGI("ShotClockLogic", "Time to display: %d", timeToDisplay);
-        updateClock(timeToDisplay, brightnessLevel);
-        if (timeToDisplay == 0)
+        state = LOGIC_DISCOVER;
+      }
+      else
+      {
+        state = LOGIC_RUNNING;
+      }
+    }
+    break;
+  
+    case LOGIC_RUNNING:
+    if (isRunning)
+    {
+      unsigned long msAlreadyPassedInCurrentSecond = (timeOfLastPauseEvent - timeOfLastCountEvent) + (timeNow - timeOfLastPlayEvent);
+      if (timeToDisplay > 0)
+      {
+        if (msAlreadyPassedInCurrentSecond >= UPDATE_INTERVALL)
         {
-          honk();
+          timeToDisplay--;
+          ESP_LOGI("ShotClockLogic", "Time to display: %d", timeToDisplay);
+          updateClock(timeToDisplay, brightnessLevel);
+          if (timeToDisplay == 0)
+          {
+            honk();
+          }
+          notifyClients(String(timeToDisplay));
+          resetTimers();
         }
-        notifyClients(String(timeToDisplay));
-        resetTimers();
+      }
+      else
+      {
+        isRunning = false;
+        honk();
       }
     }
     else
     {
-      isRunning = false;
-      honk();
+      if (timeNow - msLastTelemetry >= UPDATE_INTERVALL_PAUSED)
+      {
+        msLastTelemetry = timeNow;
+        ESP_LOGI("ShotClockLogic", "Request Telemtry");
+        pControllerLink->requestTelemetry(SCLink::DISPLAY_1);
+      }
+      if (timeNow - msLastStopCount >= UPDATE_INTERVALL_PAUSED - 730)
+      {
+        ESP_LOGI("ShotClockLogic", "Paused!");
+        updateClock(timeToDisplay, brightnessLevel);
+        notifyClients(String(timeToDisplay));
+        msLastStopCount = timeNow;
+      }
     }
+    break;
+  default:
+    break;
   }
-  else
-  {
-    if (timeNow - msLastTelemetry >= 10000)
-    {
-      msLastTelemetry = timeNow;
-      ESP_LOGI("ShotClockLogic", "Request Telemtry");
-      pControllerLink->requestTelemetry(SCLink::DISPLAY_1);
-    }
-    if (timeNow - msLastStopCount >= 1000)
-    {
-      ESP_LOGI("ShotClockLogic", "Paused!");
-      updateClock(timeToDisplay, brightnessLevel);
-      notifyClients(String(timeToDisplay));
-      msLastStopCount = timeNow;
-    }
-  }
+
 }
 
 /// @brief Sets the brightness level for the clock display.
@@ -117,7 +149,6 @@ void ShotClockLogic::playPause()
 void ShotClockLogic::resetClock(bool play, int8_t resetTime)
 {
   timeToDisplay = constrain(resetTime, 1, 99);
-  ;
   resetTimers();
   isRunning = play;
   notifyClients(String(timeToDisplay));
@@ -230,10 +261,39 @@ void ShotClockLogic::notifyClients(String message)
     notifyClientsCB(message);
   }
 }
+
+void ShotClockLogic::requestNextTelemetry()
+{
+  static size_t index = 0;
+  if(registeredLinks.empty()) return;
+
+  if(index >= registeredLinks.size())
+  {
+    index = 0;
+  }
+  index = index + 1 % registeredLinks.size();
+
+  uint8_t tmp = registeredLinks[index];
+  ESP_LOGI("LOGIC","Request from: %d", tmp);
+  pControllerLink->requestTelemetry((SCLink::endpoint_t) tmp);
+}
+
 #pragma endregion
 
 #pragma region Command Handlers
 // This section contains the command handlers
+
+void ShotClockLogic::handleSetId(uint8_t id)
+{
+  if(registeredLinks.size() < 20)
+  {
+    if(std::find(registeredLinks.begin(), registeredLinks.end(), id) == registeredLinks.end())
+    {
+      // add ID to list if not already contained
+      registeredLinks.push_back(id);
+    }
+  }
+}
 
 void ShotClockLogic::handleTelemetry(SCLink::telemetryResponse_t response)
 {
@@ -243,6 +303,10 @@ void ShotClockLogic::handleTelemetry(SCLink::telemetryResponse_t response)
 
 void ShotClockLogic::handleTimeout()
 {
+  if(state == LOGIC_DISCOVER_WAIT)
+  {
+    state = LOGIC_RUNNING;
+  }
   ESP_LOGI("SC LOGIC","CMD Timeout");
 }
 

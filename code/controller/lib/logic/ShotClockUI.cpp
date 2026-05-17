@@ -111,15 +111,17 @@ void ShotClockUI::updateTelemetryInfo(uint8_t id, uint8_t batteryLevel, uint8_t 
 void ShotClockUI::printTelemetryInfo(uint8_t id)
 {
     ESP_LOGV("DISPLAY","Print Telemetry; id: %d", id);
-    for(const auto& telemetry : telemetryList) {
-        if(telemetry.id == id) {
-            display.setFont(NULL);
-            display.setCursor(locTelemetryX, locTelemetryY + 2);
-            display.printf("ID:%02d", telemetry.id);
-            drawBatteryLevel(locTelemetryX + 32, locTelemetryY, telemetry.batteryLevel);
-            drawSignalStrength(locTelemetryX + 42, locTelemetryY, telemetry.signalStrength);
-            break;
-        }
+    if(telemetryList.size()>0)
+    {
+        telemetry_t tmp = telemetryList.front();
+        telemetryList.pop_front();
+        telemetryList.push_back(tmp);
+
+        display.setFont(NULL);
+        display.setCursor(locTelemetryX, locTelemetryY + 2);
+        display.printf("ID:%02d", tmp.id);
+        drawBatteryLevel(locTelemetryX + 32, locTelemetryY, tmp.batteryLevel);
+        drawSignalStrength(locTelemetryX + 42, locTelemetryY, tmp.signalStrength);
     }
 }
 
@@ -129,11 +131,12 @@ void ShotClockUI::printTelemetryInfo(uint8_t id)
 /// @param level The battery level to display
 void ShotClockUI::drawBatteryLevel(int16_t x, int16_t y, uint8_t level)
 {
-  level = constrain(level, 0, 8);
-  
-  display.drawRect(x, y+1, 6, 10, SSD1306_WHITE); // battery outline
-  display.fillRect(x+1, y, 4, 1, SSD1306_WHITE); // battery positive terminal
-  display.fillRect(x+1, y + 10 - level, 4, level, SSD1306_WHITE); // battery level
+    if(level <= 8)
+    {
+        display.drawRect(x, y+1, 6, 10, SSD1306_WHITE); // battery outline
+        display.fillRect(x+1, y, 4, 1, SSD1306_WHITE); // battery positive terminal
+        display.fillRect(x+1, y + 10 - level, 4, level, SSD1306_WHITE); // battery level
+    }
 }
 
 /// @brief Draws the signal strength indicator

@@ -1,3 +1,4 @@
+#pragma once
 #include "board_definitions.h"
 
 /**************************************/ 
@@ -35,6 +36,7 @@ const char* password = "12345678";
     #define HORN_CH         7
     #define LoRa_RST        RST_LoRa
     #define LoRa_BUSY       BUSY_LoRa
+    #define V_SENSE         -1
 #endif
 
 #if defined(WIFI_LoRa_32_V3)
@@ -46,6 +48,7 @@ const char* password = "12345678";
     #define HORN_CH         7
     #define LoRa_RST        RST_LoRa
     #define LoRa_BUSY       BUSY_LoRa
+    #define V_SENSE         -1
 #endif
 
 

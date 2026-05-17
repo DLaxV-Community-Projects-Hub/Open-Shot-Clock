@@ -580,8 +580,8 @@ void setup()
 
   initButtons();
 
-  protocol.begin(&shotClockLogic, shotClockLogic.getSyncWord(), shotClockLogic.getFrequency(), 1000); // Assuming device ID is 1
   shotClockLogic.begin(&shotclockUI, &protocol, notifyClients);
+  protocol.begin(&shotClockLogic, shotClockLogic.getSyncWord(), shotClockLogic.getFrequency(), 1000); // Assuming device ID is 1
 
   timeNow = millis();
 }

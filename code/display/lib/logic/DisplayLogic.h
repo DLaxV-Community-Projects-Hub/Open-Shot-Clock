@@ -1,5 +1,6 @@
 #pragma once
 
+#include "config.h"
 #include "LEDs.h"
 #include "Horn.h"
 #include "DisplayLink.h"
@@ -16,11 +17,14 @@ public:
     void handleTimeout() override;
     void handleShowId(uint8_t id) override;
 
-    void begin();
+    void begin(int8_t vBatPin=-1);
     void handle();
 
 private:
     /* data */
     Horn &horn_;
     LEDs &leds_;
+    uint32_t tLastADC = 0;
+    int8_t vbatPin_;
+    uint32_t vBatAvg;
 };

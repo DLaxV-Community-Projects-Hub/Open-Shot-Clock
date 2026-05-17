@@ -69,12 +69,13 @@ public:
     SCLink(Module *module) : radio(module) {}
 
     virtual void begin(uint8_t deviceId, uint8_t syncWord, float frequncy, bool isSlave = false, uint16_t timeout = 200, timeoutCallback callback = &defaultCallback);
-    void transmit(uint8_t receiverId, uint8_t command, uint8_t *data, uint8_t dataLength, bool requiresResp = false);
+    void transmit(uint8_t receiverId, uint8_t command, uint8_t *data, uint8_t dataLength, bool requiresResp = false, bool priority = false);
     void handler();
     void handlerSlave();
     void radioEvent();
     void addCommandHandler(command_t command);
     void handleCommand(uint8_t command, uint8_t *data, uint8_t dataLength);
+    uint8_t getRSSI();
 
 protected:
     void setId(uint8_t newId);

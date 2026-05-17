@@ -2,14 +2,25 @@
 
 #include <Arduino.h>
 #include <stdint.h>
+#include <vector>
 #include <Preferences.h>
 
 #include "ShotClockUI.h"
 #include "ControllerLink.h"
 
+#if CORE_DEBUG_LEVEL == 0
+  #define UPDATE_INTERVALL 1000
+  #define UPDATE_INTERVALL_PAUSED 1000
+#else // Use slower update intervall for debugging
+  #define UPDATE_INTERVALL 5000
+  #define UPDATE_INTERVALL_PAUSED 5000
+#endif
+
 class ShotClockLogic : public IControllerLinkHandler{
   public:
     typedef  void (*notifyClientsCallback)(String message);
+
+    ShotClockLogic(){ registeredLinks.reserve(20); }
 
     void begin(IControllerUI *iUI, IControllerLink *iLink, notifyClientsCallback notifyCallback);
     void handle();
@@ -27,6 +38,7 @@ class ShotClockLogic : public IControllerLinkHandler{
       return isRunning;
     }
 
+    void handleSetId(uint8_t id);
     void handleTelemetry(SCLink::telemetryResponse_t response) override;
     void handleTimeout() override;
 
@@ -44,21 +56,34 @@ class ShotClockLogic : public IControllerLinkHandler{
      const uint8_t RESET_TIME_LONG = 80;
 
   private:
+
+    typedef enum
+    {
+      LOGIC_DISCOVER,
+      LOGIC_DISCOVER_WAIT,
+      LOGIC_RUNNING,
+      LOGIC_WAIT,
+    }sCLogicState_t;
+  
     void resetTimers();
 
     void notifyClients(String message);
     void updateClock(uint8_t timeToDisplay, uint8_t brightnessLevel);
     void honkClock(uint8_t honkVolumeLevel);
+    void requestNextTelemetry();
 
+    sCLogicState_t state = LOGIC_DISCOVER;
+    uint8_t discoverCount = 0;
     int8_t timeToDisplay = 0;
     uint8_t brightnessLevel = 8;
     uint8_t honkVolumeLevel = 5;
     int8_t _resetTime = 30;
     bool isRunning = false;
 
+    std::vector<uint8_t> registeredLinks;
     notifyClientsCallback notifyClientsCB;
 
-    uint32_t timeOfLastPauseEvent, timeOfLastCountEvent,timeNow,  timeOfLastPlayEvent, msLastStopCount, msLastTelemetry;
+    uint32_t timeOfLastPauseEvent, timeOfLastCountEvent,timeNow,  timeOfLastPlayEvent, msLastStopCount, msLastTelemetry, msDiscoverStart;
 
     Preferences preferences;
     const char* preferenceName = "shot-clock";

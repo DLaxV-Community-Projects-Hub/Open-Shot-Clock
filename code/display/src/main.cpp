@@ -439,7 +439,7 @@ void setup() {
     spi.begin(LoRa_CLK, LoRa_MISO, LoRa_MOSI, LoRa_NSS);
   #endif
 
-  displayLogic.begin();
+  displayLogic.begin(V_SENSE);
   protocol.begin(&displayLogic, syncword, frequency, 2500); // Assuming device ID is 1
   
   waitingDisplay();
@@ -479,21 +479,6 @@ void loop() {
   else{
     client_check();
     }
-
-    
-  #if defined(OSC_DISPLAY_R2) | defined(OSC_DISPLAY_R1)
-  if(millis() - lastTime > 4800)
-  {
-    voltageRaw = analogRead(V_SENSE);
-    voltage = (voltageRaw * V_GAIN);
-    ESP_LOGI("ADC","Voltage: %f, %d",voltage, analogReadMilliVolts(V_SENSE));
-    
-    lastTime = millis();
-    uint32_t tmp ;
-    for(int i=0;i<1000;i++) tmp = analogReadMilliVolts(V_SENSE);
-    ESP_LOGI("ADC","1000x %dms",millis()- lastTime);
-  }
-  #endif
 
   displayLogic.handle();
 }

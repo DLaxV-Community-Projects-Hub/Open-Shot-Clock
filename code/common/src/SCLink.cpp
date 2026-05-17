@@ -44,6 +44,8 @@ void SCLink::begin(uint8_t deviceId, uint8_t syncWord, float frequncy, bool isSl
     radio.setSyncWord(syncWord);
     radio.setFrequency(frequncy);
 
+    ESP_LOGD("RADIO", "Using  freq: %f, sync: %d", frequncy, syncWord);
+
     id = deviceId;
     protocolInstance = this;
     radio.setPacketReceivedAction(radioEventCallback);
@@ -56,13 +58,22 @@ void SCLink::begin(uint8_t deviceId, uint8_t syncWord, float frequncy, bool isSl
     }
 }
 
+uint8_t SCLink::getRSSI()
+{
+    long tmpRssi = radio.getRSSI(true);
+    uint8_t tmp = map(tmpRssi,-130,0,0,4);
+    ESP_LOGI("RSSI","Map val %ddBm to %d", tmpRssi, tmp);
+
+    return tmp;
+}
+
 void SCLink::setId(uint8_t newId)
 {
     this->id = newId;
     // TODO: saven in preferences!
 }
 
-void SCLink::transmit(uint8_t receiverId, uint8_t command, uint8_t *data, uint8_t dataLength, bool requiresResponse)
+void SCLink::transmit(uint8_t receiverId, uint8_t command, uint8_t *data, uint8_t dataLength, bool requiresResponse, bool priority)
 {
     // construct the packet
     /*uint8_t packet[19]; // 1 byte for receiverId, 1 byte for senderId, 1 byte for command, 16 bytes for data
@@ -73,7 +84,14 @@ void SCLink::transmit(uint8_t receiverId, uint8_t command, uint8_t *data, uint8_
     memcpy(&tmp.cmd.data, data, dataLength);
     tmp.length +=3;
 
-    txList.push_back(tmp);
+    if(priority)
+    {
+        txList.push_front(tmp); 
+    }
+    else
+    {
+        txList.push_back(tmp);
+    }
 
     ESP_LOGI("TRANSMIT", "CMD added to List: cmd: %d, sender: %d, receiver: %d", command, id, receiverId);
 }
@@ -103,7 +121,11 @@ void SCLink::timeout()
     if (timeoutCB != nullptr)
         timeoutCB();
 
-    if (_isSlave)
+    if(txList.size() > 0)
+    {
+        handlePendingTransmits();
+    }
+    else if (_isSlave)
     {
         waitForResponse();
     }
@@ -207,6 +229,7 @@ void SCLink::handler()
         if (radioRXTXFlag)
         {
             radioRXTXFlag = false;
+            rxTime = millis();
             rxData.length = radio.getPacketLength();
             ESP_LOGI("SCLink", "Packet len: %d", rxData.length);
             radio.readData((uint8_t *)&rxData, rxData.length);
@@ -219,11 +242,12 @@ void SCLink::handler()
             {
                 ESP_LOGI("SCLink", "Packet received from %d, command: %d, len: %d", rxData.cmd.senderId, rxData.cmd.commandId, rxData.length);
                 handleCommand(rxData.cmd.commandId, rxData.cmd.data, rxData.length-3);
+                if(!_isSlave) radioState = RADIO_STATE_IDLE;
             }
         }
         else
         {
-            if (txList.size() > 0)
+            if (txList.size() > 0 && _isSlave && !txList.front().requiresResp)
             {
                 handlePendingTransmits();
             }

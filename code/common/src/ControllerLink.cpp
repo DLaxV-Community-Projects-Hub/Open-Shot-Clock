@@ -14,7 +14,7 @@ void ControllerLink::begin(IControllerLinkHandler *iLink, uint8_t syncWord, floa
 
 void ControllerLink::handleTelemetryCommand(uint8_t *data, uint8_t dataLength)
 {
-    telemetryResponse_t tmp = {1, data[0], data[1]};
+    telemetryResponse_t tmp = {data[0], data[1], data[2]};
     if(pILink) pILink->handleTelemetry(tmp);
 }
 
@@ -23,18 +23,20 @@ void ControllerLink::handleDiscoverCommand(uint8_t *data, uint8_t dataLength)
     uint32_t uid = 0;
     memcpy(&uid, data, sizeof(uint32_t));
     ESP_LOGI("Discover", "Found Device: %X", uid);
-    setID(uid, SCLink::DISPLAY_1);
+    setID(uid, nextFreeID++);
 }
 
 void ControllerLink::handleSetIdCommand(uint8_t *data, uint8_t dataLength)
 {
+    static uint8_t id_= 2;
     if (data[0] == 1)
     {
-        ESP_LOGI("Set ID", "Confirmed");
+        ESP_LOGI("Set ID", "Confirmed (%d, len: %d)",data[0], dataLength);
+        if(pILink) pILink->handleSetId(id_++);
     }
     else
     {
-        ESP_LOGI("Set ID", "Refused");
+        ESP_LOGI("Set ID", "Refused (%d, len: %d)",data[0], dataLength);
     }
 }
 #pragma endregion
@@ -67,7 +69,7 @@ void ControllerLink::discover()
 void ControllerLink::setID(uint32_t UID, uint8_t id)
 {
     setID_data_t tmp = {UID, id};
-    transmit(SCLink::BOARDCAST, SCLink::CMD_SET_ID, (uint8_t *)&tmp, sizeof(tmp), true);
+    transmit(SCLink::BOARDCAST, SCLink::CMD_SET_ID, (uint8_t *)&tmp, sizeof(tmp), true, true);
 }
 
 void ControllerLink::showId()
