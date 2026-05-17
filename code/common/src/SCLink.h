@@ -10,7 +10,6 @@
 class SCLink
 {
 public:
-    using CommandCallback = std::function<void(uint8_t *, uint8_t)>;
 
     typedef enum
     {
@@ -57,6 +56,7 @@ public:
         bool requiresResp;
     } protocol_t;
 
+    using CommandCallback = std::function<void(protocol_t &)>;
     typedef struct
     {
         uint8_t command;
@@ -74,7 +74,7 @@ public:
     void handlerSlave();
     void radioEvent();
     void addCommandHandler(command_t command);
-    void handleCommand(uint8_t command, uint8_t *data, uint8_t dataLength);
+    void handleCommand(protocol_t &packet);
     uint8_t getRSSI();
 
 protected:

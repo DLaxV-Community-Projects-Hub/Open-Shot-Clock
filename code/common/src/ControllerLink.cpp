@@ -4,39 +4,38 @@ void ControllerLink::begin(IControllerLinkHandler *iLink, uint8_t syncWord, floa
 {
     pILink = iLink;
     SCLink::begin(SCLink::CONTROLLER, syncWord, frequncy, false, timeout,  [this]() -> void {this->pILink->handleTimeout();});
-    addCommandHandler((SCLink::command_t){SCLink::CMD_TELEMETRY, [this](uint8_t *data, uint8_t len) -> void { return this->handleTelemetryCommand(data, len); }, false});
-    addCommandHandler((SCLink::command_t){SCLink::CMD_DISCOVER,  [this](uint8_t *data, uint8_t len) -> void { return this->handleDiscoverCommand(data, len); }, false});
-    addCommandHandler((SCLink::command_t){SCLink::CMD_SET_ID,    [this](uint8_t *data, uint8_t len) -> void { return this->handleSetIdCommand(data, len); }, false});
+    addCommandHandler((SCLink::command_t){SCLink::CMD_TELEMETRY, [this](protocol_t &packet) -> void { return this->handleTelemetryCommand(packet); }, false});
+    addCommandHandler((SCLink::command_t){SCLink::CMD_DISCOVER,  [this](protocol_t &packet) -> void { return this->handleDiscoverCommand(packet); }, false});
+    addCommandHandler((SCLink::command_t){SCLink::CMD_SET_ID,    [this](protocol_t &packet) -> void { return this->handleSetIdCommand(packet); }, false});
 }
 
 #pragma region Command Handlers
 // This section contains the mapping of received data to actual values used in the functions
 
-void ControllerLink::handleTelemetryCommand(uint8_t *data, uint8_t dataLength)
+void ControllerLink::handleTelemetryCommand(protocol_t &packet)
 {
-    telemetryResponse_t tmp = {data[0], data[1], data[2]};
+    telemetryResponse_t tmp = {packet.cmd.data[0], packet.cmd.data[1], packet.cmd.data[2]};
     if(pILink) pILink->handleTelemetry(tmp);
 }
 
-void ControllerLink::handleDiscoverCommand(uint8_t *data, uint8_t dataLength)
+void ControllerLink::handleDiscoverCommand(protocol_t &packet)
 {
     uint32_t uid = 0;
-    memcpy(&uid, data, sizeof(uint32_t));
+    memcpy(&uid, packet.cmd.data, sizeof(uint32_t));
     ESP_LOGI("Discover", "Found Device: %X", uid);
     setID(uid, nextFreeID++);
 }
 
-void ControllerLink::handleSetIdCommand(uint8_t *data, uint8_t dataLength)
+void ControllerLink::handleSetIdCommand(protocol_t &packet)
 {
-    static uint8_t id_= 2;
-    if (data[0] == 1)
+    if (packet.cmd.data[0] == 1)
     {
-        ESP_LOGI("Set ID", "Confirmed (%d, len: %d)",data[0], dataLength);
-        if(pILink) pILink->handleSetId(id_++);
+        ESP_LOGI("Set ID", "Confirmed (%d, len: %d)",packet.cmd.data[0], packet.length);
+        if(pILink) pILink->handleSetId(packet.cmd.senderId);
     }
     else
     {
-        ESP_LOGI("Set ID", "Refused (%d, len: %d)",data[0], dataLength);
+        ESP_LOGI("Set ID", "Refused (%d, len: %d)",packet.cmd.data[0], packet.length);
     }
 }
 #pragma endregion

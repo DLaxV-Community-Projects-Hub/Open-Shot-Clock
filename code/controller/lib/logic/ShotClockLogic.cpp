@@ -20,6 +20,8 @@ void ShotClockLogic::begin(IControllerUI *iUI, IControllerLink *iLink, notifyCli
   timeToDisplay = _resetTime;
   preferences.end();
 
+  brightnessLevel = CORE_DEBUG_LEVEL == 0 ? 8 : 3;
+
   uint32_t tmp = UPDATE_INTERVALL;
   ESP_LOGI("SCLogic","INTERVALL: %d",tmp);
 
@@ -81,13 +83,13 @@ void ShotClockLogic::handle()
     }
     else
     {
-      if (timeNow - msLastTelemetry >= UPDATE_INTERVALL_PAUSED)
+      if (timeNow - msLastTelemetry >= UPDATE_INTERVALL_PAUSED * 2)
       {
         msLastTelemetry = timeNow;
         ESP_LOGI("ShotClockLogic", "Request Telemtry");
-        pControllerLink->requestTelemetry(SCLink::DISPLAY_1);
+        requestNextTelemetry();
       }
-      if (timeNow - msLastStopCount >= UPDATE_INTERVALL_PAUSED - 730)
+      if (timeNow - msLastStopCount >= UPDATE_INTERVALL_PAUSED)
       {
         ESP_LOGI("ShotClockLogic", "Paused!");
         updateClock(timeToDisplay, brightnessLevel);
@@ -271,10 +273,10 @@ void ShotClockLogic::requestNextTelemetry()
   {
     index = 0;
   }
-  index = index + 1 % registeredLinks.size();
+  index = (index + 1) % registeredLinks.size();
 
   uint8_t tmp = registeredLinks[index];
-  ESP_LOGI("LOGIC","Request from: %d", tmp);
+  ESP_LOGI("LOGIC","Request from: %d/%d", tmp,registeredLinks.size());
   pControllerLink->requestTelemetry((SCLink::endpoint_t) tmp);
 }
 
@@ -291,6 +293,7 @@ void ShotClockLogic::handleSetId(uint8_t id)
     {
       // add ID to list if not already contained
       registeredLinks.push_back(id);
+      ESP_LOGI("LOGIC","Add new ID: %d", id);
     }
   }
 }

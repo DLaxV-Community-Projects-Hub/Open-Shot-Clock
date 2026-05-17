@@ -49,10 +49,10 @@ private:
 
     IDisplayLink *pILink = nullptr;
 
-    void handleTelemetryCommand(uint8_t *data, uint8_t dataLength);
-    void handleUpdateTimeCommand(uint8_t *data, uint8_t dataLength);
-    void handleHonkCommand(uint8_t *data, uint8_t dataLength);
-    void handleDiscoverCommand(uint8_t *data, uint8_t dataLength);
-    void handleSetIdCommand(uint8_t *data, uint8_t dataLength);
-    void handleShowIdCommand(uint8_t *data, uint8_t dataLength);
+    void handleTelemetryCommand(protocol_t &packet);
+    void handleUpdateTimeCommand(protocol_t &packet);
+    void handleHonkCommand(protocol_t &packet);
+    void handleDiscoverCommand(protocol_t &packet);
+    void handleSetIdCommand(protocol_t &packet);
+    void handleShowIdCommand(protocol_t &packet);
 };

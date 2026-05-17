@@ -64,13 +64,14 @@ void LEDs::displayClock(byte c)
     }
 }
 
-void LEDs::showSymbol(uint8_t symbol)
+void LEDs::showSymbol(uint8_t symbol1, uint8_t symbol10)
 {
-    symbol = constrain(symbol, 0, 6);
+    symbol1 = constrain(symbol1, 0, 17);
+    symbol10 = constrain(symbol10, 0, 17);
     for (int i = 0; i < 7; i++)
     {
-        segment(i, symbols[symbol][i]);
-        segment10(i, symbols[symbol][i]);
+        segment(i, symbol1 <=9 ? segs[symbol1][i] : symbols[symbol1 % 10][i]);
+        segment10(i, symbol10 <=9 ? segs[symbol10][i] : symbols[symbol10 % 10][i]);
     }
 }
 

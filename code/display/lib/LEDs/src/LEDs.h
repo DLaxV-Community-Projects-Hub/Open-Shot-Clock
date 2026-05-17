@@ -41,7 +41,7 @@ public:
     int getBrightnessLevel();
     void setBrightnessLevel(int);
     void displayClock(byte);
-    void showSymbol(uint8_t);
+    void showSymbol(uint8_t symbol1, uint8_t symbol10);
     void handle();
     void showWaitingAnimation();
     void allSegmentsOff();

@@ -5,18 +5,18 @@ void DisplayLink::begin(IDisplayLink *iLink, uint8_t syncWord, float frequncy, u
     pILink = iLink;
     SCLink::begin(SCLink::UNINITIALIZED, syncWord, frequncy, true, timeout, [this]() -> void {this->pILink->handleTimeout();});
 
-    addCommandHandler((SCLink::command_t){SCLink::CMD_TELEMETRY, [this](uint8_t *data, uint8_t len) -> void {  this->handleTelemetryCommand(data, len); }, false});
-    addCommandHandler((SCLink::command_t){SCLink::CMD_TIME,      [this](uint8_t *data, uint8_t len) -> void {  this->handleUpdateTimeCommand(data, len); }, false});
-    addCommandHandler((SCLink::command_t){SCLink::CMD_HONK,      [this](uint8_t *data, uint8_t len) -> void {  this->handleHonkCommand(data, len); }, false});
-    addCommandHandler((SCLink::command_t){SCLink::CMD_DISCOVER,  [this](uint8_t *data, uint8_t len) -> void {  this->handleDiscoverCommand(data, len); }, false});
-    addCommandHandler((SCLink::command_t){SCLink::CMD_SET_ID,    [this](uint8_t *data, uint8_t len) -> void {  this->handleSetIdCommand(data, len); }, false});
-    addCommandHandler((SCLink::command_t){SCLink::CMD_SHOW_ID,   [this](uint8_t *data, uint8_t len) -> void {  this->handleShowIdCommand(data, len); }, false});
+    addCommandHandler((SCLink::command_t){SCLink::CMD_TELEMETRY, [this](protocol_t &packet) -> void {  this->handleTelemetryCommand(packet); }, false});
+    addCommandHandler((SCLink::command_t){SCLink::CMD_TIME,      [this](protocol_t &packet) -> void {  this->handleUpdateTimeCommand(packet); }, false});
+    addCommandHandler((SCLink::command_t){SCLink::CMD_HONK,      [this](protocol_t &packet) -> void {  this->handleHonkCommand(packet); }, false});
+    addCommandHandler((SCLink::command_t){SCLink::CMD_DISCOVER,  [this](protocol_t &packet) -> void {  this->handleDiscoverCommand(packet); }, false});
+    addCommandHandler((SCLink::command_t){SCLink::CMD_SET_ID,    [this](protocol_t &packet) -> void {  this->handleSetIdCommand(packet); }, false});
+    addCommandHandler((SCLink::command_t){SCLink::CMD_SHOW_ID,   [this](protocol_t &packet) -> void {  this->handleShowIdCommand(packet); }, false});
 }
 
 #pragma region Command Handlers
 // This section contains the mapping of received data to actual values used in the functions
 
-void DisplayLink::handleTelemetryCommand(uint8_t *data, uint8_t dataLength)
+void DisplayLink::handleTelemetryCommand(protocol_t &packet)
 {
     telemetryResponse_t tmp = {0};
     if(pILink) tmp = pILink->handleTelemetry();
@@ -27,18 +27,18 @@ void DisplayLink::handleTelemetryCommand(uint8_t *data, uint8_t dataLength)
     transmit(SCLink::CONTROLLER, SCLink::CMD_TELEMETRY, (uint8_t *)&tmp, sizeof(tmp));
 }
 
-void DisplayLink::handleUpdateTimeCommand(uint8_t *data, uint8_t dataLength)
+void DisplayLink::handleUpdateTimeCommand(protocol_t &packet)
 {
-    ESP_LOGI("display", "addr: %p", data);
-    if(pILink) pILink->handleUpdateTime(data[0], data[1]);
+    ESP_LOGI("display", "addr: %p", packet.cmd.data);
+    if(pILink) pILink->handleUpdateTime(packet.cmd.data[0], packet.cmd.data[1]);
 }
 
-void DisplayLink::handleHonkCommand(uint8_t *data, uint8_t dataLength)
+void DisplayLink::handleHonkCommand(protocol_t &packet)
 {
-    if(pILink) pILink->handleHonk(data[0]);
+    if(pILink) pILink->handleHonk(packet.cmd.data[0]);
 }
 
-void DisplayLink::handleDiscoverCommand(uint8_t *data, uint8_t dataLength)
+void DisplayLink::handleDiscoverCommand(protocol_t &packet)
 {
     // add a random delay to avoid LoRa collisions with a high probabilty
     uint32_t wait = random(0, 20) * 5;
@@ -50,11 +50,11 @@ void DisplayLink::handleDiscoverCommand(uint8_t *data, uint8_t dataLength)
     }
 }
 
-void DisplayLink::handleSetIdCommand(uint8_t *data, uint8_t dataLength)
+void DisplayLink::handleSetIdCommand(protocol_t &packet)
 {
     setID_data_t tmp;
     uint8_t resp = 0;
-    memcpy(&tmp, data, sizeof(setID_data_t));
+    memcpy(&tmp, packet.cmd.data, sizeof(setID_data_t));
     if(id == UNINITIALIZED)
     {
         if (tmp.uid == UID)
@@ -63,6 +63,7 @@ void DisplayLink::handleSetIdCommand(uint8_t *data, uint8_t dataLength)
             resp = 1;
             setId(tmp.id);
             transmit(SCLink::CONTROLLER, SCLink::CMD_SET_ID, (uint8_t *)&resp, 1);
+            if(pILink) pILink->handleShowId(id);
         }
         else
         {
@@ -71,9 +72,9 @@ void DisplayLink::handleSetIdCommand(uint8_t *data, uint8_t dataLength)
     }
 }
 
-void DisplayLink::handleShowIdCommand(uint8_t *data, uint8_t dataLength)
+void DisplayLink::handleShowIdCommand(protocol_t &packet)
 {
-    if(pILink) pILink->handleShowId(data[0]);
+    if(pILink) pILink->handleShowId(id);
 }
 
 #pragma endregion

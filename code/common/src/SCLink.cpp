@@ -148,14 +148,15 @@ void SCLink::addCommandHandler(command_t command)
     commandList.push_back(command);
 }
 
-void SCLink::handleCommand(uint8_t command, uint8_t *data, uint8_t dataLength)
+void SCLink::handleCommand(protocol_t &packet)
 {
     for (const auto &cmd : commandList)
     {
-        if (cmd.command == command && cmd.callback != nullptr)
+        if (cmd.command == packet.cmd.commandId  && cmd.callback != nullptr)
         {
+             
             ESP_LOGV("HANDLE","Handler found, calling...");
-            cmd.callback(data, dataLength);
+            cmd.callback(packet);
         }
     }
 }
@@ -241,7 +242,7 @@ void SCLink::handler()
             else
             {
                 ESP_LOGI("SCLink", "Packet received from %d, command: %d, len: %d", rxData.cmd.senderId, rxData.cmd.commandId, rxData.length);
-                handleCommand(rxData.cmd.commandId, rxData.cmd.data, rxData.length-3);
+                handleCommand(rxData);
                 if(!_isSlave) radioState = RADIO_STATE_IDLE;
             }
         }

@@ -56,9 +56,9 @@ public:
     using telemetryCallback = std::function<void(const SCLink::telemetryResponse_t &)>;
 
 private:
-    void handleTelemetryCommand(uint8_t *data, uint8_t dataLength);
-    void handleDiscoverCommand(uint8_t *data, uint8_t dataLength);
-    void handleSetIdCommand(uint8_t *data, uint8_t dataLength);
+    void handleTelemetryCommand(protocol_t &packet);
+    void handleDiscoverCommand(protocol_t &packet);
+    void handleSetIdCommand(protocol_t &packet);
 
     telemetryCallback _telemetryCallback;
     IControllerLinkHandler *pILink = nullptr;

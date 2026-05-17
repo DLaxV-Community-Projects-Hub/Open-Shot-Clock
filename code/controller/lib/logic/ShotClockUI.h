@@ -67,7 +67,7 @@ private:
 
     uint8_t telemetryId = 0;
 
-    void printTelemetryInfo(uint8_t id);
+    void printTelemetryInfo();
     void drawBatteryLevel(int16_t x, int16_t y, uint8_t level);
     void drawSignalStrength(int16_t x, int16_t y, uint8_t strength);
 };

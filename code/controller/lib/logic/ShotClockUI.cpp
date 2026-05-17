@@ -71,7 +71,7 @@ void ShotClockUI::setDataDisplay(uint16_t timeToDisplay, int channel, bool runni
 
     drawBatteryLevel(locBatteryX, locBatteryY, 3);
 
-    printTelemetryInfo(telemetryId);
+    printTelemetryInfo();
 
     display.display();
 }
@@ -84,7 +84,8 @@ void ShotClockUI::handle() {
     lastTime = millis();
     if(!telemetryList.empty())
     {
-        telemetryId = (telemetryId + 1) % telemetryList.size()+1;
+        telemetryList.push_back(telemetryList.front());
+        telemetryList.pop_front();
     }
   }
 }
@@ -108,14 +109,15 @@ void ShotClockUI::updateTelemetryInfo(uint8_t id, uint8_t batteryLevel, uint8_t 
 
 /// @brief Prints the telemetry information for a specific ID
 /// @param id The telemetry ID to print
-void ShotClockUI::printTelemetryInfo(uint8_t id)
+void ShotClockUI::printTelemetryInfo()
 {
-    ESP_LOGV("DISPLAY","Print Telemetry; id: %d", id);
     if(telemetryList.size()>0)
     {
         telemetry_t tmp = telemetryList.front();
-        telemetryList.pop_front();
-        telemetryList.push_back(tmp);
+        ESP_LOGV("DISPLAY","Print Telemetry; id: %d", tmp.id);
+        //telemetry_t tmp = telemetryList.front();
+        //telemetryList.pop_front();
+       // telemetryList.push_back(tmp);
 
         display.setFont(NULL);
         display.setCursor(locTelemetryX, locTelemetryY + 2);

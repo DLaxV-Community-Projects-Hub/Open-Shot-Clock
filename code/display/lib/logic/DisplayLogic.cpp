@@ -33,10 +33,7 @@ void DisplayLogic::handleHonk(uint8_t volume)
 
 void DisplayLogic::handleShowId(uint8_t id)
 {
-    // TODO: remove debug code
-    static uint8_t tmp =0;
-    tmp = ++tmp < 7 ? tmp : 0;
-    leds_.showSymbol(tmp);
+    leds_.showSymbol(id, 10);
 }
 
 void DisplayLogic::handleTimeout()
