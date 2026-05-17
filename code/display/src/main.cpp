@@ -51,6 +51,7 @@ AsyncWebServer server(80);
 #if defined(OSC_DISPLAY_R0) | defined(OSC_DISPLAY_R1)
  DisplayLink protocol = DisplayLink( new Module(SS, DIO0, LoRa_RST, LoRa_BUSY));
   Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, Wire);
+  Adafruit_SSD1306 display(128, 64, &Wire, -1);
   #endif
   
 #if defined(OSC_DISPLAY_R2)
