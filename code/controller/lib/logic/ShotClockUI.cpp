@@ -39,17 +39,14 @@ void ShotClockUI::showHonk(uint8_t channel) {
     display.setCursor(7, 10);
     display.printf("HONK");
     display.setTextSize(1);
-    display.setCursor(locChannelX, locChannelY);
-    display.printf("CH%d", channel);
     display.display();
-    delay(500);
 }
 
 /// @brief Sets the data display
 /// @param timeToDisplay The time to display
 /// @param channel The channel to display
 /// @param running Whether the clock is running
-void ShotClockUI::setDataDisplay(uint16_t timeToDisplay, int channel, bool running) 
+void ShotClockUI::setDataDisplay(uint16_t timeToDisplay, int channel, uint8_t batteryLevel, bool running) 
 {
   ESP_LOGI("setDataDisplay","in func");
 
@@ -69,10 +66,38 @@ void ShotClockUI::setDataDisplay(uint16_t timeToDisplay, int channel, bool runni
     display.setCursor(locChannelX, locChannelY);
     display.printf("CH%d",channel);
 
-    drawBatteryLevel(locBatteryX, locBatteryY, 3);
+    drawBatteryLevel(locBatteryX, locBatteryY, batteryLevel);
 
     printTelemetryInfo();
 
+    display.display();
+}
+
+void ShotClockUI::setDiscoverDisplay(std::vector<uint8_t> links)
+{
+    static uint32_t lastUpdate = 0;
+    display.clearDisplay();
+    display.setFont(NULL);
+    display.setTextSize(2);
+    display.setCursor(0, 0);
+    display.printf("DISCOVER");
+    int y = 20, x = 0;
+    for(uint8_t link : links)
+    {
+        display.drawRect(x, y, 38, 19, SSD1306_WHITE);
+        display.setCursor(x+2, y+2);
+        display.setTextSize(2);
+        display.printf("A%02d", link);
+        x += 42;
+        if(x>100)
+        {
+            x = 0;
+            y += 23;
+        }
+    }
+    display.setTextSize(1);
+    display.setCursor(112, 4);
+    display.printf("%02d", lastUpdate++);
     display.display();
 }
 

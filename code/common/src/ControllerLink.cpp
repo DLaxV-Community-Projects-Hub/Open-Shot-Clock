@@ -50,7 +50,7 @@ void ControllerLink::updateTime(uint8_t time, uint8_t brightness)
 
 void ControllerLink::sendHonk(uint8_t level)
 {
-    transmit(SCLink::BOARDCAST, SCLink::CMD_HONK, &level, 1);
+    transmit(SCLink::BOARDCAST, SCLink::CMD_HONK, &level, 1, false, true);
 }
 
 void ControllerLink::requestTelemetry(endpoint_t id)

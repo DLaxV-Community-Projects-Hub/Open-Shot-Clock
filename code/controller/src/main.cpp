@@ -134,7 +134,7 @@ ControllerLink protocol = ControllerLink(new Module(SS, DIO0, RST_LoRa, BUSY_LoR
   ControllerLink protocol = ControllerLink(new Module(LoRa_NSS, DIO0, RST_LoRa, BUSY_LoRa, spi, spiSettings));
 #endif
 
-ShotClockLogic shotClockLogic = ShotClockLogic();
+ShotClockLogic shotClockLogic = ShotClockLogic(V_BAT_SENSE, V_BAT_GAIN);
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
@@ -604,10 +604,6 @@ void loop()
   #if defined(OSC_CONTROLLER_R0) | defined(OSC_CONTROLLER_R1)
   if(timeNow - lastTime > 4800)
   {
-    lastTime = timeNow;
-    voltageRaw = analogRead(V_BAT_SENSE);
-    voltage = (voltageRaw * V_BAT_GAIN);
-    ESP_LOGI("ADC","Voltage: %f",voltage);
     digitalWrite(LED_ERR, !digitalRead(LED_ERR));
   }  
   #endif

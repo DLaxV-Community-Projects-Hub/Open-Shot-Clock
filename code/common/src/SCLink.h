@@ -54,6 +54,7 @@ public:
         } cmd;
         uint8_t length;
         bool requiresResp;
+        bool abortWhenBusy;
     } protocol_t;
 
     using CommandCallback = std::function<void(protocol_t &)>;
@@ -69,7 +70,7 @@ public:
     SCLink(Module *module) : radio(module) {}
 
     virtual void begin(uint8_t deviceId, uint8_t syncWord, float frequncy, bool isSlave = false, uint16_t timeout = 200, timeoutCallback callback = &defaultCallback);
-    void transmit(uint8_t receiverId, uint8_t command, uint8_t *data, uint8_t dataLength, bool requiresResp = false, bool priority = false);
+    void transmit(uint8_t receiverId, uint8_t command, uint8_t *data, uint8_t dataLength, bool requiresResp = false, bool priority = false, bool abortWhenBusy = false);
     void handler();
     void handlerSlave();
     void radioEvent();

@@ -6,6 +6,7 @@
 #include <Wire.h> 
 #include <stdint.h>
 #include <list>
+#include <vector>
 
 #include "ControllerLink.h"
 #include "osc_logo.h"
@@ -23,9 +24,10 @@
 class IControllerUI
 {
 public:
-    virtual void setDataDisplay(uint16_t timeToDisplay, int channel, bool running) = 0;
+    virtual void setDataDisplay(uint16_t timeToDisplay, int channel, uint8_t batteryLevel, bool running = false) = 0;
     virtual void updateTelemetryInfo(uint8_t id, uint8_t batteryLevel, uint8_t signalStrength) = 0;
     virtual void showHonk(uint8_t channel) = 0;
+    virtual void setDiscoverDisplay(std::vector<uint8_t> links) = 0;
 };
 
 /**
@@ -41,8 +43,9 @@ class ShotClockUI : public IControllerUI
         void begin(bool flipScreen = false);
         void handle();
         void showHonk(uint8_t channel) override;
-        void setDataDisplay(uint16_t timeToDisplay, int channel, bool running = false) override;
+        void setDataDisplay(uint16_t timeToDisplay, int channel, uint8_t batteryLevel, bool running = false) override;
         void updateTelemetryInfo(uint8_t id, uint8_t batteryLevel, uint8_t signalStrength) override;
+        void setDiscoverDisplay(std::vector<uint8_t> links) override;
         void refreshDisplay() { display.display(); }
 
         typedef struct {
@@ -58,9 +61,9 @@ private:
     Adafruit_SSD1306 display = Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &I2C);
     std::list<telemetry_t> telemetryList;
 
-    const int16_t locChannelX = 92;
+    const int16_t locChannelX = 110;
     const int16_t locChannelY = 54;
-    const int16_t locBatteryX = 120;
+    const int16_t locBatteryX = 100;
     const int16_t locBatteryY = 51;
     const int16_t locTelemetryX = 0;
     const int16_t locTelemetryY = 51;

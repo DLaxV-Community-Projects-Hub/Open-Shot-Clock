@@ -29,6 +29,7 @@ void  DisplayLogic::handleUpdateTime(uint8_t time, uint8_t brightness)
 void DisplayLogic::handleHonk(uint8_t volume)
 {
     horn_.requestHonk(volume);
+    leds_.displayClock(0);
 }
 
 void DisplayLogic::handleShowId(uint8_t id)
@@ -69,6 +70,7 @@ void DisplayLogic::begin(int8_t vBatPin)
     if(vbatPin_ >=0)
     {
         pinMode(vbatPin_, ANALOG);
+        vBatAvg = analogReadMilliVolts(vbatPin_);
     }
     leds_.allSegmentsOff();    
 }

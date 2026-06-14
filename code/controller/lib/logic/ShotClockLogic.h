@@ -8,19 +8,22 @@
 #include "ShotClockUI.h"
 #include "ControllerLink.h"
 
-#if CORE_DEBUG_LEVEL == 0
+//#if CORE_DEBUG_LEVEL == 0
   #define UPDATE_INTERVALL 1000
   #define UPDATE_INTERVALL_PAUSED 1000
-#else // Use slower update intervall for debugging
+/*#else // Use slower update intervall for debugging
   #define UPDATE_INTERVALL 5000
   #define UPDATE_INTERVALL_PAUSED 5000
-#endif
+#endif*/
+
+#define V_BAT_FULL (4200)  // battery voltage in mV for 100%
+#define V_BAT_EMPTY (3300) // battery voltage in mV for 0%
 
 class ShotClockLogic : public IControllerLinkHandler{
   public:
     typedef  void (*notifyClientsCallback)(String message);
 
-    ShotClockLogic(){ registeredLinks.reserve(20); }
+    ShotClockLogic(int8_t vBatPin = -1, double vBatGain = 1.0) : vBatFull(V_BAT_FULL), vBatEmpty(V_BAT_EMPTY), vbatPin_(vBatPin){ registeredLinks.reserve(20); }
 
     void begin(IControllerUI *iUI, IControllerLink *iLink, notifyClientsCallback notifyCallback);
     void handle();
@@ -79,11 +82,16 @@ class ShotClockLogic : public IControllerLinkHandler{
     uint8_t honkVolumeLevel = 5;
     int8_t _resetTime = 30;
     bool isRunning = false;
+    const int8_t vbatPin_;
+    uint32_t vBatAvg;
+    uint8_t batteryLevel = 255;
 
     std::vector<uint8_t> registeredLinks;
     notifyClientsCallback notifyClientsCB;
 
-    uint32_t timeOfLastPauseEvent, timeOfLastCountEvent,timeNow,  timeOfLastPlayEvent, msLastStopCount, msLastTelemetry, msDiscoverStart;
+    uint32_t timeOfLastPauseEvent, timeOfLastCountEvent,timeNow,  timeOfLastPlayEvent, msLastStopCount, msLastTelemetry, msDiscoverStart, tLastADC;
+
+    const uint32_t vBatFull, vBatEmpty;
 
     Preferences preferences;
     const char* preferenceName = "shot-clock";

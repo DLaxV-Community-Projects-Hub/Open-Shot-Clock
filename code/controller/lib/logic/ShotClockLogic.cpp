@@ -20,12 +20,18 @@ void ShotClockLogic::begin(IControllerUI *iUI, IControllerLink *iLink, notifyCli
   timeToDisplay = _resetTime;
   preferences.end();
 
-  brightnessLevel = CORE_DEBUG_LEVEL == 0 ? 8 : 3;
+  ESP_LOGV("SCL", "vBatFull: %d, vBatEmpty: %d", vBatFull, vBatEmpty);
+
+  brightnessLevel = CORE_DEBUG_LEVEL == 0 ? 8 : 3; // Reduce brightness in debug mode
+
+  if(vbatPin_ >= 0)
+  {
+      pinMode(vbatPin_, ANALOG);
+      vBatAvg = analogReadMilliVolts(vbatPin_);
+  }
 
   uint32_t tmp = UPDATE_INTERVALL;
   ESP_LOGI("SCLogic","INTERVALL: %d",tmp);
-
-  //pControllerLink->discover();
 }
 
 /// @brief Main handler function that should be called in the main loop. It checks if the clock is running and either counts down or stops counting accordingly.
@@ -40,6 +46,7 @@ void ShotClockLogic::handle()
     discoverCount++;
     msDiscoverStart = timeNow;
     state = LOGIC_DISCOVER_WAIT;
+    pControllerUI->setDiscoverDisplay(registeredLinks);
     break;
 
     case LOGIC_DISCOVER_WAIT:
@@ -60,6 +67,7 @@ void ShotClockLogic::handle()
     if (isRunning)
     {
       unsigned long msAlreadyPassedInCurrentSecond = (timeOfLastPauseEvent - timeOfLastCountEvent) + (timeNow - timeOfLastPlayEvent);
+      // TODO: Check if this is still correct when manually changing time
       if (timeToDisplay > 0)
       {
         if (msAlreadyPassedInCurrentSecond >= UPDATE_INTERVALL)
@@ -69,6 +77,7 @@ void ShotClockLogic::handle()
           updateClock(timeToDisplay, brightnessLevel);
           if (timeToDisplay == 0)
           {
+            isRunning = false;
             honk();
           }
           notifyClients(String(timeToDisplay));
@@ -78,12 +87,11 @@ void ShotClockLogic::handle()
       else
       {
         isRunning = false;
-        honk();
       }
     }
     else
     {
-      if (timeNow - msLastTelemetry >= UPDATE_INTERVALL_PAUSED * 2)
+      if (timeNow - msLastTelemetry >= UPDATE_INTERVALL_PAUSED * 2 && timeToDisplay > 10)
       {
         msLastTelemetry = timeNow;
         ESP_LOGI("ShotClockLogic", "Request Telemtry");
@@ -91,7 +99,7 @@ void ShotClockLogic::handle()
       }
       if (timeNow - msLastStopCount >= UPDATE_INTERVALL_PAUSED)
       {
-        ESP_LOGI("ShotClockLogic", "Paused!");
+        ESP_LOGI("ShotClockLogic", "Paused! Time to display: %d", timeToDisplay);
         updateClock(timeToDisplay, brightnessLevel);
         notifyClients(String(timeToDisplay));
         msLastStopCount = timeNow;
@@ -100,6 +108,19 @@ void ShotClockLogic::handle()
     break;
   default:
     break;
+  }
+
+  if(millis() - tLastADC > 2000)
+  {
+    if(vbatPin_ >= 0)
+    {
+      uint32_t TMP = millis();
+        uint32_t tmp = analogReadMilliVolts(vbatPin_);
+        vBatAvg = ((vBatAvg << 2) + tmp) / 5;
+        batteryLevel = constrain(map(vBatAvg, vBatEmpty, vBatFull, 0, 8),0,8);
+        ESP_LOGI("ADC","measured %d, avg %d, took: %dms", tmp, vBatAvg, millis() - TMP);
+    }
+    tLastADC = millis();
   }
 
 }
@@ -168,6 +189,7 @@ void ShotClockLogic::adjustTime(int8_t timeAdjustment)
     ESP_LOGI("ShotClockLogic", "Adjusted time to display: %d, change: %d", timeToDisplay, timeAdjustment);
     updateClock(timeToDisplay, brightnessLevel);
     notifyClients(String(timeToDisplay));
+    resetTimers();
   }
 }
 
@@ -243,6 +265,7 @@ void ShotClockLogic::resetTimers()
   timeOfLastPauseEvent = timeNow;
   timeOfLastPlayEvent = timeNow;
   msLastStopCount = timeNow;
+  msLastTelemetry = timeNow;
 }
 
 void ShotClockLogic::honkClock(uint8_t honkVolumeLevel)
@@ -252,7 +275,7 @@ void ShotClockLogic::honkClock(uint8_t honkVolumeLevel)
 
 void ShotClockLogic::updateClock(uint8_t timeToDisplay, uint8_t brightnessLevel)
 {
-  if(pControllerUI) pControllerUI->setDataDisplay(timeToDisplay, channel, isRunning);
+  if(pControllerUI) pControllerUI->setDataDisplay(timeToDisplay, channel, batteryLevel, isRunning);
   if(pControllerLink) pControllerLink->updateTime(timeToDisplay, brightnessLevel);
 }
 
@@ -293,6 +316,7 @@ void ShotClockLogic::handleSetId(uint8_t id)
     {
       // add ID to list if not already contained
       registeredLinks.push_back(id);
+      pControllerUI->setDiscoverDisplay(registeredLinks);
       ESP_LOGI("LOGIC","Add new ID: %d", id);
     }
   }

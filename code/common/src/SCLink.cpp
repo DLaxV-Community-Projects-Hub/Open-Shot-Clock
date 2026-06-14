@@ -73,20 +73,28 @@ void SCLink::setId(uint8_t newId)
     // TODO: saven in preferences!
 }
 
-void SCLink::transmit(uint8_t receiverId, uint8_t command, uint8_t *data, uint8_t dataLength, bool requiresResponse, bool priority)
+void SCLink::transmit(uint8_t receiverId, uint8_t command, uint8_t *data, uint8_t dataLength, bool requiresResponse, bool priority, bool abortWhenBusy)
 {
     // construct the packet
     /*uint8_t packet[19]; // 1 byte for receiverId, 1 byte for senderId, 1 byte for command, 16 bytes for data
     packet[0] = receiverId;
     packet[1] = id;
     packet[2] = command;*/
-    protocol_t tmp = {{receiverId, id, command, {0}},dataLength, requiresResponse};
+    protocol_t tmp = {{receiverId, id, command, {0}},dataLength, requiresResponse, abortWhenBusy};
     memcpy(&tmp.cmd.data, data, dataLength);
     tmp.length +=3;
 
     if(priority)
     {
-        txList.push_front(tmp); 
+        // if we are currently transmitting or receiving, insert the packet right after the current one, otherwise at the front of the list
+        if ((radioState != RADIO_STATE_IDLE && radioState != RADIO_STATE_RX) && txList.size() > 0)
+        {
+            txList.insert(++txList.begin(), tmp);
+        }
+        else
+        {
+            txList.push_front(tmp); 
+        }
     }
     else
     {
@@ -99,7 +107,7 @@ void SCLink::transmit(uint8_t receiverId, uint8_t command, uint8_t *data, uint8_
 void SCLink::startTransmission()
 {
     if (radioState == RADIO_STATE_ACD_CLEAR && txList.size() > 0)
-    {
+    {  
         radioState = RADIO_STATE_TX;
         txTime = millis();
         ESP_LOGI("StartTransmission", "CMD sent: cmd: %d, sender: %d, receiver: %d", txList.front().cmd.commandId, txList.front().cmd.senderId, txList.front().cmd.receiverId);
@@ -192,8 +200,18 @@ void SCLink::handler()
             }
             else
             {
-                ESP_LOGI("SCLink", "Channel Busy...");
-                radioState = RADIO_STATE_ACD_WAIT;
+                if(txList.front().abortWhenBusy)
+                {
+                    ESP_LOGI("SCLink", "Channel Busy, removing packet! (cmd: %d, target: %d)", txList.front().cmd.commandId, txList.front().cmd.receiverId);
+                    txList.pop_front();
+                    if(_isSlave) waitForResponse();
+                    else radioState = RADIO_STATE_IDLE;
+                }
+                else
+                {
+                    ESP_LOGI("SCLink", "Channel Busy, wating...");
+                    radioState = RADIO_STATE_ACD_WAIT;
+                }
             }
         }
         break;
@@ -218,7 +236,7 @@ void SCLink::handler()
             }
             else
             {
-                ESP_LOGI("SCLink", "Packet sent!");
+                ESP_LOGI("SCLink", "Packet sent!, cmd: %d, target: %d", txList.front().cmd.commandId, txList.front().cmd.receiverId);
                 radioState = RADIO_STATE_IDLE;
             }
             txList.pop_front();

@@ -84,6 +84,8 @@ const char* password = "12345678";
     #define OLED_nEN        Vext
     #define SCL             SCL_OLED
     #define SDA             SDA_OLED
+    #define V_BAT_SENSE     -1
+    #define V_BAT_GAIN      1.0
 #endif
 
 //RS-485
@@ -127,9 +129,9 @@ const char* password = "12345678";
 
     #define PIN_HORN 15
 
-    #define V_GAIN (3.3f * 11.0f / 4096.0f)
-    #define V_BAT_GAIN (3.3f * 14.3f / 4096.0f / 10.0f * 0.97f)
-    #define I_GAIN (3.3f / 4096.0f * 1/(0.102f))
+    #define V_GAIN (2.0 / (2.0 + 20.0))
+    #define I_GAIN (1/(182.0 * 1e-6 * 560))
+    #define V_BAT_GAIN (10.0 / (10.0 + 4.3))
 #endif
 
 #if defined(OSC_CONTROLLER_R0)

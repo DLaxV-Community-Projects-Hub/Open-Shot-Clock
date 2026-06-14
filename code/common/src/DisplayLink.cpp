@@ -41,12 +41,12 @@ void DisplayLink::handleHonkCommand(protocol_t &packet)
 void DisplayLink::handleDiscoverCommand(protocol_t &packet)
 {
     // add a random delay to avoid LoRa collisions with a high probabilty
-    uint32_t wait = random(0, 20) * 5;
+    uint32_t wait = random(0, 10) * 5;
     if(id == UNINITIALIZED)
     {
         ESP_LOGI("DISCOVER", "waiting for: %d, UID: %X", wait, UID);
         delay(wait);
-        transmit(SCLink::CONTROLLER, SCLink::CMD_DISCOVER, (uint8_t *)&UID, sizeof(uint32_t));
+        transmit(SCLink::CONTROLLER, SCLink::CMD_DISCOVER, (uint8_t *)&UID, sizeof(uint32_t), false, false, true);
     }
 }
 
