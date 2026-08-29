@@ -15,7 +15,7 @@ void ControllerLink::begin(IControllerLinkHandler *iLink, uint8_t syncWord, floa
 void ControllerLink::handleTelemetryCommand(protocol_t &packet)
 {
     telemetryResponse_t tmp = {packet.cmd.data[0], packet.cmd.data[1], packet.cmd.data[2]};
-    if(pILink) pILink->handleTelemetry(tmp);
+    if(pILink) pILink->handleTelemetry(tmp, getRSSI());
 }
 
 void ControllerLink::handleDiscoverCommand(protocol_t &packet)

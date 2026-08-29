@@ -58,10 +58,10 @@ void SCLink::begin(uint8_t deviceId, uint8_t syncWord, float frequncy, bool isSl
     }
 }
 
-uint8_t SCLink::getRSSI()
+int8_t SCLink::getRSSI()
 {
     long tmpRssi = radio.getRSSI(true);
-    uint8_t tmp = map(tmpRssi,-130,0,0,4);
+    int8_t tmp = map(tmpRssi,-127,128,-127,128);
     ESP_LOGI("RSSI","Map val %ddBm to %d", tmpRssi, tmp);
 
     return tmp;

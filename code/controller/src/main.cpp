@@ -158,12 +158,6 @@ void notifyClients(String message)
   ws.cleanupClients();
 }
 
-void handleCMDTelemetry(const SCLink::telemetryResponse_t &data){
-  static uint8_t id=0;
-  ESP_LOGI("handleTelemetry","1: %d, 2: %d", data.batteryLevel, data.rssi);
-  shotclockUI.updateTelemetryInfo(id++ % 3, data.batteryLevel, data.rssi);
-}
-
 void sendToClock(String Msg)
 {
   String msgWithChannel = Msg + String(channel);

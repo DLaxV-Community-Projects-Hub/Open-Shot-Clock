@@ -322,10 +322,10 @@ void ShotClockLogic::handleSetId(uint8_t id)
   }
 }
 
-void ShotClockLogic::handleTelemetry(SCLink::telemetryResponse_t response)
+void ShotClockLogic::handleTelemetry(SCLink::telemetryResponse_t response, int8_t signalStrengthRX)
 {
-  ESP_LOGI("SC LOGIC","Received Telemetry: id: %d, bat: %d, rssi: %d",response.id, response.batteryLevel, response.rssi);
-  if(pControllerUI) pControllerUI->updateTelemetryInfo(response.id, response.batteryLevel, response.rssi);
+  ESP_LOGI("SC LOGIC","Received Telemetry: id: %d, bat: %d, rssiTX: %d, rssiRX: %d",response.id, response.batteryLevel, response.rssi, signalStrengthRX);
+  if(pControllerUI) pControllerUI->updateTelemetryInfo(response.id, response.batteryLevel, response.rssi, signalStrengthRX);
 }
 
 void ShotClockLogic::handleTimeout()

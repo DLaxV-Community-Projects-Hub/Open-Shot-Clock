@@ -25,7 +25,7 @@ class IControllerUI
 {
 public:
     virtual void setDataDisplay(uint16_t timeToDisplay, int channel, uint8_t batteryLevel, bool running = false) = 0;
-    virtual void updateTelemetryInfo(uint8_t id, uint8_t batteryLevel, uint8_t signalStrength) = 0;
+    virtual void updateTelemetryInfo(uint8_t id, uint8_t batteryLevel, int8_t signalStrengthTX, int8_t signalStrengthRX) = 0;
     virtual void showHonk(uint8_t channel) = 0;
     virtual void setDiscoverDisplay(std::vector<uint8_t> links) = 0;
 };
@@ -44,14 +44,15 @@ class ShotClockUI : public IControllerUI
         void handle();
         void showHonk(uint8_t channel) override;
         void setDataDisplay(uint16_t timeToDisplay, int channel, uint8_t batteryLevel, bool running = false) override;
-        void updateTelemetryInfo(uint8_t id, uint8_t batteryLevel, uint8_t signalStrength) override;
+        void updateTelemetryInfo(uint8_t id, uint8_t batteryLevel, int8_t signalStrengthTX, int8_t signalStrengthRX) override;
         void setDiscoverDisplay(std::vector<uint8_t> links) override;
         void refreshDisplay() { display.display(); }
 
         typedef struct {
             const uint8_t id;
             uint8_t batteryLevel;
-            uint8_t signalStrength;
+            int8_t signalStrengthTX;
+            int8_t signalStrengthRX;
         } telemetry_t;
 
 private:

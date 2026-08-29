@@ -9,7 +9,7 @@ class IControllerLinkHandler
 {
 public:
     // Called when telemetry data is received
-    virtual void handleTelemetry(SCLink::telemetryResponse_t) = 0;
+    virtual void handleTelemetry(SCLink::telemetryResponse_t, int8_t) = 0;
     // Called when a timeout happended while waiting for a response
     virtual void handleTimeout() = 0;
     // Called when an ID was set and confirmed on slave

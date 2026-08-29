@@ -23,7 +23,7 @@ class ShotClockLogic : public IControllerLinkHandler{
   public:
     typedef  void (*notifyClientsCallback)(String message);
 
-    ShotClockLogic(int8_t vBatPin = -1, double vBatGain = 1.0) : vBatFull(V_BAT_FULL), vBatEmpty(V_BAT_EMPTY), vbatPin_(vBatPin){ registeredLinks.reserve(20); }
+    ShotClockLogic(int8_t vBatPin = -1, double vBatGain = 1.0) : vBatFull(V_BAT_FULL * vBatGain), vBatEmpty(V_BAT_EMPTY * vBatGain), vbatPin_(vBatPin){ registeredLinks.reserve(20); }
 
     void begin(IControllerUI *iUI, IControllerLink *iLink, notifyClientsCallback notifyCallback);
     void handle();
@@ -42,7 +42,7 @@ class ShotClockLogic : public IControllerLinkHandler{
     }
 
     void handleSetId(uint8_t id);
-    void handleTelemetry(SCLink::telemetryResponse_t response) override;
+    void handleTelemetry(SCLink::telemetryResponse_t response, int8_t singalStrengthRX) override;
     void handleTimeout() override;
 
     uint8_t getSyncWord() {return syncword; }

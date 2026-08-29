@@ -119,17 +119,18 @@ void ShotClockUI::handle() {
 /// @param id The telemetry ID to update
 /// @param batteryLevel The battery level to set
 /// @param signalStrength The signal strength to set
-void ShotClockUI::updateTelemetryInfo(uint8_t id, uint8_t batteryLevel, uint8_t signalStrength)
+void ShotClockUI::updateTelemetryInfo(uint8_t id, uint8_t batteryLevel, int8_t signalStrengthTX, int8_t signalStrengthRX)
 {
     // Implementation for updating telemetry info
     for(auto& telemetry : telemetryList) {
         if(telemetry.id == id) {
             telemetry.batteryLevel = batteryLevel;
-            telemetry.signalStrength = signalStrength;
+            telemetry.signalStrengthTX = signalStrengthTX;
+            telemetry.signalStrengthRX = signalStrengthRX;
             return;
         }
     }
-    telemetryList.push_back({id, batteryLevel, signalStrength});
+    telemetryList.push_back({id, batteryLevel, signalStrengthTX, signalStrengthRX});
 }
 
 /// @brief Prints the telemetry information for a specific ID
@@ -148,7 +149,15 @@ void ShotClockUI::printTelemetryInfo()
         display.setCursor(locTelemetryX, locTelemetryY + 2);
         display.printf("ID:%02d", tmp.id);
         drawBatteryLevel(locTelemetryX + 32, locTelemetryY, tmp.batteryLevel);
-        drawSignalStrength(locTelemetryX + 42, locTelemetryY, tmp.signalStrength);
+        if(CORE_DEBUG_LEVEL == 0)
+        {
+            drawSignalStrength(locTelemetryX + 42, locTelemetryY, map(tmp.signalStrengthTX,-130,0,0,4));
+        }
+        else
+        {
+            display.setCursor(locTelemetryX + 42, locTelemetryY + 2);
+            display.printf("%d/%d", tmp.signalStrengthTX, tmp.signalStrengthRX);
+        }
     }
 }
 

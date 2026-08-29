@@ -34,7 +34,7 @@ public:
     {
         uint8_t id;
         uint8_t batteryLevel;
-        uint8_t rssi;
+        int8_t rssi;
     } telemetryResponse_t;
 
     typedef struct
@@ -76,7 +76,7 @@ public:
     void radioEvent();
     void addCommandHandler(command_t command);
     void handleCommand(protocol_t &packet);
-    uint8_t getRSSI();
+    int8_t getRSSI();
 
 protected:
     void setId(uint8_t newId);
